@@ -1,92 +1,51 @@
-"""Weishaupt WCM-COM."""
-
-from .const import DOMAIN
+"""Weishaupt WCM-COM integration."""
 import logging
-from homeassistant.helpers.entity import Entity
-from datetime import timedelta, datetime
-from weishaupt_wcm_com import heat_exchanger
-import json
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, CONF_SCAN_INTERVAL
+from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
 
-WEISHAUPT_PLATFORMS = ['sensor']
-scan_interval = timedelta(seconds=20)
+PLATFORMS = ["sensor"]
 
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Weishaupt WCM-COM from a config entry."""
+    host = entry.data.get("host")
+    username = entry.data.get("username")
+    password = entry.data.get("password")
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+    api = WeishauptAPI(host, username, password)
 
-def setup(hass, config):
-    """Your controller/hub specific code."""
-    # Data that you want to share with your platforms
+    # Initiale Datenabfrage mit await in einem Thread
+    await hass.async_add_executor_job(api.update)
 
-    host = config[DOMAIN][CONF_HOST]
-    username = config[DOMAIN][CONF_USERNAME]
-    passwort = config[DOMAIN][CONF_PASSWORD]
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
-    api = WeishauptAPI(host, username, passwort)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        "api": api,
+        "scan_interval": scan_interval,
+    }
 
-    hass.data[DOMAIN] = api
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    hass.helpers.discovery.load_platform('sensor', DOMAIN, {}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
-class WeishauptBaseEntity(Entity):  
-    def __init__(self, hass, config):
-        self._api = hass.data[DOMAIN]
-        
-    def api(self):
-        return self._api
-
-
-    def update(self):
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        _LOGGER.debug("Super Updating")
-        self._api.update()
-
-
-class WeishauptAPI:
-
-    SCAN_INTERVAL = timedelta(seconds=30)
-
-    def __init__(self, host, username, password):
-        self._host = host
-        self._username = username
-        self._password = password
-        self._data = {}
-
-    def getData(self):
-        return self._data
-
-    # The actual fetch of information, since the wcm-com module can only handle one connection at a time, this has to be throttled
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        result = heat_exchanger.process_values(self._host, self._username, self._password)
-        _LOGGER.debug("Fetching new data")
-        if result != None:
-            self._data = json.loads(result)
-        else:
-            _LOGGER.warning("Cannot Update Data")
-    
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    # Aktualisieren Sie das Abfrageintervall
+    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    hass.data[DOMAIN][entry.entry_id]["scan_interval"] = scan_interval
+    _LOGGER.info(f"Updated scan interval to {scan_interval} seconds for entry {entry.entry_id}")
