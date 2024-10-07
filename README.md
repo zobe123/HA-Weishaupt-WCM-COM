@@ -1,4 +1,4 @@
-# HA-Weishaupt-WCM-COM Integration
+# HA-Weishaupt-WCM-COM Home Integration
 
 [![GitHub release](https://img.shields.io/github/release/zobe123/HA-Weishaupt-WCM-COM.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/releases)
 
@@ -73,7 +73,7 @@ logger:
   default: warning
   logs:
     custom_components.weishaupt_wcm_com: debug
-
+```
 ## Contributing
 
 Contributions to this project are welcome. Please create a pull request or report issues in the [Issue Tracker](https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues).
