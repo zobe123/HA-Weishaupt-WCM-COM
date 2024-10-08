@@ -42,12 +42,12 @@ OPERATION_MODE_MAP = {
 
 OPERATION_PHASE_MAP = {
     0: "Bereitschaft",
-    1: "Heizen",
-    2: "Warmwasser",
-    3: "Störung",
-    4: "Entlüften",
-    5: "Vorbereitung",
-    6: "Nachlauf",
+    6: "Heizen",
+    8: "Warmwasser",
+    #3: "Störung",
+    #4: "Entlüften",
+    #5: "Vorbereitung",
+    #6: "Nachlauf",
     # Fügen Sie weitere Phasen hinzu
 }
 # Abfrageparameter und ihre Eigenschaften
@@ -59,7 +59,7 @@ PARAMETERS = [
     {"id": 81, "name": "Flamme", "type": "binary"},
     {"id": 82, "name": "Heizung", "type": "binary"},
     {"id": 83, "name": "Warmwasser", "type": "binary"},
-    {"id": 274, "name": "Betriebsmodus", "type": "value"},
+#    {"id": 274, "name": "Betriebsmodus", "type": "value"},
     {"id": 325, "name": "Abgastemperatur", "type": "temperature"},
     {"id": 373, "name": "Betriebsphase", "type": "value"},
     {"id": 466, "name": "Pumpe", "type": "binary"},

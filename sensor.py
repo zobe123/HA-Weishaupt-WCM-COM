@@ -65,9 +65,9 @@ class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
             # Spezielle Verarbeitung für bestimmte Sensoren
             if self._sensor_name == ERROR_CODE_KEY:
                 self._attr_native_value = self.api.process_codes(value)
-            elif self._sensor_name == "Operation Mode":
+            elif self._sensor_name == "Betriebsmodus":
                 self._attr_native_value = OPERATION_MODE_MAP.get(value, f"Unbekannter Modus ({value})")
-            elif self._sensor_name == "Operation Phase":
+            elif self._sensor_name == "Betriebsphase":
                 self._attr_native_value = OPERATION_PHASE_MAP.get(value, f"Unbekannte Phase ({value})")
             elif param_type := next((p["type"] for p in PARAMETERS if p["name"] == self._sensor_name), None):
                 if param_type == "binary":
