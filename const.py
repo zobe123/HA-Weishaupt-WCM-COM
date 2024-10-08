@@ -17,7 +17,7 @@ OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"
 WARM_WATER_TEMPERATURE_KEY = "Warm Water Temperature"
 FLOW_TEMPERATURE_KEY = "Flow Temperature"
 FLUE_GAS_TEMPERATURE_KEY = "Flue Gas Temperature"
-ERROR_CODE_KEY = "Error"
+ERROR_CODE_KEY = "Status"
 
 # Neue Konstanten
 ROOM_TEMPERATURE_KEY = "Room Temperature"
@@ -52,7 +52,7 @@ OPERATION_PHASE_MAP = {
 }
 # Abfrageparameter und ihre Eigenschaften
 PARAMETERS = [
-    {"id": 1, "name": "Fehler", "type": "code"},
+    {"id": 1, "name": "Status", "type": "code"},
     {"id": 12, "name": "Außentemperatur", "type": "temperature"},
     {"id": 14, "name": "Warmwassertemperatur", "type": "temperature"},
     {"id": 17, "name": "Raumtemperatur", "type": "temperature"},
