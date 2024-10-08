@@ -52,19 +52,26 @@ OPERATION_PHASE_MAP = {
 }
 # Abfrageparameter und ihre Eigenschaften
 PARAMETERS = [
-    {"id": 12, "name": "Outside Temperature", "type": "temperature"},
-    {"id": 14, "name": "Warm Water Temperature", "type": "temperature"},
-    {"id": 3101, "name": "Flow Temperature", "type": "temperature"},
-    {"id": 325, "name": "Flue Gas Temperature", "type": "temperature"},
-    {"id": 17, "name": "Room Temperature", "type": "temperature"},
-    {"id": 274, "name": "Operation Mode", "type": "value"},
-    {"id": 81, "name": "Flame", "type": "binary"},
-    {"id": 466, "name": "Pump", "type": "binary"},
-    {"id": 82, "name": "Heating", "type": "binary"},
-    {"id": 83, "name": "Warm Water", "type": "binary"},
-    {"id": 1, "name": "Error", "type": "code"},
-    {"id": 373, "name": "Operation Phase", "type": "value"},
-    # Weitere Parameter hinzufügen, falls erforderlich
+    {"id": 1, "name": "Fehler", "type": "code"},
+    {"id": 12, "name": "Außentemperatur", "type": "temperature"},
+    {"id": 14, "name": "Warmwassertemperatur", "type": "temperature"},
+    {"id": 17, "name": "Raumtemperatur", "type": "temperature"},
+    {"id": 81, "name": "Flamme", "type": "binary"},
+    {"id": 82, "name": "Heizung", "type": "binary"},
+    {"id": 83, "name": "Warmwasser", "type": "binary"},
+    {"id": 274, "name": "Betriebsmodus", "type": "value"},
+    {"id": 325, "name": "Abgastemperatur", "type": "temperature"},
+    {"id": 373, "name": "Betriebsphase", "type": "value"},
+    {"id": 466, "name": "Pumpe", "type": "binary"},
+    {"id": 3101, "name": "Vorlauftemperatur", "type": "temperature"},
+    {"id": 2, "name": "Wärmeanforderung", "type": "value"},
+    {"id": 13, "name": "Vorlauftemperatur", "type": "value"},
+    {"id": 118, "name": "Puffer Oben", "type": "value"},
+    {"id": 138, "name": "Laststellung", "type": "value"},
+    {"id": 1497, "name": "Gasventil 1", "type": "binary"},
+    {"id": 1498, "name": "Gasventil 2", "type": "binary"},
+    {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
+    #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
 
 ERROR_CODE_MAP = {
