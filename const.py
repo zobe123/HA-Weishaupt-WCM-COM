@@ -64,7 +64,7 @@ PARAMETERS = [
     {"id": 373, "name": "Betriebsphase", "type": "value"},
     {"id": 466, "name": "Pumpe", "type": "binary"},
     {"id": 3101, "name": "Vorlauftemperatur", "type": "temperature"},
-    {"id": 2, "name": "Wärmeanforderung", "type": "value"},
+    {"id": 2, "name": "Wärmeanforderung", "type": "temperature"},
     {"id": 13, "name": "Vorlauftemperatur", "type": "value"},
     {"id": 118, "name": "Puffer Oben", "type": "value"},
     {"id": 138, "name": "Laststellung", "type": "value"},
@@ -75,7 +75,7 @@ PARAMETERS = [
 ]
 
 ERROR_CODE_MAP = {
-    0: "Kein Fehler",
+    0: "normal",
     11: "F11: Temperatur am Vorlauffühler > 105 °C",
     12: "W12: Temperatur am Vorlauffühler > 95 °C",
     13: "F13: Abgastemperatur zu hoch",
