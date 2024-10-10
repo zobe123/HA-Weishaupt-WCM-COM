@@ -60,7 +60,7 @@ PARAMETERS = [
     {"id": 82, "name": "Heizung", "type": "binary"},
     {"id": 83, "name": "Warmwasser", "type": "binary"},
 #    {"id": 274, "name": "Betriebsmodus", "type": "value"},
-    {"id": 325, "name": "Abgastemperatur", "type": "temperature"},
+    {"id": 325, "name": "Kesseltemperatur", "type": "temperature"},
     {"id": 373, "name": "Betriebsphase", "type": "value"},
     {"id": 466, "name": "Pumpe", "type": "binary"},
     {"id": 3101, "name": "Vorlauftemperatur", "type": "temperature"},

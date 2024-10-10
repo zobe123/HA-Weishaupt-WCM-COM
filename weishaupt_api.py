@@ -4,6 +4,7 @@ import json
 import requests
 import threading
 from requests.auth import HTTPDigestAuth
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 
@@ -12,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 # Lock initialisieren, um sicherzustellen, dass nur eine Anfrage gleichzeitig erfolgt
 _lock = threading.Lock()
 
-class WeishauptAPI:
+class WeishauptAPI(RestoreEntity):
     """API class for interacting with the Weishaupt WCM-COM."""
 
     def __init__(self, host, username=None, password=None):
@@ -21,11 +22,27 @@ class WeishauptAPI:
         self._username = username
         self._password = password
         self._data = {}
+        self.previous_values = {}
+        self._state = None
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        if (old_state := await self.async_get_last_state()) is not None:
+            self._data = old_state.attributes.get("data", {})
+            self.previous_values = old_state.attributes.get("previous_values", {})
 
     @property
     def data(self):
         """Return the latest data."""
         return self._data
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            "data": self._data,
+            "previous_values": self.previous_values
+        }
 
     def update(self):
         """Fetch new data from the WCM-COM."""
@@ -103,6 +120,10 @@ class WeishauptAPI:
                     if param:
                         if param["type"] == "temperature":
                             value = self.get_temperature(low_byte, high_byte)
+                            # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
+                            if value < -50 or value > 150:
+                                _LOGGER.warning(f"Unplausibler Temperaturwert verworfen: {value}")
+                                value = self.previous_values.get(param["name"], value)
                         elif param["type"] == "value":
                             value = self.get_value(low_byte, high_byte)
                         elif param["type"] == "binary":
@@ -111,7 +132,10 @@ class WeishauptAPI:
                             value = self.get_code(low_byte, high_byte)
                         else:
                             value = low_byte + 256 * high_byte  # Fallback
+
+                        # Speichern Sie den neuen (oder beibehaltenen) Wert
                         result[param["name"]] = value
+                        self.previous_values[param["name"]] = value
 
                 _LOGGER.debug(f"Received data: {result}")
                 self._data = result  # Speichern Sie die aktualisierten Daten
