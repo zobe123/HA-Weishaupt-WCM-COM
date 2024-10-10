@@ -1,0 +1,6 @@
+{
+  "name": "Weishaupt WCM-COM 1.0 Integration",
+  "content_in_root": false,
+  "domains": ["sensor"],
+  "country": "AT"
+}
