@@ -126,6 +126,10 @@ class WeishauptAPI(RestoreEntity):
                                 value = self.previous_values.get(param["name"], value)
                         elif param["type"] == "value":
                             value = self.get_value(low_byte, high_byte)
+                            # Numerische Prüfung für 'value'
+                            if not isinstance(value, (int, float)):
+                                _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
+                                value = 0  # Fallback auf 0 bei nicht-numerischen Werten
                         elif param["type"] == "binary":
                             value = self.get_binary(low_byte, high_byte)
                         elif param["type"] == "code":
