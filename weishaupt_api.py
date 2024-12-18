@@ -160,10 +160,17 @@ class WeishauptAPI(RestoreEntity):
 
     def get_temperature(self, low_byte, high_byte):
         """Calculate temperature from two bytes."""
+        raw_value = low_byte + 256 * high_byte
         if high_byte < 128:
-            return (low_byte + 256 * high_byte) / 10
+            value = raw_value / 10
         else:
-            return ((low_byte + 256 * high_byte) - 65536) / 10
+            value = (raw_value - 65536) / 10
+
+        # Plausibilitätsprüfung erweitern
+        if value < -50 or value > 150:
+            _LOGGER.warning(f"Unplausibler Temperaturwert: {value}. Fallback auf vorherigen Wert.")
+            return self.previous_values.get("fallback_temperature", 0)  # Standardwert als Fallback
+        return value
 
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""
