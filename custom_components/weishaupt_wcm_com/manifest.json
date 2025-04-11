@@ -1,12 +1,12 @@
 {
   "domain": "weishaupt_wcm_com",
-  "name": "Weishaupt WCM-COM (beta)",
-  "version": "1.1.1",
-  "documentation": "https://github.com/zobe123/HA-Weishaupt-WCM-COM",
-  "issue_tracker": "https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues",
-  "dependencies": [],
+  "name": "Weishaupt WCM-COM",
   "codeowners": ["@zobe123"],
-  "requirements": ["requests>=2.25.0"],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "dependencies": [],
+  "documentation": "https://github.com/zobe123/HA-Weishaupt-WCM-COM",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues",
+  "requirements": ["requests>=2.25.0"],
+  "version": "1.1.2"
 }
