@@ -2,16 +2,9 @@
 import logging
 from datetime import timedelta
 
-# Core Home Assistant imports
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-# Component imports
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 
-# Local imports
 from .const import (
     DOMAIN,
     NAME_PREFIX,
@@ -26,7 +19,7 @@ from .base_entity import WeishauptBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][entry.entry_id]["api"]
     scan_interval = hass.data[DOMAIN][entry.entry_id]["scan_interval"]
@@ -67,29 +60,17 @@ class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
                 _LOGGER.debug(f"Data for {self._sensor_name} not found")
                 return
 
-            # Spezielle Verarbeitung für bestimmte Sensoren
             if self._sensor_name == ERROR_CODE_KEY:
-                # Fehlercode-Verarbeitung
                 error_code = int(value)
-                if error_code in ERROR_CODE_MAP:
-                    self._attr_native_value = ERROR_CODE_MAP[error_code]
-                else:
-                    self._attr_native_value = f"Unbekannter Fehler ({error_code})"
+                self._attr_native_value = ERROR_CODE_MAP.get(error_code, f"Unbekannter Fehler ({error_code})")
             elif self._sensor_name == "Betriebsmodus":
-                # Betriebsmodus-Verarbeitung
                 self._attr_native_value = OPERATION_MODE_MAP.get(value, f"Unbekannter Modus ({value})")
             elif self._sensor_name == "Betriebsphase":
-                # Betriebsphase-Verarbeitung
                 self._attr_native_value = OPERATION_PHASE_MAP.get(value, f"Unbekannte Phase ({value})")
             else:
-                # Standardverarbeitung für andere Sensoren
                 param_type = next((p["type"] for p in PARAMETERS if p["name"] == self._sensor_name), None)
-                if param_type == "binary":
-                    self._attr_native_value = "Ein" if value else "Aus"
-                else:
-                    self._attr_native_value = value
+                self._attr_native_value = "Ein" if value and param_type == "binary" else "Aus" if param_type == "binary" else value
                     
-            # Speichern des vorherigen Werts
             self._api.previous_values[self._sensor_name] = value
             
         except Exception as e:
