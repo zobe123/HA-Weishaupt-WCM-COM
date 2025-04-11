@@ -1,24 +1,10 @@
-"""Base entity for Weishaupt WCM-COM integration."""
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-import logging
-
-_LOGGER = logging.getLogger(__name__)
-
-class WeishauptBaseEntity:
-    """Basisklasse für Weishaupt-Entitäten."""
-
+class WeishauptBaseEntity(CoordinatorEntity):
+    """Base entity for Weishaupt integration."""
+    
     def __init__(self, api):
-        """Initialisierung der Basisklasse."""
+        """Initialize the entity."""
+        super().__init__(api)
         self._api = api
-
-    @property
-    def api(self):
-        """Gibt die API-Instanz zurück."""
-        return self._api
-
-    # Diese Methode sollte entfernt oder als abstrakte Methode deklariert werden,
-    # da sie in den abgeleiteten Klassen überschrieben wird
-    async def async_update(self):
-        """Aktualisiert die Zustandsdaten der Entität."""
-        _LOGGER.debug("Updating entity")
-        await self.hass.async_add_executor_job(self._api.update)
+        self._attr_has_entity_name = True

@@ -2,8 +2,8 @@
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 
-DOMAIN = 'weishaupt_wcm_com'
-NAME_PREFIX = "Weishaupt (beta) "
+DOMAIN = "weishaupt_wcm_com"
+NAME_PREFIX = "Weishaupt "
 
 # Standard Scan Interval in Sekunden
 DEFAULT_SCAN_INTERVAL = 60

@@ -2,9 +2,16 @@
 import logging
 from datetime import timedelta
 
+# Core Home Assistant imports
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+# Component imports
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 
+# Local imports
 from .const import (
     DOMAIN,
     NAME_PREFIX,
@@ -19,7 +26,7 @@ from .base_entity import WeishauptBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][entry.entry_id]["api"]
     scan_interval = hass.data[DOMAIN][entry.entry_id]["scan_interval"]
