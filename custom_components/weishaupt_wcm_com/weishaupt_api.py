@@ -4,7 +4,6 @@ import json
 import requests
 import threading
 from requests.auth import HTTPDigestAuth
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 
@@ -13,7 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 # Lock initialisieren, um sicherzustellen, dass nur eine Anfrage gleichzeitig erfolgt
 _lock = threading.Lock()
 
-class WeishauptAPI(RestoreEntity):
+class WeishauptAPI:
     """API class for interacting with the Weishaupt WCM-COM."""
 
     def __init__(self, host, username=None, password=None):
@@ -23,14 +22,10 @@ class WeishauptAPI(RestoreEntity):
         self._password = password
         self._data = {}
         self.previous_values = {}
-        self._state = None
-
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        if (old_state := await self.async_get_last_state()) is not None:
-            self._data = old_state.attributes.get("data", {})
-            self.previous_values = old_state.attributes.get("previous_values", {})
-
+        # Entfernen des _state Attributs, da es nicht verwendet wird
+        
+    # Entfernen der async_added_to_hass Methode und extra_state_attributes
+    
     @property
     def data(self):
         """Return the latest data."""
@@ -145,8 +140,10 @@ class WeishauptAPI(RestoreEntity):
                 self._data = result  # Speichern Sie die aktualisierten Daten
                 return  # Erfolgreiches Ende der Schleife, Daten erfolgreich abgerufen
 
+            # In der _fetch_data Methode:
             except requests.exceptions.HTTPError as err:
-                if req.status_code == 401:
+                req_status = getattr(err.response, 'status_code', None)
+                if req_status == 401:
                     _LOGGER.error("Authentication failed. Please check your username and password.")
                 else:
                     _LOGGER.error(f"HTTP error occurred: {err}")

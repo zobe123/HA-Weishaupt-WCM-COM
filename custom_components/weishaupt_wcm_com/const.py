@@ -9,6 +9,7 @@ NAME_PREFIX = "Weishaupt "
 DEFAULT_SCAN_INTERVAL = 60
 
 # Scan Interval Konfiguration
+# Diese Zeile sollte entfernt werden, da sie bereits importiert wird
 CONF_SCAN_INTERVAL = "scan_interval"
 
 

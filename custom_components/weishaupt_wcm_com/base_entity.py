@@ -16,6 +16,8 @@ class WeishauptBaseEntity:
         """Gibt die API-Instanz zurück."""
         return self._api
 
+    # Diese Methode sollte entfernt oder als abstrakte Methode deklariert werden,
+    # da sie in den abgeleiteten Klassen überschrieben wird
     async def async_update(self):
         """Aktualisiert die Zustandsdaten der Entität."""
         _LOGGER.debug("Updating entity")

@@ -21,7 +21,7 @@ from .base_entity import WeishauptBaseEntity  # Importieren Sie die Basisklasse 
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][entry.entry_id]["api"]
     scan_interval = hass.data[DOMAIN][entry.entry_id]["scan_interval"]
@@ -62,24 +62,20 @@ class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
                 _LOGGER.debug(f"Data for {self._sensor_name} not found")
                 return
 
-            # Spezielle Verarbeitung für bestimmte Sensoren
+            # Vereinfachte Verarbeitung für bestimmte Sensoren
             if self._sensor_name == ERROR_CODE_KEY:
                 self._attr_native_value = self.api.process_codes(value)
             elif self._sensor_name == "Betriebsmodus":
                 self._attr_native_value = OPERATION_MODE_MAP.get(value, f"Unbekannter Modus ({value})")
             elif self._sensor_name == "Betriebsphase":
                 self._attr_native_value = OPERATION_PHASE_MAP.get(value, f"Unbekannte Phase ({value})")
-            elif param_type := next((p["type"] for p in PARAMETERS if p["name"] == self._sensor_name), None):
+            else:
+                # Vereinfachte Typverarbeitung
+                param_type = next((p["type"] for p in PARAMETERS if p["name"] == self._sensor_name), None)
                 if param_type == "binary":
                     self._attr_native_value = "Ein" if value else "Aus"
-                elif param_type == "value":
-                    self._attr_native_value = value
-                elif param_type == "temperature":
-                    self._attr_native_value = value
                 else:
                     self._attr_native_value = value
-            else:
-                self._attr_native_value = value
 
         except Exception as e:
             _LOGGER.error(f"Error updating sensor {self._sensor_name}: {e}")
