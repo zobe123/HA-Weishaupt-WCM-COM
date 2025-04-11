@@ -9,9 +9,10 @@ from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "weishaupt_wcm_com"
 PLATFORMS = ["sensor"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
     host = entry.data.get("host")
     username = entry.data.get("username")
