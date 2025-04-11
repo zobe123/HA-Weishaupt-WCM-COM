@@ -1,8 +1,7 @@
 {
-  "name": "Weishaupt WCM-COM 1.0 Integration",
+  "name": "Weishaupt WCM-COM",
   "content_in_root": false,
   "render_readme": true,
-  "domains": ["sensor"],
   "country": "AT",
   "homeassistant": "2023.8.0"
 }
