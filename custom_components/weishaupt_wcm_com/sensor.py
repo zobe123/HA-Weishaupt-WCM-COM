@@ -2,16 +2,8 @@
 import logging
 from datetime import timedelta
 
-# Importe neu organisiert
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import voluptuous as vol
-
-# Typhinweise separat importieren
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
 
 from .const import (
     DOMAIN,
@@ -27,27 +19,21 @@ from .base_entity import WeishauptBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Typhinweise ohne Doppelpunkt-Notation
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the sensor platform."""
     api = hass.data[DOMAIN][entry.entry_id]["api"]
     scan_interval = hass.data[DOMAIN][entry.entry_id]["scan_interval"]
-    
+
     sensors = []
     for param in PARAMETERS:
-        sensors.append(
-            WeishauptSensor(
-                api,
-                param["name"],
-                param.get("unit", ""),
-                scan_interval
-            )
-        )
-    
-    async_add_entities(sensors, True)
+        sensor_name = param["name"]
+        unit = UnitOfTemperature.CELSIUS if param["type"] == "temperature" else None
+        sensors.append(WeishauptSensor(api, sensor_name, unit, scan_interval))
+
+    async_add_entities(sensors)
 
 class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
-    """Representation of a Weishaupt sensor."""
+    """Representation of a Weishaupt Sensor."""
 
     def __init__(self, api, sensor_name, unit, scan_interval):
         """Initialize the sensor."""
@@ -57,24 +43,23 @@ class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_unique_id = f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
         self._scan_interval = timedelta(seconds=scan_interval)
-        
+
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._attr_native_value
-        
+    def scan_interval(self):
+        """Return the scan interval."""
+        return self._scan_interval
+
     async def async_update(self):
         """Fetch new state data for the sensor."""
         await self.hass.async_add_executor_job(self._api.update)
         data = self._api.data
-        
         try:
             value = data.get(self._sensor_name)
             if value is None:
                 self._attr_native_value = None
                 _LOGGER.debug(f"Data for {self._sensor_name} not found")
                 return
-                
+
             # Spezielle Verarbeitung für bestimmte Sensoren
             if self._sensor_name == ERROR_CODE_KEY:
                 # Fehlercode-Verarbeitung
