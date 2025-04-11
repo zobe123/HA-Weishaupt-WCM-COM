@@ -6,6 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant  # Add this import
 
 from .const import (
     DOMAIN,
@@ -21,10 +22,10 @@ from .base_entity import WeishauptBaseEntity  # Importieren Sie die Basisklasse 
 
 _LOGGER = logging.getLogger(__name__)
 
-# Am Anfang der Datei müssen wir die fehlenden Importe hinzufügen
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+# Remove the duplicate imports below
+# from homeassistant.core import HomeAssistant
+# from homeassistant.config_entries import ConfigEntry
+# from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up the sensor platform."""
