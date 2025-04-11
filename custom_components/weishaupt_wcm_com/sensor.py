@@ -41,8 +41,14 @@ class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
         self._sensor_name = sensor_name
         self._attr_name = f"{NAME_PREFIX}{self._sensor_name}"
         self._attr_native_unit_of_measurement = unit
-        self._attr_unique_id = f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
+        self._attr_unique_id = f"{DOMAIN}_{api.host}_{self._sensor_name.lower().replace(' ', '_')}"
         self._scan_interval = timedelta(seconds=scan_interval)
+        self._attr_native_value = None
+
+    @property
+    def should_poll(self):
+        """Return True as entity should be polled."""
+        return True
 
     @property
     def scan_interval(self):
