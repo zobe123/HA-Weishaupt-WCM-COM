@@ -1,6 +1,9 @@
-# HA-Weishaupt-WCM-COM Home Integration
+# HA-Weishaupt-WCM-COM Home Integration (BETA)
 
 [![GitHub release](https://img.shields.io/github/release/zobe123/HA-Weishaupt-WCM-COM.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/releases)
+[![HACS Badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+
+> **BETA VERSION**: This branch contains experimental improvements and bug fixes. For the stable version, please use the master branch.
 
 ## Overview
 

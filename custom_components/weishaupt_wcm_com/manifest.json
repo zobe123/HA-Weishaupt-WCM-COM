@@ -1,7 +1,7 @@
 {
   "domain": "weishaupt_wcm_com",
-  "name": "Weishaupt WCM-COM",
-  "version": "1.1.0",
+  "name": "Weishaupt WCM-COM (beta)",
+  "version": "1.1.1",
   "documentation": "https://github.com/zobe123/HA-Weishaupt-WCM-COM",
   "issue_tracker": "https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues",
   "dependencies": [],
