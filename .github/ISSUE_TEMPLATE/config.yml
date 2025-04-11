@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Weishaupt WCM-COM Dokumentation
+    url: https://github.com/zobe123/HA-Weishaupt-WCM-COM/blob/master/README.md
+    about: Bitte lesen Sie zuerst die Dokumentation
+  - name: Home Assistant Community Forum
+    url: https://community.home-assistant.io/
+    about: Bitte stellen Sie allgemeine Fragen im Home Assistant Forum
