@@ -1,10 +1,18 @@
-"""Platform for sensor integration."""
+"""Sensor platform for the Weishaupt WCM-COM integration.
+
+All sensors are backed by a shared DataUpdateCoordinator which performs
+exactly one request to the WCM-COM device per update interval.
+"""
+
+from __future__ import annotations
+
 import logging
-from datetime import timedelta
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from .const import (
@@ -12,75 +20,103 @@ from .const import (
     NAME_PREFIX,
     PARAMETERS,
     ERROR_CODE_KEY,
-    ERROR_CODE_MAP,
-    WARNING_CODE_MAP,
     OPERATION_MODE_MAP,
     OPERATION_PHASE_MAP,
 )
-from .base_entity import WeishauptBaseEntity  # Importieren Sie die Basisklasse von base_entity.py
+from .base_entity import WeishauptBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the sensor platform."""
-    api = hass.data[DOMAIN][entry.entry_id]["api"]
-    scan_interval = hass.data[DOMAIN][entry.entry_id]["scan_interval"]
 
-    sensors = []
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor platform for a config entry."""
+
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator = entry_data["coordinator"]
+    api = entry_data["api"]
+
+    sensors: list[WeishauptSensor] = []
     for param in PARAMETERS:
         sensor_name = param["name"]
         unit = UnitOfTemperature.CELSIUS if param["type"] == "temperature" else None
-        sensors.append(WeishauptSensor(api, sensor_name, unit, scan_interval))
+        sensors.append(WeishauptSensor(coordinator, api, sensor_name, unit))
 
     async_add_entities(sensors)
 
-class WeishauptSensor(WeishauptBaseEntity, SensorEntity):
-    """Representation of a Weishaupt Sensor."""
 
-    def __init__(self, api, sensor_name, unit, scan_interval):
+class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
+    """Representation of a Weishaupt Sensor using shared coordinator data."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        api,
+        sensor_name: str,
+        unit,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(api)
+
+        CoordinatorEntity.__init__(self, coordinator)
+        WeishauptBaseEntity.__init__(self, api)
+
         self._sensor_name = sensor_name
         self._attr_name = f"{NAME_PREFIX}{self._sensor_name}"
         self._attr_native_unit_of_measurement = unit
-        self._attr_unique_id = f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
-        self._scan_interval = timedelta(seconds=scan_interval)
+        self._attr_unique_id = (
+            f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
+        )
 
     @property
-    def scan_interval(self):
-        """Return the scan interval."""
-        return self._scan_interval
+    def native_value(self):
+        """Return the state of the sensor based on the latest data."""
 
-    async def async_update(self):
-        """Fetch new state data for the sensor."""
-        await self.hass.async_add_executor_job(self.api.update)
-        data = self.api.data
+        data = self.coordinator.data or {}
+
         try:
             value = data.get(self._sensor_name)
             if value is None:
-                self._attr_native_value = None
-                _LOGGER.debug(f"Data for {self._sensor_name} not found")
-                return
+                _LOGGER.debug("Data for %s not found", self._sensor_name)
+                return None
 
-            # Spezielle Verarbeitung für bestimmte Sensoren
+            # Special handling for certain sensors
             if self._sensor_name == ERROR_CODE_KEY:
-                self._attr_native_value = self.api.process_codes(value)
-            elif self._sensor_name == "Betriebsmodus":
-                self._attr_native_value = OPERATION_MODE_MAP.get(value, f"Unbekannter Modus ({value})")
-            elif self._sensor_name == "Betriebsphase":
-                self._attr_native_value = OPERATION_PHASE_MAP.get(value, f"Unbekannte Phase ({value})")
-            elif param_type := next((p["type"] for p in PARAMETERS if p["name"] == self._sensor_name), None):
-                if param_type == "binary":
-                    self._attr_native_value = "Ein" if value else "Aus"
-                elif param_type == "value":
-                    self._attr_native_value = value
-                elif param_type == "temperature":
-                    self._attr_native_value = value
-                else:
-                    self._attr_native_value = value
-            else:
-                self._attr_native_value = value
+                # Map error codes to human readable text
+                return self.api.process_codes(value)
 
-        except Exception as e:
-            _LOGGER.error(f"Error updating sensor {self._sensor_name}: {e}")
-            self._attr_native_value = None
+            if self._sensor_name == "Betriebsmodus":
+                return OPERATION_MODE_MAP.get(
+                    value,
+                    f"Unbekannter Modus ({value})",
+                )
+
+            if self._sensor_name == "Betriebsphase":
+                return OPERATION_PHASE_MAP.get(
+                    value,
+                    f"Unbekannte Phase ({value})",
+                )
+
+            param_type = next(
+                (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
+                None,
+            )
+
+            if param_type == "binary":
+                return "Ein" if value else "Aus"
+
+            if param_type in ("value", "temperature") or param_type is None:
+                return value
+
+            # Fallback: return the raw value
+            return value
+
+        except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Error updating sensor %s from coordinator data: %s",
+                self._sensor_name,
+                err,
+            )
+            return None
