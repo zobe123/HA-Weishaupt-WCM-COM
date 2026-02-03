@@ -57,19 +57,30 @@ class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Weishaupt WCM-COM options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Weishaupt options flow."""
-        self.config_entry = config_entry
+        # In neueren HA-Versionen ist ``config_entry`` bereits als Property
+        # im OptionsFlow-Basisobjekt vorhanden. Wir speichern daher unsere
+        # Referenz unter einem eigenen Namen.
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the Weishaupt options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        scan_interval = self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        scan_interval = self._config_entry.options.get(
+            CONF_SCAN_INTERVAL,
+            DEFAULT_SCAN_INTERVAL,
+        )
 
-        data_schema = vol.Schema({
-            vol.Required(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
-        })
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=scan_interval,
+                ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+            }
+        )
 
         return self.async_show_form(step_id="init", data_schema=data_schema)

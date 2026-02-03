@@ -51,11 +51,14 @@ OPERATION_PHASE_MAP = {
     # Fügen Sie weitere Phasen hinzu
 }
 # Abfrageparameter und ihre Eigenschaften
+# Standardmäßig wird Zieladresse 10 verwendet. Für einzelne Parameter (z.B.
+# Raumtemperatur über den Raumregler) kann eine abweichende "destination"
+# gesetzt werden.
 PARAMETERS = [
     {"id": 1, "name": "Status", "type": "code"},
     {"id": 12, "name": "Außentemperatur", "type": "temperature"},
     {"id": 14, "name": "Warmwassertemperatur", "type": "temperature"},
-    {"id": 17, "name": "Raumtemperatur", "type": "temperature"},
+    {"id": 17, "name": "Raumtemperatur", "type": "temperature", "destination": 6},
     {"id": 81, "name": "Flamme", "type": "binary"},
     {"id": 82, "name": "Heizung", "type": "binary"},
     {"id": 83, "name": "Warmwasser", "type": "binary"},
@@ -63,9 +66,9 @@ PARAMETERS = [
     {"id": 325, "name": "Kesseltemperatur", "type": "temperature"},
     {"id": 373, "name": "Betriebsphase", "type": "value"},
     {"id": 466, "name": "Pumpe", "type": "binary"},
-    {"id": 3101, "name": "Vorlauftemperatur", "type": "temperature"},
+    {"id": 3101, "name": "Vorlauftemperatur Zone", "type": "temperature"},
     {"id": 2, "name": "Wärmeanforderung", "type": "temperature"},
-    {"id": 13, "name": "Vorlauftemperatur", "type": "value"},
+    {"id": 13, "name": "Vorlauftemperatur", "type": "temperature"},
     {"id": 118, "name": "Puffer Oben", "type": "value"},
     {"id": 138, "name": "Laststellung", "type": "value"},
     {"id": 1497, "name": "Gasventil 1", "type": "binary"},

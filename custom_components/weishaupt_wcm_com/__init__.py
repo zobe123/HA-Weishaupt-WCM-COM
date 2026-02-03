@@ -1,33 +1,68 @@
-"""Weishaupt WCM-COM integration."""
+"""Weishaupt WCM-COM integration.
+
+Uses a DataUpdateCoordinator to ensure that only a single
+request to the WCM-COM device is executed per update interval.
+"""
+
+from __future__ import annotations
+
 import logging
+from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, CONF_SCAN_INTERVAL
+from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS: list[str] = ["sensor"]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
-    host = entry.data.get("host")
-    username = entry.data.get("username")
-    password = entry.data.get("password")
+
+    host: str | None = entry.data.get("host")
+    username: str | None = entry.data.get("username")
+    password: str | None = entry.data.get("password")
 
     api = WeishauptAPI(host, username, password)
 
-    # Initiale Datenabfrage mit await in einem Thread
-    await hass.async_add_executor_job(api.update)
+    async def async_update_data() -> dict:
+        """Fetch the latest data from the WCM-COM API.
 
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        This function is executed by the DataUpdateCoordinator in an executor
+        thread and must not block the event loop.
+        """
+
+        try:
+            await hass.async_add_executor_job(api.update)
+            return api.data
+        except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
+            raise UpdateFailed(f"Error communicating with WCM-COM: {err}") from err
+
+    # Read scan interval from options (or use default)
+    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    coordinator = DataUpdateCoordinator[
+        dict
+    ](
+        hass,
+        _LOGGER,
+        name="weishaupt_wcm_com",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=scan_interval),
+    )
+
+    # First refresh before entities are created
+    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
-        "scan_interval": scan_interval,
+        "coordinator": coordinator,
     }
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -36,16 +71,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     return True
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok and entry.entry_id in hass.data.get(DOMAIN, {}):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update."""
-    # Aktualisieren Sie das Abfrageintervall
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    hass.data[DOMAIN][entry.entry_id]["scan_interval"] = scan_interval
-    _LOGGER.info(f"Updated scan interval to {scan_interval} seconds for entry {entry.entry_id}")
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update.
+
+    Called when options (e.g. scan interval) are changed in the UI.
+    """
+
+    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
+    if not entry_data:
+        return
+
+    coordinator: DataUpdateCoordinator | None = entry_data.get("coordinator")
+    if coordinator is None:
+        return
+
+    coordinator.update_interval = timedelta(seconds=scan_interval)
+
+    _LOGGER.info(
+        "Updated scan interval to %s seconds for entry %s",
+        scan_interval,
+        entry.entry_id,
+    )
