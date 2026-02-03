@@ -63,8 +63,20 @@ class WeishauptAPI(RestoreEntity):
         ENDPOINT = "/parameter.json"
 
         telegram = {
-            'prot': 'coco',
-            'telegramm': [[10, 0, 1, param["id"], 0, 0, 0, 0] for param in PARAMETERS],
+            "prot": "coco",
+            "telegramm": [
+                [
+                    param.get("destination", 10),
+                    0,
+                    1,
+                    param["id"],
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+                for param in PARAMETERS
+            ],
         }
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -202,8 +214,20 @@ class WeishauptAPI(RestoreEntity):
         ENDPOINT = "/parameter.json"
         url = f"http://{self._host}{ENDPOINT}"
         telegram = {
-            'prot': 'coco',
-            'telegramm': [[10, 0, 1, param["id"], 0, 0, 0, 0] for param in PARAMETERS],
+            "prot": "coco",
+            "telegramm": [
+                [
+                    param.get("destination", 10),
+                    0,
+                    1,
+                    param["id"],
+                    0,
+                    0,
+                    0,
+                    0,
+                ]
+                for param in PARAMETERS
+            ],
         }
         headers = "-H 'Content-Type: application/json'"
         auth = f"--digest -u {self._username}:{self._password}" if self._username and self._password else ""
