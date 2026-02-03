@@ -64,12 +64,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         WeishauptBaseEntity.__init__(self, api)
 
         self._sensor_name = sensor_name
-        # Visible name (current default): prefix + German label from PARAMETERS
-        self._attr_name = f"{NAME_PREFIX}{self._sensor_name}"
-        # Use a simple translation_key derived from the parameter name so that
-        # translations/en.json and translations/de.json can override the label
-        # in the future. Keys must be lowercase and underscore separated.
+        # Use a translation_key derived from the parameter name so that
+        # translations/en.json and translations/de.json define the visible
+        # label. Keys are lowercase and underscore separated.
         self._attr_translation_key = self._sensor_name.lower().replace(" ", "_")
+        # Do NOT set _attr_name here so that Home Assistant uses the
+        # translation-based name instead of a hardcoded German label.
         self._attr_native_unit_of_measurement = unit
         self._attr_unique_id = (
             f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
