@@ -74,6 +74,9 @@ PARAMETERS = [
     {"id": 1497, "name": "Gasventil 1", "type": "binary"},
     {"id": 1498, "name": "Gasventil 2", "type": "binary"},
     {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
+    {"id": 3158, "name": "Schaltspielzahl Brenner", "type": "value"},
+    {"id": 3159, "name": "Betriebsstunden Brenner", "type": "value"},
+    {"id": 700, "name": "Zeit seit letzter Wartung", "type": "value"},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
 
