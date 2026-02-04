@@ -96,10 +96,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
-            name = "Weishaupt HK1"
+            name = "Weishaupt Heizkreis 1"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
-            name = "Weishaupt HK2"
+            name = "Weishaupt Heizkreis 2"
         else:
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
