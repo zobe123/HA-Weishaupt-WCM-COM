@@ -30,14 +30,14 @@
       "schaltspielzahl_brenner": { "name": "Burner cycle count" },
       "betriebsstunden_brenner": { "name": "Burner operating hours" },
       "zeit_seit_letzter_wartung": { "name": "Time since last maintenance" },
-      "hk1_gemischte_außentemperatur": { "name": "HK1 mixed outside temperature" },
-      "hk1_zirkulationstemperatur":    { "name": "HK1 circulation temperature" },
-      "hk1_solltemperatur":            { "name": "HK1 setpoint temperature" },
-      "hk1_solltemperatur_system":     { "name": "HK1 system setpoint temperature" },
-      "hk2_gemischte_außentemperatur": { "name": "HK2 mixed outside temperature" },
-      "hk2_zirkulationstemperatur":    { "name": "HK2 circulation temperature" },
-      "hk2_solltemperatur":            { "name": "HK2 setpoint temperature" },
-      "hk2_solltemperatur_system":     { "name": "HK2 system setpoint temperature" }
+      "hk1_gemischte_außentemperatur": { "name": "Heating circuit 1 mixed outside temperature" },
+      "hk1_zirkulationstemperatur":    { "name": "Heating circuit 1 circulation temperature" },
+      "hk1_solltemperatur":            { "name": "Heating circuit 1 setpoint temperature" },
+      "hk1_solltemperatur_system":     { "name": "Heating circuit 1 system setpoint temperature" },
+      "hk2_gemischte_außentemperatur": { "name": "Heating circuit 2 mixed outside temperature" },
+      "hk2_zirkulationstemperatur":    { "name": "Heating circuit 2 circulation temperature" },
+      "hk2_solltemperatur":            { "name": "Heating circuit 2 setpoint temperature" },
+      "hk2_solltemperatur_system":     { "name": "Heating circuit 2 system setpoint temperature" }
     }
   }
 }

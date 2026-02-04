@@ -72,8 +72,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # translations/en.json and translations/de.json define the visible
         # label. Keys are lowercase and underscore separated.
         self._attr_translation_key = slug
-        # Do NOT set _attr_name here so that Home Assistant uses the
-        # translation-based name instead of a hardcoded German label.
+        # Wir verwenden Übersetzungen + has_entity_name, damit HA
+        # den übersetzten Namen pro Entity verwendet.
+        self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = unit
 
         # Nutze ein konsistentes Unique-ID-Schema, das deinem Wunschpattern
