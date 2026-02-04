@@ -62,22 +62,46 @@ class WeishauptAPI(RestoreEntity):
         _LOGGER.debug("Fetching new data")
         ENDPOINT = "/parameter.json"
 
+        # Build CoCo telegrams based on parameter metadata and original
+        # Elster webApp format (see webApp.js / OBJTELEGRAMM).
+        #
+        # Index mapping:
+        #   0: TEL_MODULTYP   (module type / destination)
+        #   1: TEL_BUSKENNUNG (bus id / Heizkreis)
+        #   2: TEL_COMMAND    (1 = read)
+        #   3: TEL_INFONR     (parameter id)
+        #   4: TEL_INDEX      (unused here)
+        #   5: TEL_PROT       (unused here)
+        #   6: TEL_DATA low   (0 for read)
+        #   7: TEL_DATA high  (0 for read)
         telegram = {
             "prot": "coco",
-            "telegramm": [
-                [
-                    param.get("destination", 10),
-                    0,
-                    1,
-                    param["id"],
-                    0,
-                    0,
-                    0,
-                    0,
-                ]
-                for param in PARAMETERS
-            ],
+            "telegramm": [],
         }
+
+        for param in PARAMETERS:
+            # Default behaviour (existing implementation): use destination=10
+            # as module type and no specific bus assignment.
+            modultyp = param.get("destination", 10)
+            bus = 0
+
+            # Special handling for Heizkreis-Prozesswerte where the original
+            # web UI uses a concrete module type and bus id (HK1 = bus 1, ...).
+            if "modultyp" in param:
+                modultyp = param["modultyp"]
+            if "bus" in param:
+                bus = param["bus"]
+
+            telegram["telegramm"].append([
+                modultyp,      # TEL_MODULTYP
+                bus,           # TEL_BUSKENNUNG
+                1,             # TEL_COMMAND (read)
+                param["id"],  # TEL_INFONR
+                0,             # TEL_INDEX
+                0,             # TEL_PROT
+                0,             # TEL_DATA low
+                0,             # TEL_DATA high
+            ])
 
         url = f"http://{self._host}{ENDPOINT}"
 
