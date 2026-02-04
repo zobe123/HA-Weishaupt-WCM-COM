@@ -72,9 +72,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # translations/en.json and translations/de.json define the visible
         # label. Keys are lowercase and underscore separated.
         self._attr_translation_key = slug
-        # Wir verwenden Übersetzungen + has_entity_name, damit HA
-        # den übersetzten Namen pro Entity verwendet.
-        self._attr_has_entity_name = True
+        # Sichtbarer Name der Entität in HA (z.B. "Außentemperatur",
+        # "Heizkreis 1 Solltemperatur"). Wir setzen ihn explizit, damit
+        # nicht der Gerätename (z.B. "Weishaupt Kessel") angezeigt wird.
+        self._attr_name = self._sensor_name
         self._attr_native_unit_of_measurement = unit
 
         # Nutze ein konsistentes Unique-ID-Schema, das deinem Wunschpattern
