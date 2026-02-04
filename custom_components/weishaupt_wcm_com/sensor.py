@@ -64,16 +64,21 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         WeishauptBaseEntity.__init__(self, api)
 
         self._sensor_name = sensor_name
+        # Slug für Übersetzungs-Key und eindeutige IDs
+        slug = self._sensor_name.lower().replace(" ", "_")
+
         # Use a translation_key derived from the parameter name so that
         # translations/en.json and translations/de.json define the visible
         # label. Keys are lowercase and underscore separated.
-        self._attr_translation_key = self._sensor_name.lower().replace(" ", "_")
+        self._attr_translation_key = slug
         # Do NOT set _attr_name here so that Home Assistant uses the
         # translation-based name instead of a hardcoded German label.
         self._attr_native_unit_of_measurement = unit
-        self._attr_unique_id = (
-            f"{DOMAIN}_{self._sensor_name.lower().replace(' ', '_')}"
-        )
+
+        # Nutze ein konsistentes Unique-ID-Schema, das deinem Wunschpattern
+        # für entity_ids entspricht: weishaupt_<slug>
+        # Beispiel: weishaupt_hk1_gemischte_außentemperatur
+        self._attr_unique_id = f"weishaupt_{slug}"
 
     @property
     def native_value(self):
