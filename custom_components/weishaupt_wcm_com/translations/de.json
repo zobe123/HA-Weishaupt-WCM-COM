@@ -29,7 +29,11 @@
       "gedämpfte_außentemperatur": { "name": "Gedämpfte Außentemperatur" },
       "schaltspielzahl_brenner": { "name": "Schaltspielzahl Brenner" },
       "betriebsstunden_brenner": { "name": "Betriebsstunden Brenner" },
-      "zeit_seit_letzter_wartung": { "name": "Zeit seit letzter Wartung" }
+      "zeit_seit_letzter_wartung": { "name": "Zeit seit letzter Wartung" },
+      "gemischte_außentemperatur": { "name": "Gemischte Außentemperatur" },
+      "zirkulationstemperatur": { "name": "Zirkulationstemperatur" },
+      "soll_temp": { "name": "Solltemperatur" },
+      "soll_temp_system": { "name": "Solltemperatur System" }
     }
   }
 }

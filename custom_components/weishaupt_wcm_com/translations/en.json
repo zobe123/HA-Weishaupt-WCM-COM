@@ -29,7 +29,11 @@
       "gedämpfte_außentemperatur": { "name": "Smoothed outside temperature" },
       "schaltspielzahl_brenner": { "name": "Burner cycle count" },
       "betriebsstunden_brenner": { "name": "Burner operating hours" },
-      "zeit_seit_letzter_wartung": { "name": "Time since last maintenance" }
+      "zeit_seit_letzter_wartung": { "name": "Time since last maintenance" },
+      "gemischte_außentemperatur": { "name": "Mixed outside temperature" },
+      "zirkulationstemperatur": { "name": "Circulation temperature" },
+      "soll_temp": { "name": "Setpoint temperature" },
+      "soll_temp_system": { "name": "System setpoint temperature" }
     }
   }
 }
