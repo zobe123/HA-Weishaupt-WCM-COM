@@ -74,34 +74,39 @@ class WeishauptAPI(RestoreEntity):
         #   5: TEL_PROT       (unused here)
         #   6: TEL_DATA low   (0 for read)
         #   7: TEL_DATA high  (0 for read)
-        telegram = {
-            "prot": "coco",
-            "telegramm": [],
-        }
 
-        for param in PARAMETERS:
-            # Default behaviour (existing implementation): use destination=10
-            # as module type and no specific bus assignment.
-            modultyp = param.get("destination", 10)
-            bus = 0
+        def build_telegram(params):
+            telegram = {"prot": "coco", "telegramm": []}
+            for param in params:
+                # Default behaviour (existing implementation): use destination=10
+                # as module type and no specific bus assignment.
+                modultyp = param.get("destination", 10)
+                bus = 0
 
-            # Special handling for Heizkreis-Prozesswerte where the original
-            # web UI uses a concrete module type and bus id (HK1 = bus 1, ...).
-            if "modultyp" in param:
-                modultyp = param["modultyp"]
-            if "bus" in param:
-                bus = param["bus"]
+                # Special handling for Heizkreis-Prozesswerte where the original
+                # web UI uses a concrete module type and bus id (HK1 = bus 1, ...).
+                if "modultyp" in param:
+                    modultyp = param["modultyp"]
+                if "bus" in param:
+                    bus = param["bus"]
 
-            telegram["telegramm"].append([
-                modultyp,      # TEL_MODULTYP
-                bus,           # TEL_BUSKENNUNG
-                1,             # TEL_COMMAND (read)
-                param["id"],  # TEL_INFONR
-                0,             # TEL_INDEX
-                0,             # TEL_PROT
-                0,             # TEL_DATA low
-                0,             # TEL_DATA high
-            ])
+                telegram["telegramm"].append([
+                    modultyp,      # TEL_MODULTYP
+                    bus,           # TEL_BUSKENNUNG
+                    1,             # TEL_COMMAND (read)
+                    param["id"],  # TEL_INFONR
+                    0,             # TEL_INDEX
+                    0,             # TEL_PROT
+                    0,             # TEL_DATA low
+                    0,             # TEL_DATA high
+                ])
+            return telegram
+
+        # Split in zwei Requests, damit der WCM-COM alle Heizkreis-Telegramme
+        # beantwortet (begrenzte Anzahl pro Antwort). Zuerst globale Parameter
+        # ohne Bus/Modultyp, danach die Heizkreis-Prozesswerte separat.
+        global_params = [p for p in PARAMETERS if "bus" not in p and "modultyp" not in p]
+        hk_params = [p for p in PARAMETERS if "bus" in p or "modultyp" in p]
 
         url = f"http://{self._host}{ENDPOINT}"
 
