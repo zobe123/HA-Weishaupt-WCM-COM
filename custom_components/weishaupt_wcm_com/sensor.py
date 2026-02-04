@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.const import UnitOfTemperature
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
@@ -76,9 +77,37 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit
 
         # Nutze ein konsistentes Unique-ID-Schema, das deinem Wunschpattern
-        # für entity_ids entspricht: weishaupt_<slug>
+        # entspricht: weishaupt_<slug>
         # Beispiel: weishaupt_hk1_gemischte_außentemperatur
         self._attr_unique_id = f"weishaupt_{slug}"
+
+        # Erzwinge einheitliche entity_ids nach dem Schema:
+        #   sensor.weishaupt_<slug>
+        # Beispiel: sensor.weishaupt_hk1_gemischte_außentemperatur
+        self.entity_id = f"sensor.weishaupt_{slug}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for grouping sensors (Kessel, HK1, HK2)."""
+
+        slug = self._sensor_name.lower().replace(" ", "_")
+
+        if slug.startswith("hk1_"):
+            ident = "weishaupt_hk1"
+            name = "Weishaupt HK1"
+        elif slug.startswith("hk2_"):
+            ident = "weishaupt_hk2"
+            name = "Weishaupt HK2"
+        else:
+            ident = "weishaupt_kessel"
+            name = "Weishaupt Kessel"
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, ident)},
+            name=name,
+            manufacturer="Weishaupt",
+            model="WCM-COM",
+        )
 
     @property
     def native_value(self):
