@@ -74,12 +74,18 @@ PARAMETERS = [
     {"id": 1497, "name": "Gasventil 1", "type": "binary"},
     {"id": 1498, "name": "Gasventil 2", "type": "binary"},
     {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
-    # Heizkreis-Prozesswerte HK1 (Buskennung 1)
-    {"id": 2586, "name": "Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
-    {"id": 4, "name": "Zirkulationstemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
-    {"id": 15, "name": "Soll Temp", "type": "temperature", "bus": 1, "modultyp": 12},
-    {"id": 1257, "name": "Soll Temp System", "type": "temperature", "bus": 1, "modultyp": 12},
-    {"id": 3158, "name": "Schaltspielzahl Brenner", "type": "value"},
+    # Heizkreis-Prozesswerte HK1/HK2
+    # HK1 (Buskennung 1)
+    {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 4,    "name": "HK1 Zirkulationstemperatur",    "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 15,   "name": "HK1 Solltemperatur",            "type": "temperature", "bus": 1, "modultyp": 12},
+    {"id": 1257, "name": "HK1 Solltemperatur System",     "type": "temperature", "bus": 1, "modultyp": 12},
+    # HK2 (Buskennung 2)
+    {"id": 2586, "name": "HK2 Gemischte Außentemperatur", "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 4,    "name": "HK2 Zirkulationstemperatur",    "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 15,   "name": "HK2 Solltemperatur",            "type": "temperature", "bus": 2, "modultyp": 12},
+    {"id": 1257, "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 12},
+    {"id": 3158, "name": "Schaltspielzahl Brenner",       "type": "value"},
     {"id": 3159, "name": "Betriebsstunden Brenner", "type": "value"},
     {"id": 700, "name": "Zeit seit letzter Wartung", "type": "value"},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
