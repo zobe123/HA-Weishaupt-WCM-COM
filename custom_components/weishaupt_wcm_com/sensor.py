@@ -53,6 +53,8 @@ async def async_setup_entry(
             unit = PERCENTAGE
         elif p_type == "hours_1000":
             unit = UnitOfTime.HOURS
+        elif p_type == "minutes":
+            unit = UnitOfTime.MINUTES
 
         sensors.append(WeishauptSensor(coordinator, api, sensor_name, unit))
 
@@ -109,6 +111,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
+        elif slug.startswith("expert_"):
+            ident = "weishaupt_expert"
+            name = "Weishaupt Fachmann"
         else:
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
@@ -157,7 +162,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if param_type == "binary":
                 return "Ein" if value else "Aus"
 
-            if param_type in ("value", "temperature", "days", "percent") or param_type is None:
+            if param_type in ("value", "temperature", "days", "percent", "minutes") or param_type is None:
                 return value
 
             if param_type in ("value_1000", "hours_1000"):
