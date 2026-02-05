@@ -59,7 +59,7 @@ PARAMETERS = [
     {"id": 1,    "name": "Status",                    "type": "code"},
     {"id": 12,   "name": "Außentemperatur",           "type": "temperature"},
     {"id": 14,   "name": "Warmwassertemperatur",      "type": "temperature"},
-    {"id": 17,   "name": "Raumtemperatur",            "type": "temperature", "destination": 6},
+    # Raumtemperatur wird unten pro Heizkreis (HK1/HK2) erfasst
     {"id": 81,   "name": "Flamme",                    "type": "binary"},
     {"id": 82,   "name": "Heizung",                   "type": "binary"},
     {"id": 83,   "name": "Warmwasser",                "type": "binary"},
@@ -83,11 +83,17 @@ PARAMETERS = [
     {"id": 4,    "name": "HK1 Zirkulationstemperatur",    "type": "temperature", "bus": 1, "modultyp": 6},
     {"id": 15,   "name": "HK1 Solltemperatur",            "type": "temperature", "bus": 1, "modultyp": 12},
     {"id": 1257, "name": "HK1 Solltemperatur System",     "type": "temperature", "bus": 1, "modultyp": 12},
+    {"id": 17,   "name": "HK1 Raumtemperatur",            "type": "temperature", "bus": 1, "modultyp": 6, "destination": 6},
+    {"id": 13,   "name": "HK1 Vorlauftemperatur",         "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 14,   "name": "HK1 Warmwassertemperatur",      "type": "temperature", "bus": 1, "modultyp": 6},
     # HK2 (Buskennung 2)
     {"id": 2586, "name": "HK2 Gemischte Außentemperatur", "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 4,    "name": "HK2 Zirkulationstemperatur",    "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 15,   "name": "HK2 Solltemperatur",            "type": "temperature", "bus": 2, "modultyp": 12},
     {"id": 1257, "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 12},
+    {"id": 17,   "name": "HK2 Raumtemperatur",            "type": "temperature", "bus": 2, "modultyp": 6, "destination": 6},
+    {"id": 13,   "name": "HK2 Vorlauftemperatur",         "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 14,   "name": "HK2 Warmwassertemperatur",      "type": "temperature", "bus": 2, "modultyp": 6},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
 
