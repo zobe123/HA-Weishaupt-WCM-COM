@@ -10,7 +10,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 from homeassistant.core import HomeAssistant
@@ -43,7 +43,17 @@ async def async_setup_entry(
     sensors: list[WeishauptSensor] = []
     for param in PARAMETERS:
         sensor_name = param["name"]
-        unit = UnitOfTemperature.CELSIUS if param["type"] == "temperature" else None
+        p_type = param["type"]
+        unit = None
+        if p_type == "temperature":
+            unit = UnitOfTemperature.CELSIUS
+        elif p_type == "days":
+            unit = UnitOfTime.DAYS
+        elif p_type == "percent":
+            unit = PERCENTAGE
+        elif p_type == "hours_1000":
+            unit = UnitOfTime.HOURS
+
         sensors.append(WeishauptSensor(coordinator, api, sensor_name, unit))
 
     async_add_entities(sensors)
@@ -147,8 +157,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if param_type == "binary":
                 return "Ein" if value else "Aus"
 
-            if param_type in ("value", "temperature") or param_type is None:
+            if param_type in ("value", "temperature", "days", "percent") or param_type is None:
                 return value
+
+            if param_type in ("value_1000", "hours_1000"):
+                return value * 1000
 
             # Fallback: return the raw value
             return value

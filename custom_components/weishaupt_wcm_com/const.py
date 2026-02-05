@@ -70,13 +70,13 @@ PARAMETERS = [
     {"id": 2,    "name": "Wärmeanforderung",          "type": "temperature"},
     {"id": 13,   "name": "Vorlauftemperatur",         "type": "temperature"},
     {"id": 118,  "name": "Puffer Oben",               "type": "value"},
-    {"id": 138,  "name": "Laststellung",              "type": "value"},
+    {"id": 138,  "name": "Laststellung",              "type": "percent"},
     {"id": 1497, "name": "Gasventil 1",               "type": "binary"},
     {"id": 1498, "name": "Gasventil 2",               "type": "binary"},
     {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
-    {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value"},
-    {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "value"},
-    {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "value"},
+    {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value_1000"},
+    {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "hours_1000"},
+    {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "days"},
     # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
     # HK1 (Buskennung 1)
     {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
