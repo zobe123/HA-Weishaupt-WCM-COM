@@ -10,6 +10,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
@@ -95,6 +96,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # Beispiel: weishaupt_hk1_gemischte_außentemperatur
         self._attr_unique_id = f"weishaupt_{slug}"
 
+        # Expert-/Fachmann-Werte als Diagnose-Entities kennzeichnen,
+        # damit sie im Gerät in einem eigenen Abschnitt erscheinen.
+        if slug.startswith("expert_"):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
         # und zukünftigen Slug-Regeln zu vermeiden.
@@ -111,10 +117,8 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
-        elif slug.startswith("expert_"):
-            ident = "weishaupt_expert"
-            name = "Weishaupt Fachmann"
         else:
+            # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
 
