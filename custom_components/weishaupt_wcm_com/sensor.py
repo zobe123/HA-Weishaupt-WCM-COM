@@ -83,10 +83,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # Beispiel: weishaupt_hk1_gemischte_außentemperatur
         self._attr_unique_id = f"weishaupt_{slug}"
 
-        # Erzwinge einheitliche entity_ids nach dem Schema:
-        #   sensor.weishaupt_<slug>
-        # Beispiel: sensor.weishaupt_hk1_gemischte_außentemperatur
-        self.entity_id = f"sensor.weishaupt_{slug}"
+        # Entity-ID wird von Home Assistant aus name/unique_id generiert.
+        # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
+        # und zukünftigen Slug-Regeln zu vermeiden.
 
     @property
     def device_info(self) -> DeviceInfo:
