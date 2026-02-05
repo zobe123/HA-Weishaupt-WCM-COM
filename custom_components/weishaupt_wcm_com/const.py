@@ -55,25 +55,45 @@ OPERATION_PHASE_MAP = {
 # Raumtemperatur über den Raumregler) kann eine abweichende "destination"
 # gesetzt werden.
 PARAMETERS = [
-    {"id": 1, "name": "Status", "type": "code"},
-    {"id": 12, "name": "Außentemperatur", "type": "temperature"},
-    {"id": 14, "name": "Warmwassertemperatur", "type": "temperature"},
-    {"id": 17, "name": "Raumtemperatur", "type": "temperature", "destination": 6},
-    {"id": 81, "name": "Flamme", "type": "binary"},
-    {"id": 82, "name": "Heizung", "type": "binary"},
-    {"id": 83, "name": "Warmwasser", "type": "binary"},
-#    {"id": 274, "name": "Betriebsmodus", "type": "value"},
-    {"id": 325, "name": "Kesseltemperatur", "type": "temperature"},
-    {"id": 373, "name": "Betriebsphase", "type": "value"},
-    {"id": 466, "name": "Pumpe", "type": "binary"},
-    {"id": 3101, "name": "Vorlauftemperatur Zone", "type": "temperature"},
-    {"id": 2, "name": "Wärmeanforderung", "type": "temperature"},
-    {"id": 13, "name": "Vorlauftemperatur", "type": "temperature"},
-    {"id": 118, "name": "Puffer Oben", "type": "value"},
-    {"id": 138, "name": "Laststellung", "type": "value"},
-    {"id": 1497, "name": "Gasventil 1", "type": "binary"},
-    {"id": 1498, "name": "Gasventil 2", "type": "binary"},
+    # Kessel / globale Prozesswerte (WTC-G Prozesswerte)
+    {"id": 1,    "name": "Status",                    "type": "code"},
+    {"id": 12,   "name": "Außentemperatur",           "type": "temperature"},
+    {"id": 14,   "name": "Warmwassertemperatur",      "type": "temperature"},
+    # Raumtemperatur wird unten pro Heizkreis (HK1/HK2) erfasst
+    {"id": 81,   "name": "Flamme",                    "type": "binary"},
+    {"id": 82,   "name": "Heizung",                   "type": "binary"},
+    {"id": 83,   "name": "Warmwasser",                "type": "binary"},
+    {"id": 325,  "name": "Kesseltemperatur",          "type": "temperature"},
+    {"id": 373,  "name": "Betriebsphase",             "type": "value"},
+    {"id": 466,  "name": "Pumpe",                     "type": "binary"},
+    {"id": 3101, "name": "Vorlauftemperatur Zone",    "type": "temperature"},
+    {"id": 2,    "name": "Wärmeanforderung",          "type": "temperature"},
+    {"id": 13,   "name": "Vorlauftemperatur",         "type": "temperature"},
+    {"id": 118,  "name": "Puffer Oben",               "type": "value"},
+    {"id": 138,  "name": "Laststellung",              "type": "percent"},
+    {"id": 1497, "name": "Gasventil 1",               "type": "binary"},
+    {"id": 1498, "name": "Gasventil 2",               "type": "binary"},
     {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
+    {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value_1000"},
+    {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "hours_1000"},
+    {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "days"},
+    # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
+    # HK1 (Buskennung 1)
+    {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 17,   "name": "HK1 Raumtemperatur",            "type": "temperature", "bus": 1, "modultyp": 6, "destination": 6},
+    {"id": 15,   "name": "HK1 Vorlauftemperatur",         "type": "temperature", "bus": 1, "modultyp": 12},
+    {"id": 14,   "name": "HK1 Warmwassertemperatur",      "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 1257, "name": "HK1 Zirkulationstemperatur",    "type": "temperature", "bus": 1, "modultyp": 12},
+    {"id": 4,    "name": "HK1 Solltemperatur",            "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 2,    "name": "HK1 Solltemperatur System",     "type": "temperature", "bus": 1, "modultyp": 6},
+    # HK2 (Buskennung 2)
+    {"id": 2586, "name": "HK2 Gemischte Außentemperatur", "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 17,   "name": "HK2 Raumtemperatur",            "type": "temperature", "bus": 2, "modultyp": 6, "destination": 6},
+    {"id": 15,   "name": "HK2 Vorlauftemperatur",         "type": "temperature", "bus": 2, "modultyp": 12},
+    {"id": 14,   "name": "HK2 Warmwassertemperatur",      "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 1257, "name": "HK2 Zirkulationstemperatur",    "type": "temperature", "bus": 2, "modultyp": 12},
+    {"id": 4,    "name": "HK2 Solltemperatur",            "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 2,    "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 6},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
 

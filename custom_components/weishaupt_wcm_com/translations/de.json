@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weishaupt WCM-COM",
+        "description": "Verbindung zu einem Weishaupt WCM-COM Heizungsregler herstellen"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": { "name": "Status" },
+      "außentemperatur": { "name": "Außentemperatur" },
+      "warmwassertemperatur": { "name": "Warmwassertemperatur" },
+      "raumtemperatur": { "name": "Raumtemperatur" },
+      "flamme": { "name": "Flamme" },
+      "heizung": { "name": "Heizung" },
+      "warmwasser": { "name": "Warmwasser" },
+      "kesseltemperatur": { "name": "Kesseltemperatur" },
+      "betriebsphase": { "name": "Betriebsphase" },
+      "pumpe": { "name": "Pumpe" },
+      "vorlauftemperatur_zone": { "name": "Vorlauftemperatur Zone" },
+      "wärmeanforderung": { "name": "Wärmeanforderung" },
+      "vorlauftemperatur": { "name": "Vorlauftemperatur" },
+      "puffer_oben": { "name": "Puffer oben" },
+      "laststellung": { "name": "Laststellung" },
+      "gasventil_1": { "name": "Gasventil 1" },
+      "gasventil_2": { "name": "Gasventil 2" },
+      "gedämpfte_außentemperatur": { "name": "Gedämpfte Außentemperatur" },
+      "schaltspielzahl_brenner": { "name": "Schaltspielzahl Brenner" },
+      "betriebsstunden_brenner": { "name": "Betriebsstunden Brenner" },
+      "zeit_seit_letzter_wartung": { "name": "Zeit seit letzter Wartung" },
+      "hk1_gemischte_außentemperatur": { "name": "Heizkreis 1 gemischte Außentemperatur" },
+      "hk1_zirkulationstemperatur":    { "name": "Heizkreis 1 Zirkulationstemperatur" },
+      "hk1_solltemperatur":            { "name": "Heizkreis 1 Solltemperatur" },
+      "hk1_solltemperatur_system":     { "name": "Heizkreis 1 Solltemperatur System" },
+      "hk2_gemischte_außentemperatur": { "name": "Heizkreis 2 gemischte Außentemperatur" },
+      "hk2_zirkulationstemperatur":    { "name": "Heizkreis 2 Zirkulationstemperatur" },
+      "hk2_solltemperatur":            { "name": "Heizkreis 2 Solltemperatur" },
+      "hk2_solltemperatur_system":     { "name": "Heizkreis 2 Solltemperatur System" }
+    }
+  }
+}

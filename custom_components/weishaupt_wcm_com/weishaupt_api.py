@@ -62,22 +62,51 @@ class WeishauptAPI(RestoreEntity):
         _LOGGER.debug("Fetching new data")
         ENDPOINT = "/parameter.json"
 
-        telegram = {
-            "prot": "coco",
-            "telegramm": [
-                [
-                    param.get("destination", 10),
-                    0,
-                    1,
-                    param["id"],
-                    0,
-                    0,
-                    0,
-                    0,
-                ]
-                for param in PARAMETERS
-            ],
-        }
+        # Build CoCo telegrams based on parameter metadata and original
+        # Elster webApp format (see webApp.js / OBJTELEGRAMM).
+        #
+        # Index mapping:
+        #   0: TEL_MODULTYP   (module type / destination)
+        #   1: TEL_BUSKENNUNG (bus id / Heizkreis)
+        #   2: TEL_COMMAND    (1 = read)
+        #   3: TEL_INFONR     (parameter id)
+        #   4: TEL_INDEX      (unused here)
+        #   5: TEL_PROT       (unused here)
+        #   6: TEL_DATA low   (0 for read)
+        #   7: TEL_DATA high  (0 for read)
+
+        def build_telegram(params):
+            telegram = {"prot": "coco", "telegramm": []}
+            for param in params:
+                # Default behaviour (existing implementation): use destination=10
+                # as module type and no specific bus assignment.
+                modultyp = param.get("destination", 10)
+                bus = 0
+
+                # Special handling for Heizkreis-Prozesswerte where the original
+                # web UI uses a concrete module type and bus id (HK1 = bus 1, ...).
+                if "modultyp" in param:
+                    modultyp = param["modultyp"]
+                if "bus" in param:
+                    bus = param["bus"]
+
+                telegram["telegramm"].append([
+                    modultyp,      # TEL_MODULTYP
+                    bus,           # TEL_BUSKENNUNG
+                    1,             # TEL_COMMAND (read)
+                    param["id"],  # TEL_INFONR
+                    0,             # TEL_INDEX
+                    0,             # TEL_PROT
+                    0,             # TEL_DATA low
+                    0,             # TEL_DATA high
+                ])
+            return telegram
+
+        # Split in zwei Requests, damit der WCM-COM alle Heizkreis-Telegramme
+        # beantwortet (begrenzte Anzahl pro Antwort). Zuerst globale Parameter
+        # ohne Bus/Modultyp, danach die Heizkreis-Prozesswerte separat.
+        global_params = [p for p in PARAMETERS if "bus" not in p and "modultyp" not in p]
+        hk_params = [p for p in PARAMETERS if "bus" in p or "modultyp" in p]
 
         url = f"http://{self._host}{ENDPOINT}"
 
@@ -89,69 +118,83 @@ class WeishauptAPI(RestoreEntity):
 
         for attempt in range(3):  # Bis zu 3 Versuche, falls die Anfrage fehlschlägt
             try:
-                req = requests.post(
-                    url,
-                    auth=auth,
-                    data=json.dumps(telegram),
-                    headers={'Content-Type': 'application/json'},
-                    timeout=60  # Timeout auf 60 Sekunden erhöhen
-                )
-                req.raise_for_status()
-
-                # Prüfen, ob die Antwort gültig ist
-                if req.text.strip() == "":
-                    _LOGGER.warning("Received empty response from Weishaupt WCM-COM, retrying...")
-                    self._data = {}
-                    continue  # Versuchen Sie es erneut
-
-                # Prüfen, ob der Server überlastet ist (Server antwortet mit HTML)
-                if "<HTML>" in req.text.upper():
-                    _LOGGER.warning("Received 'server busy' response, retrying...")
-                    self._data = {}
-                    continue  # Versuchen Sie es erneut
-
-                # Versuchen, die Antwort als JSON zu dekodieren
-                try:
-                    response_json = req.json()
-                except json.JSONDecodeError as e:
-                    _LOGGER.error(f"JSON decode error: {e}. Response content: {req.text}")
-                    self._data = {}
-                    continue  # Versuchen Sie es erneut
-
-                # Verarbeiten der empfangenen Daten
-                response_data = response_json.get("telegramm", [])
-                _LOGGER.debug(f"Raw response data: {response_data}")
                 result = {}
 
-                for message in response_data:
-                    param_id = message[3]
-                    low_byte = message[6]
-                    high_byte = message[7]
-                    # Finden Sie den entsprechenden Parameter
-                    param = next((p for p in PARAMETERS if p["id"] == param_id), None)
-                    if param:
-                        if param["type"] == "temperature":
-                            value = self.get_temperature(low_byte, high_byte)
-                            # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
-                            if value < -50 or value > 150:
-                                _LOGGER.warning(f"Unplausibler Temperaturwert verworfen: {value}")
-                                value = self.previous_values.get(param["name"], value)
-                        elif param["type"] == "value":
-                            value = self.get_value(low_byte, high_byte)
-                            # Numerische Prüfung für 'value'
-                            if not isinstance(value, (int, float)):
-                                _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
-                                value = 0  # Fallback auf 0 bei nicht-numerischen Werten
-                        elif param["type"] == "binary":
-                            value = self.get_binary(low_byte, high_byte)
-                        elif param["type"] == "code":
-                            value = self.get_code(low_byte, high_byte)
-                        else:
-                            value = low_byte + 256 * high_byte  # Fallback
+                # Zwei Requests: erst globale Parameter, dann Heizkreis-Parameter (HK1)
+                for params in (global_params, hk_params):
+                    if not params:
+                        continue
 
-                        # Speichern Sie den neuen (oder beibehaltenen) Wert
-                        result[param["name"]] = value
-                        self.previous_values[param["name"]] = value
+                    req = requests.post(
+                        url,
+                        auth=auth,
+                        data=json.dumps(build_telegram(params)),
+                        headers={'Content-Type': 'application/json'},
+                        timeout=60  # Timeout auf 60 Sekunden erhöhen
+                    )
+                    req.raise_for_status()
+
+                    # Prüfen, ob die Antwort gültig ist
+                    if req.text.strip() == "":
+                        _LOGGER.warning("Received empty response from Weishaupt WCM-COM, retrying...")
+                        self._data = {}
+                        continue  # Versuchen Sie es erneut
+
+                    # Prüfen, ob der Server überlastet ist (Server antwortet mit HTML)
+                    if "<HTML>" in req.text.upper():
+                        _LOGGER.warning("Received 'server busy' response, retrying...")
+                        self._data = {}
+                        continue  # Versuchen Sie es erneut
+
+                    # Versuchen, die Antwort als JSON zu dekodieren
+                    try:
+                        response_json = req.json()
+                    except json.JSONDecodeError as e:
+                        _LOGGER.error(f"JSON decode error: {e}. Response content: {req.text}")
+                        self._data = {}
+                        continue  # Versuchen Sie es erneut
+
+                    # Verarbeiten der empfangenen Daten
+                    response_data = response_json.get("telegramm", [])
+                    _LOGGER.debug(f"Raw response data: {response_data}")
+
+                    for message in response_data:
+                        param_id = message[3]
+                        bus_id = message[1]
+                        low_byte = message[6]
+                        high_byte = message[7]
+
+                        # Zuordnung des Parameters:
+                        # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
+                        # 2. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
+                        candidates = [p for p in PARAMETERS if p["id"] == param_id]
+                        param = next((p for p in candidates if p.get("bus") == bus_id), None)
+                        if param is None:
+                            param = next((p for p in candidates if "bus" not in p), None)
+
+                        if param:
+                            if param["type"] == "temperature":
+                                value = self.get_temperature(low_byte, high_byte)
+                                # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
+                                if value < -50 or value > 150:
+                                    _LOGGER.warning(f"Unplausibler Temperaturwert verworfen: {value}")
+                                    value = self.previous_values.get(param["name"], value)
+                            elif param["type"] == "value":
+                                value = self.get_value(low_byte, high_byte)
+                                # Numerische Prüfung für 'value'
+                                if not isinstance(value, (int, float)):
+                                    _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
+                                    value = 0  # Fallback auf 0 bei nicht-numerischen Werten
+                            elif param["type"] == "binary":
+                                value = self.get_binary(low_byte, high_byte)
+                            elif param["type"] == "code":
+                                value = self.get_code(low_byte, high_byte)
+                            else:
+                                value = low_byte + 256 * high_byte  # Fallback
+
+                            # Speichern/Mergen der Werte
+                            result[param["name"]] = value
+                            self.previous_values[param["name"]] = value
 
                 _LOGGER.debug(f"Received data: {result}")
                 self._data = result  # Speichern Sie die aktualisierten Daten
