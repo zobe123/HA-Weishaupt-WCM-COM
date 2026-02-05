@@ -163,15 +163,15 @@ class WeishauptAPI(RestoreEntity):
                         bus_id = message[1]
                         low_byte = message[6]
                         high_byte = message[7]
-                        # Finden Sie den entsprechenden Parameter (ggf. HK-spezifisch nach Buskennung)
-                        param = next(
-                            (
-                                p
-                                for p in PARAMETERS
-                                if p["id"] == param_id and p.get("bus", bus_id) == bus_id
-                            ),
-                            None,
-                        )
+
+                        # Zuordnung des Parameters:
+                        # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
+                        # 2. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
+                        candidates = [p for p in PARAMETERS if p["id"] == param_id]
+                        param = next((p for p in candidates if p.get("bus") == bus_id), None)
+                        if param is None:
+                            param = next((p for p in candidates if "bus" not in p), None)
+
                         if param:
                             if param["type"] == "temperature":
                                 value = self.get_temperature(low_byte, high_byte)
