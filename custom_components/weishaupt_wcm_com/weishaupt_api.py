@@ -102,10 +102,19 @@ class WeishauptAPI(RestoreEntity):
                 ])
             return telegram
 
-        # Split in zwei Requests, damit der WCM-COM alle Heizkreis-Telegramme
-        # beantwortet (begrenzte Anzahl pro Antwort). Zuerst globale Parameter
-        # ohne Bus/Modultyp, danach die Heizkreis-Prozesswerte separat.
-        global_params = [p for p in PARAMETERS if "bus" not in p and "modultyp" not in p]
+        # Split in mehrere Requests, damit der WCM-COM alle Telegramme
+        # beantwortet (begrenzte Anzahl pro Antwort).
+        #  - globale Prozesswerte (Kessel)
+        #  - Heizkreis-Prozesswerte (HK1/HK2)
+        #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
+        global_params = [
+            p for p in PARAMETERS
+            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ")
+        ]
+        expert_params = [
+            p for p in PARAMETERS
+            if p["name"].startswith("Expert ")
+        ]
         hk_params = [p for p in PARAMETERS if "bus" in p or "modultyp" in p]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -120,8 +129,9 @@ class WeishauptAPI(RestoreEntity):
             try:
                 result = {}
 
-                # Zwei Requests: erst globale Parameter, dann Heizkreis-Parameter (HK1)
-                for params in (global_params, hk_params):
+                # Drei Requests: globale Parameter, Heizkreis-Parameter (HK1/HK2)
+                # und Fachmann-/Expert-Parameter separat, analog zur WebApp.
+                for params in (global_params, hk_params, expert_params):
                     if not params:
                         continue
 
