@@ -169,15 +169,23 @@ class WeishauptAPI(RestoreEntity):
                     _LOGGER.debug(f"Raw response data: {response_data}")
 
                     for message in response_data:
-                        # Erwartetes Format: [modultyp, bus, cmd, id, index, prot, data_low, data_high]
-                        if len(message) < 8:
+                        # Erwartete Formate:
+                        #  - Standard: [modultyp, bus, cmd, id, index, prot, data_low, data_high]
+                        #  - Spezialfall (z.B. 3794/Device Conf): [modultyp, bus, cmd, id, index, prot, text]
+                        if len(message) < 7:
                             _LOGGER.warning("Received malformed telegram from WCM-COM (len=%s): %s", len(message), message)
                             continue
 
                         param_id = message[3]
                         bus_id = message[1]
-                        low_byte = message[6]
-                        high_byte = message[7]
+
+                        if len(message) >= 8:
+                            low_byte = message[6]
+                            high_byte = message[7]
+                        else:
+                            # Keine getrennten Bytes vorhanden (z.B. Textwert) -> Dummy-Bytes
+                            low_byte = 0
+                            high_byte = 0
 
                         # Zuordnung des Parameters:
                         # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
@@ -188,7 +196,11 @@ class WeishauptAPI(RestoreEntity):
                             param = next((p for p in candidates if "bus" not in p), None)
 
                         if param:
-                            if param["type"] == "temperature":
+                            # Spezialfall: Device Conf (3794) liefert einen Text wie "WAP P3" im letzten Feld.
+                            if param["id"] == 3794 and len(message) >= 7 and isinstance(message[6], str):
+                                value = message[6]
+
+                            elif param["type"] == "temperature":
                                 value = self.get_temperature(low_byte, high_byte)
                                 # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
                                 if value < -50 or value > 150:
@@ -201,6 +213,7 @@ class WeishauptAPI(RestoreEntity):
                                         value = self.previous_values[param["name"]]
                                     else:
                                         value = None
+
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
                                 # Numerische Prüfung für 'value'
