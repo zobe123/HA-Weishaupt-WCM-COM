@@ -92,6 +92,20 @@ PARAMETERS = [
     {"id": 345,  "name": "Expert Max Power WW",            "type": "percent"},
     {"id": 384,  "name": "Expert Max Charge Time WW",      "type": "minutes"},
 
+    # Heizkreis-Konfiguration HK1/HK2
+    # Pumpen-/Spannungs- und Regelungsparameter (abgeleitet aus WTC WebApp Dumps)
+    {"id": 857,   "name": "HK1 Config Pump",              "type": "value", "bus": 1, "modultyp": 12},
+    {"id": 65019, "name": "HK1 Config Voltage",           "type": "value", "bus": 1, "modultyp": 12},
+    {"id": 16,    "name": "HK1 Config HK Type",           "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 2419,  "name": "HK1 Config Regelvariante",     "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 321,   "name": "HK1 Config Ext Room Sensor",   "type": "value", "bus": 1, "modultyp": 6},
+
+    {"id": 857,   "name": "HK2 Config Pump",              "type": "value", "bus": 2, "modultyp": 12},
+    {"id": 65019, "name": "HK2 Config Voltage",           "type": "value", "bus": 2, "modultyp": 12},
+    {"id": 16,    "name": "HK2 Config HK Type",           "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
+
     # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
     # HK1 (Buskennung 1)
     {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
@@ -111,6 +125,27 @@ PARAMETERS = [
     {"id": 2,    "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 6},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
+
+# HK-Konfigurations-Mappings (Enums)
+HK_CONFIG_PUMP_MAP = {
+    0: "Pumpe stufig",
+}
+
+HK_CONFIG_VOLTAGE_MAP = {
+    2: "Spannung: Auto Aus",
+}
+
+HK_CONFIG_HK_TYPE_MAP = {
+    2: "HK-Typ: int. Raumfühler",
+}
+
+HK_CONFIG_REGELVARIANTE_MAP = {
+    1: "Regelvariante: Fußbodenheizung",
+}
+
+HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
+    2: "Externer Raumfühler: Witterungs-/Raumführung",
+}
 
 ERROR_CODE_MAP = {
     0: "normal",

@@ -24,6 +24,11 @@ from .const import (
     ERROR_CODE_KEY,
     OPERATION_MODE_MAP,
     OPERATION_PHASE_MAP,
+    HK_CONFIG_PUMP_MAP,
+    HK_CONFIG_VOLTAGE_MAP,
+    HK_CONFIG_HK_TYPE_MAP,
+    HK_CONFIG_REGELVARIANTE_MAP,
+    HK_CONFIG_EXT_ROOM_SENSOR_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -163,6 +168,22 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     value,
                     f"Unbekannte Phase ({value})",
                 )
+
+            # HK-Konfigurations-Sensoren: Codes auf lesbare Texte abbilden
+            if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
+                return HK_CONFIG_PUMP_MAP.get(value, f"Pumpe (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
+                return HK_CONFIG_VOLTAGE_MAP.get(value, f"Spannung (Code {value})")
+
+            if self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
+                return HK_CONFIG_HK_TYPE_MAP.get(value, f"HK-Typ (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
+                return HK_CONFIG_REGELVARIANTE_MAP.get(value, f"Regelvariante (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
+                return HK_CONFIG_EXT_ROOM_SENSOR_MAP.get(value, f"Externer Raumfühler (Code {value})")
 
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
