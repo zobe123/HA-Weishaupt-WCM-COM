@@ -65,9 +65,15 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
         self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
-        """Manage the Weishaupt options."""
+        """Manage the Weishaupt options (reconfigure connection)."""
         if user_input is not None:
+            # Beim Speichern: neuen Host/User/Passwort + Scan-Intervall übernehmen
             return self.async_create_entry(title="", data=user_input)
+
+        # Aktuelle Werte aus Entry / Optionen als Default
+        host = self._config_entry.data.get(CONF_HOST, "")
+        username = self._config_entry.data.get(CONF_USERNAME, "")
+        password = self._config_entry.data.get(CONF_PASSWORD, "")
 
         scan_interval = self._config_entry.options.get(
             CONF_SCAN_INTERVAL,
@@ -76,6 +82,9 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                vol.Required(CONF_HOST, default=host): str,
+                vol.Optional(CONF_USERNAME, default=username): str,
+                vol.Optional(CONF_PASSWORD, default=password): str,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=scan_interval,

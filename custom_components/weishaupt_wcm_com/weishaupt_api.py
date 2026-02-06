@@ -102,10 +102,19 @@ class WeishauptAPI(RestoreEntity):
                 ])
             return telegram
 
-        # Split in zwei Requests, damit der WCM-COM alle Heizkreis-Telegramme
-        # beantwortet (begrenzte Anzahl pro Antwort). Zuerst globale Parameter
-        # ohne Bus/Modultyp, danach die Heizkreis-Prozesswerte separat.
-        global_params = [p for p in PARAMETERS if "bus" not in p and "modultyp" not in p]
+        # Split in mehrere Requests, damit der WCM-COM alle Telegramme
+        # beantwortet (begrenzte Anzahl pro Antwort).
+        #  - globale Prozesswerte (Kessel)
+        #  - Heizkreis-Prozesswerte (HK1/HK2)
+        #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
+        global_params = [
+            p for p in PARAMETERS
+            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ")
+        ]
+        expert_params = [
+            p for p in PARAMETERS
+            if p["name"].startswith("Expert ")
+        ]
         hk_params = [p for p in PARAMETERS if "bus" in p or "modultyp" in p]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -120,8 +129,9 @@ class WeishauptAPI(RestoreEntity):
             try:
                 result = {}
 
-                # Zwei Requests: erst globale Parameter, dann Heizkreis-Parameter (HK1)
-                for params in (global_params, hk_params):
+                # Drei Requests: globale Parameter, Heizkreis-Parameter (HK1/HK2)
+                # und Fachmann-/Expert-Parameter separat, analog zur WebApp.
+                for params in (global_params, hk_params, expert_params):
                     if not params:
                         continue
 
@@ -159,10 +169,23 @@ class WeishauptAPI(RestoreEntity):
                     _LOGGER.debug(f"Raw response data: {response_data}")
 
                     for message in response_data:
+                        # Erwartete Formate:
+                        #  - Standard: [modultyp, bus, cmd, id, index, prot, data_low, data_high]
+                        #  - Spezialfall (z.B. 3794/Device Conf): [modultyp, bus, cmd, id, index, prot, text]
+                        if len(message) < 7:
+                            _LOGGER.warning("Received malformed telegram from WCM-COM (len=%s): %s", len(message), message)
+                            continue
+
                         param_id = message[3]
                         bus_id = message[1]
-                        low_byte = message[6]
-                        high_byte = message[7]
+
+                        if len(message) >= 8:
+                            low_byte = message[6]
+                            high_byte = message[7]
+                        else:
+                            # Keine getrennten Bytes vorhanden (z.B. Textwert) -> Dummy-Bytes
+                            low_byte = 0
+                            high_byte = 0
 
                         # Zuordnung des Parameters:
                         # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
@@ -173,18 +196,37 @@ class WeishauptAPI(RestoreEntity):
                             param = next((p for p in candidates if "bus" not in p), None)
 
                         if param:
-                            if param["type"] == "temperature":
+                            # Spezialfall: Device Conf (3794) liefert einen Text wie "WAP P3" im letzten Feld.
+                            if param["id"] == 3794 and len(message) >= 7 and isinstance(message[6], str):
+                                value = message[6]
+
+                            elif param["type"] == "temperature":
                                 value = self.get_temperature(low_byte, high_byte)
                                 # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
                                 if value < -50 or value > 150:
-                                    _LOGGER.warning(f"Unplausibler Temperaturwert verworfen: {value}")
-                                    value = self.previous_values.get(param["name"], value)
+                                    _LOGGER.warning(
+                                        "Unplausibler Temperaturwert für %s: %s. Nutze vorherigen Wert oder setze auf 'unavailable'.",
+                                        param["name"],
+                                        value,
+                                    )
+                                    if param["name"] in self.previous_values:
+                                        value = self.previous_values[param["name"]]
+                                    else:
+                                        value = None
+
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
                                 # Numerische Prüfung für 'value'
                                 if not isinstance(value, (int, float)):
                                     _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
                                     value = 0  # Fallback auf 0 bei nicht-numerischen Werten
+
+                            elif param["type"] == "percent":
+                                value = self.get_value(low_byte, high_byte)
+                                # P37/P38 (Max Power Heating/WW) kommen als x10 -> auf % skalieren
+                                if param["id"] in (319, 345):
+                                    value = value / 10
+
                             elif param["type"] == "binary":
                                 value = self.get_binary(low_byte, high_byte)
                             elif param["type"] == "code":
@@ -221,15 +263,9 @@ class WeishauptAPI(RestoreEntity):
         """Calculate temperature from two bytes."""
         raw_value = low_byte + 256 * high_byte
         if high_byte < 128:
-            value = raw_value / 10
+            return raw_value / 10
         else:
-            value = (raw_value - 65536) / 10
-
-        # Plausibilitätsprüfung erweitern
-        if value < -50 or value > 150:
-            _LOGGER.warning(f"Unplausibler Temperaturwert: {value}. Fallback auf vorherigen Wert.")
-            return self.previous_values.get("fallback_temperature", 0)  # Standardwert als Fallback
-        return value
+            return (raw_value - 65536) / 10
 
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""

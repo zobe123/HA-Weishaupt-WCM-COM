@@ -37,7 +37,20 @@
       "hk2_gemischte_außentemperatur": { "name": "Heizkreis 2 gemischte Außentemperatur" },
       "hk2_zirkulationstemperatur":    { "name": "Heizkreis 2 Zirkulationstemperatur" },
       "hk2_solltemperatur":            { "name": "Heizkreis 2 Solltemperatur" },
-      "hk2_solltemperatur_system":     { "name": "Heizkreis 2 Solltemperatur System" }
+      "hk2_solltemperatur_system":     { "name": "Heizkreis 2 Solltemperatur System" },
+
+      "expert_device_conf":             { "name": "Gerätekonfiguration (P10)" },
+      "expert_boiler_address":          { "name": "Kesseladresse (P12)" },
+      "expert_spec_level_heating_mode": { "name": "Sonderniveau Heizbetrieb (P18)" },
+      "expert_corr_outside_sensor":     { "name": "Außenfühler-Korrektur (P20)" },
+      "expert_facility_frost_cont":     { "name": "Anlagenschutz Frost (P23)" },
+      "expert_min_vl_target":           { "name": "Min. VL-Soll (P30)" },
+      "expert_max_vl_target":           { "name": "Max. VL-Soll (P31)" },
+      "expert_switch_diff_vl":          { "name": "Schaltdifferenz VL (P32)" },
+      "expert_burner_pulse_lock":       { "name": "Brenner-Taktsperre (P34)" },
+      "expert_max_power_heating":       { "name": "Max. Leistung Heizung (P37)" },
+      "expert_max_power_ww":            { "name": "Max. Leistung WW (P38)" },
+      "expert_max_charge_time_ww":      { "name": "Max. WW-Ladezeit (P52)" }
     }
   }
 }

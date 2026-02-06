@@ -77,6 +77,21 @@ PARAMETERS = [
     {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value_1000"},
     {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "hours_1000"},
     {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "days"},
+
+    # Fachmann / Experten-Parameter (global)
+    {"id": 3794, "name": "Expert Device Conf",             "type": "value"},
+    {"id": 376,  "name": "Expert Boiler Address",          "type": "value"},
+    {"id": 3102, "name": "Expert Spec Level Heating Mode", "type": "temperature"},
+    {"id": 3103, "name": "Expert Corr Outside Sensor",     "type": "temp_delta"},
+    {"id": 2560, "name": "Expert Facility Frost Cont",     "type": "temperature"},
+    {"id": 31,   "name": "Expert Min VL Target",           "type": "temperature"},
+    {"id": 39,   "name": "Expert Max VL Target",           "type": "temperature"},
+    {"id": 34,   "name": "Expert Switch Diff VL",          "type": "temperature"},
+    {"id": 323,  "name": "Expert Burner Pulse Lock",       "type": "minutes"},
+    {"id": 319,  "name": "Expert Max Power Heating",       "type": "percent"},
+    {"id": 345,  "name": "Expert Max Power WW",            "type": "percent"},
+    {"id": 384,  "name": "Expert Max Charge Time WW",      "type": "minutes"},
+
     # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
     # HK1 (Buskennung 1)
     {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},

@@ -37,7 +37,20 @@
       "hk2_gemischte_außentemperatur": { "name": "Heating circuit 2 mixed outside temperature" },
       "hk2_zirkulationstemperatur":    { "name": "Heating circuit 2 circulation temperature" },
       "hk2_solltemperatur":            { "name": "Heating circuit 2 setpoint temperature" },
-      "hk2_solltemperatur_system":     { "name": "Heating circuit 2 system setpoint temperature" }
+      "hk2_solltemperatur_system":     { "name": "Heating circuit 2 system setpoint temperature" },
+
+      "expert_device_conf":             { "name": "Device configuration (P10)" },
+      "expert_boiler_address":          { "name": "Boiler address (P12)" },
+      "expert_spec_level_heating_mode": { "name": "Special level heating (P18)" },
+      "expert_corr_outside_sensor":     { "name": "Outside sensor correction (P20)" },
+      "expert_facility_frost_cont":     { "name": "Facility frost protection (P23)" },
+      "expert_min_vl_target":           { "name": "Min. flow setpoint (P30)" },
+      "expert_max_vl_target":           { "name": "Max. flow setpoint (P31)" },
+      "expert_switch_diff_vl":          { "name": "Flow switch differential (P32)" },
+      "expert_burner_pulse_lock":       { "name": "Burner pulse lock (P34)" },
+      "expert_max_power_heating":       { "name": "Max. power heating (P37)" },
+      "expert_max_power_ww":            { "name": "Max. power DHW (P38)" },
+      "expert_max_charge_time_ww":      { "name": "Max. DHW charge time (P52)" }
     }
   }
 }

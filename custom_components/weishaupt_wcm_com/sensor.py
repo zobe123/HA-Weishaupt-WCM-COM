@@ -10,6 +10,7 @@ import logging
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
@@ -47,12 +48,16 @@ async def async_setup_entry(
         unit = None
         if p_type == "temperature":
             unit = UnitOfTemperature.CELSIUS
+        elif p_type == "temp_delta":
+            unit = "K"
         elif p_type == "days":
             unit = UnitOfTime.DAYS
         elif p_type == "percent":
             unit = PERCENTAGE
         elif p_type == "hours_1000":
             unit = UnitOfTime.HOURS
+        elif p_type == "minutes":
+            unit = UnitOfTime.MINUTES
 
         sensors.append(WeishauptSensor(coordinator, api, sensor_name, unit))
 
@@ -93,6 +98,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # Beispiel: weishaupt_hk1_gemischte_außentemperatur
         self._attr_unique_id = f"weishaupt_{slug}"
 
+        # Expert-/Fachmann-Werte als Diagnose-Entities kennzeichnen,
+        # damit sie im Gerät in einem eigenen Abschnitt erscheinen.
+        if slug.startswith("expert_"):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
         # und zukünftigen Slug-Regeln zu vermeiden.
@@ -110,6 +120,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
         else:
+            # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
 
@@ -129,8 +140,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         try:
             value = data.get(self._sensor_name)
             if value is None:
-                _LOGGER.debug("Data for %s not found", self._sensor_name)
+                _LOGGER.debug("Data for %s not found – sensor set to unavailable", self._sensor_name)
+                self._attr_available = False
                 return None
+
+            # Wir haben einen Wert gefunden -> Sensor ist verfügbar
+            self._attr_available = True
 
             # Special handling for certain sensors
             if self._sensor_name == ERROR_CODE_KEY:
@@ -157,7 +172,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if param_type == "binary":
                 return "Ein" if value else "Aus"
 
-            if param_type in ("value", "temperature", "days", "percent") or param_type is None:
+            if param_type in ("value", "temperature", "days", "percent", "minutes") or param_type is None:
                 return value
 
             if param_type in ("value_1000", "hours_1000"):
