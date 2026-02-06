@@ -169,6 +169,11 @@ class WeishauptAPI(RestoreEntity):
                     _LOGGER.debug(f"Raw response data: {response_data}")
 
                     for message in response_data:
+                        # Erwartetes Format: [modultyp, bus, cmd, id, index, prot, data_low, data_high]
+                        if len(message) < 8:
+                            _LOGGER.warning("Received malformed telegram from WCM-COM (len=%s): %s", len(message), message)
+                            continue
+
                         param_id = message[3]
                         bus_id = message[1]
                         low_byte = message[6]
