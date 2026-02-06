@@ -4,65 +4,86 @@
 
 ## Overview
 
-This Home Assistant integration allows communication with the Weishaupt WCM-COM heating control system. With this integration, you can read important parameters of your heating system and visualize them in Home Assistant, enabling you to monitor and optimize the operation of your heating system.
+This Home Assistant integration allows communication with the Weishaupt WCM-COM heating control system.  
+It reads important parameters from your boiler and heating circuits and exposes them as sensors in Home Assistant so you can monitor and optimize your heating system.
 
 ## Features
 
 - Query important operational parameters such as:
   - Outside temperature
-  - Flow temperature
+  - Flow temperature (boiler and zones)
   - Hot water temperature
-  - Operating status of pumps and valves
-  - Burner runtime and error codes
-- Display the values via Home Assistant dashboards (e.g., historical graphs for temperatures and status indicators).
-- Integration of error and warning codes with plain text descriptions for easier diagnosis.
+  - Pump and valve status
+  - Burner runtime, cycle count and error / warning codes
+- Display values in Home Assistant dashboards (history graphs, status indicators, diagnostics).
+- Map error and warning codes to human readable text for easier diagnosis.
+- Expose **expert parameters** from the WTC expert menu (P10/P12/P18/…/P52) as diagnostic sensors (depending on your installation).
 
 ## Requirements
 
 - Home Assistant Core
-- Weishaupt WCM-COM control unit accessible on the local network
+- Weishaupt WCM-COM control unit reachable in your local network
 - Network connection to the Weishaupt WCM-COM (via LAN)
 - Python 3.8 or higher
 
 ## Installation
 
-### Manual Installation
+### 1. HACS (recommended – custom repository)
 
-1. Clone the repository into your custom components folder:
+Until this integration is part of the official HACS default store, you can install it as a custom repository:
+
+1. In Home Assistant, go to **HACS → Integrations**.
+2. Click the three dots in the top right → **Custom repositories**.
+3. Add:
+
+   - **Repository**: `https://github.com/zobe123/HA-Weishaupt-WCM-COM`  
+   - **Category**: `Integration`
+
+4. After adding the custom repository, search for **Weishaupt WCM-COM** in HACS and install it.
+5. Restart Home Assistant.
+
+### 2. Manual installation
+
+1. Clone this repository into your `custom_components` folder:
+
    ```bash
-   git clone https://github.com/zobe123/HA-Weishaupt-WCM-COM ~/.homeassistant/custom_components/weishaupt_wcm_com
-2. Restart Home Assistant.
+   git clone https://github.com/zobe123/HA-Weishaupt-WCM-COM \
+     ~/.homeassistant/custom_components/weishaupt_wcm_com
+   ```
 
-### HACS Installation (TODO)
-Adding support for HACS installation is planned for a future update.
+2. Restart Home Assistant.
 
 ## Configuration
 
-1. Open Home Assistant and go to **Settings** > **Integrations**.
-2. Click on **Add Integration** and search for **Weishaupt WCM-COM**.
-3. Enter the IP address of the Weishaupt WCM-COM, along with an optional username and password.
-4. Save the configuration.
+1. Open Home Assistant and go to **Settings → Devices & Services**.
+2. Click **Add Integration** and search for **Weishaupt WCM-COM**.
+3. Enter:
+   - the IP address of your WCM-COM,
+   - optional username and password (if configured on the device).
+4. Confirm to create the integration.
+
+You can later change IP, username, password and the scan interval via the integration’s **Reconfigure** (wrench) options flow.
 
 ## Parameters and Entities
 
-The integration queries various parameters from the WCM-COM interface. The collected parameters are displayed as sensor entities in Home Assistant. Here are some of the available entities:
+The integration queries various parameters from the WCM-COM interface and exposes them as sensors, for example:
 
-- **sensor.weishaupt_outside_temperature**: Outside temperature
-- **sensor.weishaupt_flow_temperature**: Flow temperature
-- **sensor.weishaupt_warm_water_temperature**: Hot water temperature
-- **sensor.weishaupt_burner_state**: Burner status (On/Off)
-- **sensor.weishaupt_error_code**: Heating system error code (with plain text description)
+- `Außentemperatur` – outside temperature
+- `Vorlauftemperatur` – boiler flow temperature
+- `Warmwassertemperatur` – hot water temperature
+- `Pumpe`, `Flamme`, `Heizung`, `Warmwasser` – on/off status
+- `Status` – error/warning code with mapped description
+- `HK1/HK2 …` – heating circuit 1/2 process values
+- **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
 
-## Usage Notes
+Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
+
+## Usage notes
 
 - Ensure that your Weishaupt WCM-COM device is reachable on the network.
-- The WCM-COM server can handle only a limited number of simultaneous requests. Avoid short polling intervals to prevent overloading the server.
-- If you see the "Server is busy" error, consider increasing the polling interval.
-
-## Known Issues
-
-- If there are too many simultaneous requests, the "Server is busy" message may appear. Increasing the polling interval can help in this case.
-- Some values may occasionally be unavailable if the server does not respond.
+- The WCM-COM server can handle only a limited number of simultaneous requests. Avoid very short polling intervals to prevent overloading the device.
+- If you see a "server busy" HTML response, increase the scan interval.
+- Some values (especially expert or circulation temperatures) may be temporarily `unavailable` if the controller reports invalid values (e.g. −100 °C) or does not support the parameter in your configuration.
 
 ## Debugging
 
@@ -74,14 +95,18 @@ logger:
   logs:
     custom_components.weishaupt_wcm_com: debug
 ```
+
 ## Contributing
 
-Contributions to this project are welcome. Please create a pull request or report issues in the [Issue Tracker](https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues).
+Bug reports and pull requests are welcome.  
+Please use the [issue tracker](https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues) for problems and feature requests.
 
 ## License
 
-This project is licensed under the MIT License. For more details, see the [LICENSE](LICENSE) file.
+This project is licensed under the MIT License.  
+See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
-This project is based on the work of [schmiegelt](https://github.com/schmiegelt/HA-Weishaupt-WCM-COM). Thank you for the inspiration and groundwork!
+This project was originally based on the work of [schmiegelt/HA-Weishaupt-WCM-COM](https://github.com/schmiegelt/HA-Weishaupt-WCM-COM).  
+Thanks for the inspiration and groundwork.
