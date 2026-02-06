@@ -177,8 +177,15 @@ class WeishauptAPI(RestoreEntity):
                                 value = self.get_temperature(low_byte, high_byte)
                                 # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
                                 if value < -50 or value > 150:
-                                    _LOGGER.warning(f"Unplausibler Temperaturwert verworfen: {value}")
-                                    value = self.previous_values.get(param["name"], value)
+                                    _LOGGER.warning(
+                                        "Unplausibler Temperaturwert für %s: %s. Nutze vorherigen Wert oder setze auf 'unavailable'.",
+                                        param["name"],
+                                        value,
+                                    )
+                                    if param["name"] in self.previous_values:
+                                        value = self.previous_values[param["name"]]
+                                    else:
+                                        value = None
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
                                 # Numerische Prüfung für 'value'
@@ -221,15 +228,9 @@ class WeishauptAPI(RestoreEntity):
         """Calculate temperature from two bytes."""
         raw_value = low_byte + 256 * high_byte
         if high_byte < 128:
-            value = raw_value / 10
+            return raw_value / 10
         else:
-            value = (raw_value - 65536) / 10
-
-        # Plausibilitätsprüfung erweitern
-        if value < -50 or value > 150:
-            _LOGGER.warning(f"Unplausibler Temperaturwert: {value}. Fallback auf vorherigen Wert.")
-            return self.previous_values.get("fallback_temperature", 0)  # Standardwert als Fallback
-        return value
+            return (raw_value - 65536) / 10
 
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""

@@ -138,8 +138,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         try:
             value = data.get(self._sensor_name)
             if value is None:
-                _LOGGER.debug("Data for %s not found", self._sensor_name)
+                _LOGGER.debug("Data for %s not found – sensor set to unavailable", self._sensor_name)
+                self._attr_available = False
                 return None
+
+            # Wir haben einen Wert gefunden -> Sensor ist verfügbar
+            self._attr_available = True
 
             # Special handling for certain sensors
             if self._sensor_name == ERROR_CODE_KEY:
