@@ -82,7 +82,7 @@ PARAMETERS = [
     {"id": 3794, "name": "Expert Device Conf",             "type": "value"},
     {"id": 376,  "name": "Expert Boiler Address",          "type": "value"},
     {"id": 3102, "name": "Expert Spec Level Heating Mode", "type": "temperature"},
-    {"id": 3103, "name": "Expert Corr Outside Sensor",     "type": "temperature"},
+    {"id": 3103, "name": "Expert Corr Outside Sensor",     "type": "temp_delta"},
     {"id": 2560, "name": "Expert Facility Frost Cont",     "type": "temperature"},
     {"id": 31,   "name": "Expert Min VL Target",           "type": "temperature"},
     {"id": 39,   "name": "Expert Max VL Target",           "type": "temperature"},

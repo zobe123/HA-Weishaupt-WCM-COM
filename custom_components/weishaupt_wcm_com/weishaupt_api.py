@@ -220,6 +220,13 @@ class WeishauptAPI(RestoreEntity):
                                 if not isinstance(value, (int, float)):
                                     _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
                                     value = 0  # Fallback auf 0 bei nicht-numerischen Werten
+
+                            elif param["type"] == "percent":
+                                value = self.get_value(low_byte, high_byte)
+                                # P37/P38 (Max Power Heating/WW) kommen als x10 -> auf % skalieren
+                                if param["id"] in (319, 345):
+                                    value = value / 10
+
                             elif param["type"] == "binary":
                                 value = self.get_binary(low_byte, high_byte)
                             elif param["type"] == "code":

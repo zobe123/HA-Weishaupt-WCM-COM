@@ -48,6 +48,8 @@ async def async_setup_entry(
         unit = None
         if p_type == "temperature":
             unit = UnitOfTemperature.CELSIUS
+        elif p_type == "temp_delta":
+            unit = "K"
         elif p_type == "days":
             unit = UnitOfTime.DAYS
         elif p_type == "percent":
