@@ -152,15 +152,27 @@ HK_CONFIG_VOLTAGE_MAP = {
 }
 
 HK_CONFIG_HK_TYPE_MAP = {
+    0: "HK-Typ: n/v",
+    1: "HK-Typ: ext. Raumfühler",
     2: "HK-Typ: int. Raumfühler",
+    3: "HK-Typ: n/v",
+    4: "HK-Typ: Im Kessel",
 }
 
 HK_CONFIG_REGELVARIANTE_MAP = {
+    0: "Regelvariante: Fußbodenerwärmung",
     1: "Regelvariante: Fußbodenheizung",
+    2: "Regelvariante: Radiator 60°C",
+    3: "Regelvariante: Radiator 75°C",
+    4: "Regelvariante: Konvektor",
+    5: "Regelvariante: Universal",
 }
 
 HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
+    0: "Externer Raumfühler: Konstantvorlauf",
+    1: "Externer Raumfühler: Witterungsführung",
     2: "Externer Raumfühler: Witterungs-/Raumführung",
+    3: "Externer Raumfühler: Raumführung",
 }
 
 ERROR_CODE_MAP = {
