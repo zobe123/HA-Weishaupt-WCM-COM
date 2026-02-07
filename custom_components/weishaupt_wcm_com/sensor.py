@@ -48,6 +48,11 @@ async def async_setup_entry(
 
     sensors: list[WeishauptSensor] = []
     for param in PARAMETERS:
+        # Interne Rohwerte (z. B. High/Low-Bytes für Versionsnummern)
+        # sollen keine eigenen Sensoren bekommen.
+        if param.get("internal"):
+            continue
+
         sensor_name = param["name"]
         p_type = param["type"]
         unit = None

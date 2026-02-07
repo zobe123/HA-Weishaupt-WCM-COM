@@ -239,6 +239,21 @@ class WeishauptAPI(RestoreEntity):
                             self.previous_values[param["name"]] = value
 
                 _LOGGER.debug(f"Received data: {result}")
+
+                # Versionen für FS/EM aus den Rohwerten (High/Low) berechnen
+                for hk in (1, 2):
+                    fs_high = result.get(f"HK{hk} Version FS High")
+                    fs_low = result.get(f"HK{hk} Version FS Low")
+                    em_high = result.get(f"HK{hk} Version EM High")
+                    em_low = result.get(f"HK{hk} Version EM Low")
+
+                    if fs_high is not None and fs_low is not None and fs_high != 0:
+                        result[f"HK{hk} Config Version FS"] = f"{fs_high}.{fs_low}"
+
+                    if em_high is not None and em_low is not None and em_high != 0:
+                        result[f"HK{hk} Config Version EM"] = f"{em_high}.{em_low}"
+
+                _LOGGER.debug(f"Received data (with versions): {result}")
                 self._data = result  # Speichern Sie die aktualisierten Daten
                 return  # Erfolgreiches Ende der Schleife, Daten erfolgreich abgerufen
 

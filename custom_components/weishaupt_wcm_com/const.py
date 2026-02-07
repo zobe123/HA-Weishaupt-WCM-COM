@@ -106,7 +106,17 @@ PARAMETERS = [
     {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
     {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
-    # Virtuelle Parameter für Versionsanzeigen (werden nicht direkt abgefragt)
+    # Rohwerte für Versionsanzeigen (werden intern zu Major.Minor kombiniert)
+    {"id": 409, "name": "HK1 Version FS High", "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "HK1 Version FS Low",  "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
+    {"id": 409, "name": "HK1 Version EM High", "type": "value", "bus": 1, "modultyp": 12, "internal": True},
+    {"id": 410, "name": "HK1 Version EM Low",  "type": "value", "bus": 1, "modultyp": 12, "internal": True},
+    {"id": 409, "name": "HK2 Version FS High", "type": "value", "bus": 2, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "HK2 Version FS Low",  "type": "value", "bus": 2, "modultyp": 6,  "internal": True},
+    {"id": 409, "name": "HK2 Version EM High", "type": "value", "bus": 2, "modultyp": 12, "internal": True},
+    {"id": 410, "name": "HK2 Version EM Low",  "type": "value", "bus": 2, "modultyp": 12, "internal": True},
+
+    # Virtuelle Parameter für Versionsanzeigen (werden aus den Rohwerten berechnet)
     {"id": 0, "name": "HK1 Config Version FS", "type": "value", "virtual": True},
     {"id": 0, "name": "HK2 Config Version FS", "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Config Version EM", "type": "value", "virtual": True},
