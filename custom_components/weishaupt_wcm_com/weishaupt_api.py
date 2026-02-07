@@ -333,6 +333,14 @@ class WeishauptAPI(RestoreEntity):
                 headers={"Content-Type": "application/json"},
                 timeout=30,
             )
+
+            # "Server busy"-Antworten (HTML) nicht als harten Fehler werten,
+            # sondern nur warnen – das Gerät ist träge und lässt sich ggf.
+            # mit dem nächsten regulären Poll wieder einfangen.
+            if "<HTML>" in req.text.upper():
+                _LOGGER.warning("WCM-COM returned 'server busy' on write for parameter %s", parameter_id)
+                return
+
             req.raise_for_status()
             _LOGGER.debug("Write result: %s", req.text)
         except Exception as err:  # pragma: no cover
