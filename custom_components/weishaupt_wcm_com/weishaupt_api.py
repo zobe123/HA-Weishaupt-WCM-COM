@@ -189,9 +189,17 @@ class WeishauptAPI(RestoreEntity):
 
                         # Zuordnung des Parameters:
                         # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
-                        # 2. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
+                        #    und passenden "modultyp" (FS/MS), damit 409/410 sauber
+                        #    zwischen FS- und EM-Versionen getrennt werden.
+                        # 2. Fallback: Einträge mit passendem "bus" (ohne modultyp).
+                        # 3. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
                         candidates = [p for p in PARAMETERS if p["id"] == param_id]
-                        param = next((p for p in candidates if p.get("bus") == bus_id), None)
+                        param = next(
+                            (p for p in candidates if p.get("bus") == bus_id and p.get("modultyp") == message[0]),
+                            None,
+                        )
+                        if param is None:
+                            param = next((p for p in candidates if p.get("bus") == bus_id and "modultyp" not in p), None)
                         if param is None:
                             param = next((p for p in candidates if "bus" not in p), None)
 
