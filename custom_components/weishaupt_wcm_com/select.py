@@ -16,7 +16,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -87,7 +87,7 @@ async def async_setup_entry(
     async_add_entities(selects)
 
 
-class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
+class WeishauptHK1ConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEntity):
     """Select entity for HK1 configuration parameters."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -105,7 +105,7 @@ class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
 
-        self.coordinator = coordinator
+        CoordinatorEntity.__init__(self, coordinator)
         WeishauptBaseEntity.__init__(self, api)
 
         self._sensor_name = sensor_name
