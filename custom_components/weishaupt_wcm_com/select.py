@@ -109,15 +109,25 @@ class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
         WeishauptBaseEntity.__init__(self, api)
 
         self._sensor_name = sensor_name
-        self._attr_name = sensor_name
         self._attr_unique_id = f"weishaupt_{slug}_select"
         self._value_map = value_map
         self._parameter_id = parameter_id
         self._bus = bus
         self._modultyp = modultyp
 
-        # Options are the human readable strings from the map
-        self._attr_options = list(value_map.values())
+        # Schönerer Anzeigename ohne "Config"-Präfix
+        if sensor_name == "HK1 Config HK Type":
+            self._attr_name = "HK1 HK-Typ"
+        elif sensor_name == "HK1 Config Regelvariante":
+            self._attr_name = "HK1 Regelvariante"
+        elif sensor_name == "HK1 Config Ext Room Sensor":
+            self._attr_name = "HK1 Externer Raumfühler"
+        else:
+            self._attr_name = sensor_name
+
+        # Optionen: nur der rechte Teil nach dem Doppelpunkt, z.B.
+        # "Externer Raumfühler: Witterungsführung" -> "Witterungsführung"
+        self._attr_options = [self._extract_option_label(v) for v in value_map.values()]
 
     @property
     def device_info(self):
@@ -130,6 +140,15 @@ class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
             "model": "WCM-COM",
         }
 
+    @staticmethod
+    def _extract_option_label(text: str) -> str:
+        """Strip the left label part (before ":") from a mapped string."""
+        if not isinstance(text, str):
+            return str(text)
+        if ":" in text:
+            return text.split(":", 1)[1].strip()
+        return text
+
     @property
     def current_option(self) -> str | None:
         """Return the currently selected option based on coordinator data."""
@@ -140,14 +159,16 @@ class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
             return None
 
         # Für HK-Konfig-Sensoren liefert der Sensor bereits einen
-        # gemappten String wie "HK-Typ: int. Raumfühler" – daher können
-        # wir direkt vergleichen.
+        # gemappten String wie "HK-Typ: int. Raumfühler" – wir mappen
+        # das auf den rechten Teil nach dem Doppelpunkt.
         if isinstance(value, str):
-            return value if value in self._attr_options else None
+            label = self._extract_option_label(value)
+            return label if label in self._attr_options else None
 
         # Fallback: roher Code → Mapping benutzen
         if isinstance(value, int):
-            return self._value_map.get(value)
+            mapped = self._value_map.get(value)
+            return self._extract_option_label(mapped) if mapped else None
 
         return None
 
@@ -157,7 +178,7 @@ class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
         # Finde den passenden Roh-Code für das gewählte Label
         code = None
         for k, v in self._value_map.items():
-            if v == option:
+            if self._extract_option_label(v) == option:
                 code = k
                 break
 
