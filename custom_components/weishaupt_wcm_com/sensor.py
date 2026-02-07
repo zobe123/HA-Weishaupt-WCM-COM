@@ -113,6 +113,15 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         if slug.startswith("expert_"):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+        # Firmware-/Versionsanzeigen als Diagnose-Entities behandeln
+        if self._sensor_name in (
+            "HK1 Config Version FS",
+            "HK2 Config Version FS",
+            "HK1 Config Version EM",
+            "HK2 Config Version EM",
+        ):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
         # und zukünftigen Slug-Regeln zu vermeiden.
