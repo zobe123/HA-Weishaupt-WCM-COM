@@ -1,0 +1,187 @@
+"""Select platform for Weishaupt WCM-COM HK1 configuration.
+
+This exposes read/write dropdowns for:
+- HK1 Config HK Type (id 16)
+- HK1 Config Regelvariante (id 2419)
+- HK1 Config Ext Room Sensor (id 321)
+
+Initially only HK1 is supported; HK2 can be added later using the same pattern.
+"""
+
+from __future__ import annotations
+
+import logging
+
+from homeassistant.components.select import SelectEntity
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import (
+    DOMAIN,
+    PARAMETERS,
+    HK_CONFIG_HK_TYPE_MAP,
+    HK_CONFIG_REGELVARIANTE_MAP,
+    HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+)
+from .base_entity import WeishauptBaseEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up select entities for HK1 configuration."""
+
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DataUpdateCoordinator = entry_data["coordinator"]
+    api = entry_data["api"]
+
+    selects: list[WeishauptHK1ConfigSelect] = []
+
+    # HK1 uses bus=1 in PARAMETERS; we use the sensor names as keys
+    selects.append(
+        WeishauptHK1ConfigSelect(
+            coordinator,
+            api,
+            "HK1 Config HK Type",
+            "hk1_config_hk_type",
+            HK_CONFIG_HK_TYPE_MAP,
+            parameter_id=16,
+            bus=1,
+            modultyp=6,
+        )
+    )
+
+    selects.append(
+        WeishauptHK1ConfigSelect(
+            coordinator,
+            api,
+            "HK1 Config Regelvariante",
+            "hk1_config_regelvariante",
+            HK_CONFIG_REGELVARIANTE_MAP,
+            parameter_id=2419,
+            bus=1,
+            modultyp=6,
+        )
+    )
+
+    selects.append(
+        WeishauptHK1ConfigSelect(
+            coordinator,
+            api,
+            "HK1 Config Ext Room Sensor",
+            "hk1_config_ext_room_sensor",
+            HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+            parameter_id=321,
+            bus=1,
+            modultyp=6,
+        )
+    )
+
+    async_add_entities(selects)
+
+
+class WeishauptHK1ConfigSelect(WeishauptBaseEntity, SelectEntity):
+    """Select entity for HK1 configuration parameters."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        api,
+        sensor_name: str,
+        slug: str,
+        value_map: dict[int, str],
+        parameter_id: int,
+        bus: int,
+        modultyp: int,
+    ) -> None:
+        """Initialize the select entity."""
+
+        self.coordinator = coordinator
+        WeishauptBaseEntity.__init__(self, api)
+
+        self._sensor_name = sensor_name
+        self._attr_name = sensor_name
+        self._attr_unique_id = f"weishaupt_{slug}_select"
+        self._value_map = value_map
+        self._parameter_id = parameter_id
+        self._bus = bus
+        self._modultyp = modultyp
+
+        # Options are the human readable strings from the map
+        self._attr_options = list(value_map.values())
+
+    @property
+    def device_info(self):
+        """Attach to the HK1 device group."""
+        # Reuse the same identifiers as HK1 sensors
+        return {
+            "identifiers": {(DOMAIN, "weishaupt_hk1")},
+            "name": "Weishaupt Heizkreis 1",
+            "manufacturer": "Weishaupt",
+            "model": "WCM-COM",
+        }
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the currently selected option based on coordinator data."""
+
+        data = self.coordinator.data or {}
+        value = data.get(self._sensor_name)
+        if value is None:
+            return None
+
+        # Für HK-Konfig-Sensoren liefert der Sensor bereits einen
+        # gemappten String wie "HK-Typ: int. Raumfühler" – daher können
+        # wir direkt vergleichen.
+        if isinstance(value, str):
+            return value if value in self._attr_options else None
+
+        # Fallback: roher Code → Mapping benutzen
+        if isinstance(value, int):
+            return self._value_map.get(value)
+
+        return None
+
+    async def async_select_option(self, option: str) -> None:
+        """Handle user selection by sending a write telegram to WCM-COM."""
+
+        # Finde den passenden Roh-Code für das gewählte Label
+        code = None
+        for k, v in self._value_map.items():
+            if v == option:
+                code = k
+                break
+
+        if code is None:
+            _LOGGER.warning("Unknown option '%s' for %s", option, self._sensor_name)
+            return
+
+        _LOGGER.debug(
+            "Setting %s (id=%s, bus=%s, modultyp=%s) to code %s",
+            self._sensor_name,
+            self._parameter_id,
+            self._bus,
+            self._modultyp,
+            code,
+        )
+
+        # Schreiben über die API (synchron, im Executor)
+        await self.hass.async_add_executor_job(
+            self.api.write_parameter,
+            self._parameter_id,
+            self._bus,
+            self._modultyp,
+            code,
+        )
+
+        # Nach dem Schreiben direkt ein Update anstoßen
+        await self.coordinator.async_request_refresh()
