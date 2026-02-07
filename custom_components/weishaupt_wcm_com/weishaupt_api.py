@@ -290,6 +290,54 @@ class WeishauptAPI(RestoreEntity):
         else:
             return (raw_value - 65536) / 10
 
+    def write_parameter(self, parameter_id: int, bus: int, modultyp: int, code: int) -> None:
+        """Write a simple enum parameter (HK1 config) via CoCo telegram.
+
+        This mirrors the structure used in the read path, but with
+        TEL_COMMAND set to write (2) and the code in the low byte.
+        The high byte is 0 because all our enums are small.
+        """
+
+        ENDPOINT = "/parameter.json"
+        url = f"http://{self._host}{ENDPOINT}"
+
+        telegram = {
+            "prot": "coco",
+            "telegramm": [
+                [
+                    modultyp,  # TEL_MODULTYP (destination)
+                    bus,       # TEL_BUSKENNUNG (HK1 = 1)
+                    2,         # TEL_COMMAND (2 = write)
+                    parameter_id,  # TEL_INFONR
+                    0,         # TEL_INDEX
+                    0,         # TEL_PROT
+                    code & 0xFF,      # TEL_DATA low
+                    (code >> 8) & 0xFF,  # TEL_DATA high
+                ]
+            ],
+        }
+
+        _LOGGER.debug("Writing parameter %s (bus=%s, modultyp=%s) with code %s", parameter_id, bus, modultyp, code)
+
+        # Optional Auth wie im Read-Pfad
+        if self._username and self._password:
+            auth = HTTPDigestAuth(self._username, self._password)
+        else:
+            auth = None
+
+        try:
+            req = requests.post(
+                url,
+                auth=auth,
+                data=json.dumps(telegram),
+                headers={"Content-Type": "application/json"},
+                timeout=30,
+            )
+            req.raise_for_status()
+            _LOGGER.debug("Write result: %s", req.text)
+        except Exception as err:  # pragma: no cover
+            _LOGGER.error("Error writing parameter %s: %s", parameter_id, err)
+
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""
         return low_byte + 256 * high_byte
