@@ -109,7 +109,7 @@ class WeishauptAPI(RestoreEntity):
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
             p for p in PARAMETERS
-            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ")
+            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ") and not p.get("virtual")
         ]
         expert_params = [
             p for p in PARAMETERS

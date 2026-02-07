@@ -106,6 +106,12 @@ PARAMETERS = [
     {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
     {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
+    # Virtuelle Parameter für Versionsanzeigen (werden nicht direkt abgefragt)
+    {"id": 0, "name": "HK1 Config Version FS", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Config Version FS", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Config Version EM", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Config Version EM", "type": "value", "virtual": True},
+
     # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
     # HK1 (Buskennung 1)
     {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
