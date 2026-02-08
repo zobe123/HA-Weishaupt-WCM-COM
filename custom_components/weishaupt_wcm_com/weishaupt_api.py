@@ -249,6 +249,14 @@ class WeishauptAPI(RestoreEntity):
                 _LOGGER.debug(f"Received data: {result}")
 
                 # Versionen für FS/EM aus den Rohwerten (High/Low) berechnen
+
+                # Kessel (Bus 0) – nur FS-Version (EM ist bei Manuel N/V)
+                kessel_fs_high = result.get("Kessel Version FS High")
+                kessel_fs_low = result.get("Kessel Version FS Low")
+                if kessel_fs_high is not None and kessel_fs_low is not None and kessel_fs_high != 0:
+                    result["Kessel Config Version FS"] = f"{kessel_fs_high}.{kessel_fs_low}"
+
+                # Heizkreise HK1/HK2 – FS/EM-Version pro Kreis
                 for hk in (1, 2):
                     fs_high = result.get(f"HK{hk} Version FS High")
                     fs_low = result.get(f"HK{hk} Version FS Low")

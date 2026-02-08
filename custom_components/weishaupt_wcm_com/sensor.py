@@ -150,8 +150,8 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
-            # Bevorzuge HK1 EM-Version, falls vorhanden, sonst HK2
-            sw_version = data.get("HK1 Config Version EM") or data.get("HK2 Config Version EM")
+            # Kessel-Firmware FS aus Bus 0 (Kessel Config Version FS)
+            sw_version = data.get("Kessel Config Version FS")
 
         info_kwargs = {
             "identifiers": {(DOMAIN, ident)},

@@ -107,6 +107,11 @@ PARAMETERS = [
     {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
     # Rohwerte für Versionsanzeigen (werden intern zu Major.Minor kombiniert)
+    # Kessel (Bus 0) – Rohwerte für FS-Version
+    {"id": 409, "name": "Kessel Version FS High", "type": "value", "bus": 0, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "Kessel Version FS Low",  "type": "value", "bus": 0, "modultyp": 6,  "internal": True},
+
+    # HK1/HK2 – Rohwerte für FS/EM-Versionen
     {"id": 409, "name": "HK1 Version FS High", "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
     {"id": 410, "name": "HK1 Version FS Low",  "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
     {"id": 409, "name": "HK1 Version EM High", "type": "value", "bus": 1, "modultyp": 12, "internal": True},
@@ -117,6 +122,7 @@ PARAMETERS = [
     {"id": 410, "name": "HK2 Version EM Low",  "type": "value", "bus": 2, "modultyp": 12, "internal": True},
 
     # Virtuelle Parameter für Versionsanzeigen (werden aus den Rohwerten berechnet)
+    {"id": 0, "name": "Kessel Config Version FS", "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Config Version FS", "type": "value", "virtual": True},
     {"id": 0, "name": "HK2 Config Version FS", "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Config Version EM", "type": "value", "virtual": True},
