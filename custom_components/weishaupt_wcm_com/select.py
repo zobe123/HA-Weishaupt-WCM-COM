@@ -45,8 +45,9 @@ async def async_setup_entry(
     selects: list[WeishauptHK1ConfigSelect] = []
 
     # HK1 uses bus=1 in PARAMETERS; we use the sensor names as keys
+    # HK1
     selects.append(
-        WeishauptHK1ConfigSelect(
+        WeishauptHKConfigSelect(
             coordinator,
             api,
             "HK1 Config HK Type",
@@ -59,7 +60,7 @@ async def async_setup_entry(
     )
 
     selects.append(
-        WeishauptHK1ConfigSelect(
+        WeishauptHKConfigSelect(
             coordinator,
             api,
             "HK1 Config Regelvariante",
@@ -72,7 +73,7 @@ async def async_setup_entry(
     )
 
     selects.append(
-        WeishauptHK1ConfigSelect(
+        WeishauptHKConfigSelect(
             coordinator,
             api,
             "HK1 Config Ext Room Sensor",
@@ -84,11 +85,51 @@ async def async_setup_entry(
         )
     )
 
+    # HK2
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 Config HK Type",
+            "hk2_config_hk_type",
+            HK_CONFIG_HK_TYPE_MAP,
+            parameter_id=16,
+            bus=2,
+            modultyp=6,
+        )
+    )
+
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 Config Regelvariante",
+            "hk2_config_regelvariante",
+            HK_CONFIG_REGELVARIANTE_MAP,
+            parameter_id=2419,
+            bus=2,
+            modultyp=6,
+        )
+    )
+
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 Config Ext Room Sensor",
+            "hk2_config_ext_room_sensor",
+            HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+            parameter_id=321,
+            bus=2,
+            modultyp=6,
+        )
+    )
+
     async_add_entities(selects)
 
 
-class WeishauptHK1ConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEntity):
-    """Select entity for HK1 configuration parameters."""
+class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEntity):
+    """Select entity for HK1/HK2 configuration parameters."""
 
     _attr_entity_category = EntityCategory.CONFIG
 
@@ -122,6 +163,12 @@ class WeishauptHK1ConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnt
             self._attr_name = "HK1 Regelvariante"
         elif sensor_name == "HK1 Config Ext Room Sensor":
             self._attr_name = "HK1 Externer Raumfühler"
+        elif sensor_name == "HK2 Config HK Type":
+            self._attr_name = "HK2 HK-Typ"
+        elif sensor_name == "HK2 Config Regelvariante":
+            self._attr_name = "HK2 Regelvariante"
+        elif sensor_name == "HK2 Config Ext Room Sensor":
+            self._attr_name = "HK2 Externer Raumfühler"
         else:
             self._attr_name = sensor_name
 
@@ -131,11 +178,23 @@ class WeishauptHK1ConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnt
 
     @property
     def device_info(self):
-        """Attach to the HK1 device group."""
-        # Reuse the same identifiers as HK1 sensors
+        """Attach to the HK1/HK2 device group."""
+
+        slug = self._sensor_name.lower().replace(" ", "_")
+
+        if slug.startswith("hk1_"):
+            ident = "weishaupt_hk1"
+            name = "Weishaupt Heizkreis 1"
+        elif slug.startswith("hk2_"):
+            ident = "weishaupt_hk2"
+            name = "Weishaupt Heizkreis 2"
+        else:
+            ident = "weishaupt_kessel"
+            name = "Weishaupt Kessel"
+
         return {
-            "identifiers": {(DOMAIN, "weishaupt_hk1")},
-            "name": "Weishaupt Heizkreis 1",
+            "identifiers": {(DOMAIN, ident)},
+            "name": name,
             "manufacturer": "Weishaupt",
             "model": "WCM-COM",
         }
