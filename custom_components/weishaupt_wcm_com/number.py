@@ -33,6 +33,19 @@ async def async_setup_entry(
 
     numbers: list[WeishauptExpertNumber] = []
 
+    # Expert Spec Level Heating Mode (P18 / ID 3102) – Sonderniveau Heizbetrieb
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Spec Level Heating Mode",
+            parameter_id=3102,
+            min_value=8,
+            max_value=85,
+            step=1,
+        )
+    )
+
     # Expert Corr Outside Sensor (P20 / ID 3103) – Außentemperatur-Korrektur
     numbers.append(
         WeishauptExpertNumber(
@@ -53,7 +66,9 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
     """Number entity for expert parameters (slider-based configuration)."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_unit_of_measurement = UnitOfTemperature.KELVIN
+    # Einheit ist je nach Parameter entweder °C (Spezialniveau) oder K (Korrektur),
+    # wir verwenden hier °C als generische Temperatur-Einheit.
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
