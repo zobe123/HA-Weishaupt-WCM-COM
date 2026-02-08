@@ -303,12 +303,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             ):
                 return value / 10 if value is not None else None
 
-            # Fachmann-Prozentwerte mit DIV=10 skalieren
+            # Fachmann-Prozentwerte übernehmen wir 1:1 (0-100 %)
             if self._sensor_name in (
                 "Expert Max Power Heating",
                 "Expert Max Power WW",
             ):
-                return value / 10 if value is not None else None
+                return value
 
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),

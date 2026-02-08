@@ -132,7 +132,7 @@ async def async_setup_entry(
             min_value=20.0,
             max_value=100.0,
             step=1.0,
-            scale=10.0,
+            scale=1.0,
             unit=PERCENTAGE,
         )
     )
@@ -146,7 +146,7 @@ async def async_setup_entry(
             min_value=20.0,
             max_value=100.0,
             step=1.0,
-            scale=10.0,
+            scale=1.0,
             unit=PERCENTAGE,
         )
     )
