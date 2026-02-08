@@ -141,17 +141,35 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
             name = "Weishaupt Heizkreis 1"
-            sw_version = data.get("HK1 Config Version FS")
+            fs = data.get("HK1 Config Version FS")
+            em = data.get("HK1 Config Version EM")
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"
+            elif em:
+                sw_version = f"EM {em}"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
-            sw_version = data.get("HK2 Config Version FS")
+            fs = data.get("HK2 Config Version FS")
+            em = data.get("HK2 Config Version EM")
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"
+            elif em:
+                sw_version = f"EM {em}"
         else:
             # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
-            # Kessel-Firmware FS aus Bus 0 (Kessel Config Version FS)
-            sw_version = data.get("Kessel Config Version FS")
+            fs = data.get("Kessel Config Version FS")
+            em = None  # Bus 0 EM ist bei dir N/V
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"  # z.B. "FS 327.30"
 
         info_kwargs = {
             "identifiers": {(DOMAIN, ident)},
