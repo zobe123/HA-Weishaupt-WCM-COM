@@ -115,12 +115,26 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
         # Firmware-/Versionsanzeigen als Diagnose-Entities behandeln
         if self._sensor_name in (
+            "Kessel Config Version FS",
             "HK1 Config Version FS",
             "HK2 Config Version FS",
             "HK1 Config Version EM",
             "HK2 Config Version EM",
         ):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_icon = "mdi:chip"
+
+        # HK-Konfigurations-Sensoren: eigene Icons
+        if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
+            self._attr_icon = "mdi:pump"
+        elif self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
+            self._attr_icon = "mdi:flash-triangle-outline"
+        elif self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
+            self._attr_icon = "mdi:radiator"
+        elif self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
+            self._attr_icon = "mdi:chart-bell-curve"
+        elif self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
+            self._attr_icon = "mdi:home-thermometer-outline"
 
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten

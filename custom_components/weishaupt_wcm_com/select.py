@@ -156,19 +156,25 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._bus = bus
         self._modultyp = modultyp
 
-        # Schönerer Anzeigename ohne "Config"-Präfix
+        # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name == "HK1 Config HK Type":
             self._attr_name = "HK1 HK-Typ"
+            self._attr_icon = "mdi:radiator"
         elif sensor_name == "HK1 Config Regelvariante":
             self._attr_name = "HK1 Regelvariante"
+            self._attr_icon = "mdi:chart-bell-curve"
         elif sensor_name == "HK1 Config Ext Room Sensor":
             self._attr_name = "HK1 Externer Raumfühler"
+            self._attr_icon = "mdi:home-thermometer-outline"
         elif sensor_name == "HK2 Config HK Type":
             self._attr_name = "HK2 HK-Typ"
+            self._attr_icon = "mdi:radiator"
         elif sensor_name == "HK2 Config Regelvariante":
             self._attr_name = "HK2 Regelvariante"
+            self._attr_icon = "mdi:chart-bell-curve"
         elif sensor_name == "HK2 Config Ext Room Sensor":
             self._attr_name = "HK2 Externer Raumfühler"
+            self._attr_icon = "mdi:home-thermometer-outline"
         else:
             self._attr_name = sensor_name
 
