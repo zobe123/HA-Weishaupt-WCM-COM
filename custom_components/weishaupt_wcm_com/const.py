@@ -69,7 +69,7 @@ PARAMETERS = [
     {"id": 3101, "name": "Vorlauftemperatur Zone",    "type": "temperature"},
     {"id": 2,    "name": "Wärmeanforderung",          "type": "temperature"},
     {"id": 13,   "name": "Vorlauftemperatur",         "type": "temperature"},
-    {"id": 118,  "name": "Puffer Oben",               "type": "value"},
+    {"id": 118,  "name": "Puffer Oben",               "type": "temperature"},
     {"id": 138,  "name": "Laststellung",              "type": "percent"},
     {"id": 1497, "name": "Gasventil 1",               "type": "binary"},
     {"id": 1498, "name": "Gasventil 2",               "type": "binary"},
