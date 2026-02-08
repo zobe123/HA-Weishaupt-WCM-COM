@@ -136,6 +136,49 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         elif self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
             self._attr_icon = "mdi:home-thermometer-outline"
 
+        # Kessel-/HK-Prozesswerte: Icons, wo es eindeutig ist
+        if self._sensor_name == "Status":
+            self._attr_icon = "mdi:alert-circle-outline"
+        elif self._sensor_name == "Außentemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Warmwassertemperatur":
+            self._attr_icon = "mdi:thermometer-water"
+        elif self._sensor_name == "Flamme":
+            self._attr_icon = "mdi:fire"
+        elif self._sensor_name == "Heizung":
+            self._attr_icon = "mdi:radiator"
+        elif self._sensor_name == "Warmwasser":
+            self._attr_icon = "mdi:water-thermometer"
+        elif self._sensor_name == "Kesseltemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Betriebsphase":
+            self._attr_icon = "mdi:cog-play"
+        elif self._sensor_name == "Puffer Oben":
+            self._attr_icon = "mdi:thermometer-lines"
+        elif self._sensor_name == "Laststellung":
+            self._attr_icon = "mdi:chart-line"
+        elif self._sensor_name == "Gedämpfte Außentemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Schaltspielzahl Brenner":
+            self._attr_icon = "mdi:counter"
+        elif self._sensor_name == "Betriebsstunden Brenner":
+            self._attr_icon = "mdi:clock-time-eight-outline"
+        elif self._sensor_name == "Zeit seit letzter Wartung":
+            self._attr_icon = "mdi:calendar-clock"
+
+        elif self._sensor_name in ("HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name in ("HK1 Raumtemperatur", "HK2 Raumtemperatur"):
+            self._attr_icon = "mdi:home-thermometer"
+        elif self._sensor_name in ("HK1 Vorlauftemperatur", "HK2 Vorlauftemperatur"):
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name in ("HK1 Warmwassertemperatur", "HK2 Warmwassertemperatur"):
+            self._attr_icon = "mdi:thermometer-water"
+        elif self._sensor_name in ("HK1 Zirkulationstemperatur", "HK2 Zirkulationstemperatur"):
+            self._attr_icon = "mdi:pipe"
+        elif self._sensor_name in ("HK1 Solltemperatur", "HK2 Solltemperatur", "HK1 Solltemperatur System", "HK2 Solltemperatur System"):
+            self._attr_icon = "mdi:thermostat"
+
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
         # und zukünftigen Slug-Regeln zu vermeiden.
