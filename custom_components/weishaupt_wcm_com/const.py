@@ -181,6 +181,15 @@ HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
     3: "Externer Raumfühler: Raumführung",
 }
 
+EXPERT_BOILER_ADDRESS_MAP = {
+    0: "1",
+    1: "A",
+    2: "B",
+    3: "C",
+    4: "D",
+    5: "E",
+}
+
 ERROR_CODE_MAP = {
     0: "normal",
     11: "F11: Temperatur am Vorlauffühler > 105 °C",

@@ -29,6 +29,7 @@ from .const import (
     HK_CONFIG_HK_TYPE_MAP,
     HK_CONFIG_REGELVARIANTE_MAP,
     HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+    EXPERT_BOILER_ADDRESS_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -289,6 +290,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
             if self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
                 return HK_CONFIG_EXT_ROOM_SENSOR_MAP.get(value, f"Externer Raumfühler (Code {value})")
+
+            # Fachmann-Adresse (P12 / ID 376) als 1/A/B/C/D/E darstellen
+            if self._sensor_name == "Expert Boiler Address":
+                return EXPERT_BOILER_ADDRESS_MAP.get(value, f"Adresse (Code {value})")
 
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
