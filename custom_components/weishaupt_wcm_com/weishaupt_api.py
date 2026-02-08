@@ -109,7 +109,7 @@ class WeishauptAPI(RestoreEntity):
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
             p for p in PARAMETERS
-            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ")
+            if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ") and not p.get("virtual")
         ]
         expert_params = [
             p for p in PARAMETERS
@@ -189,9 +189,17 @@ class WeishauptAPI(RestoreEntity):
 
                         # Zuordnung des Parameters:
                         # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
-                        # 2. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
+                        #    und passenden "modultyp" (FS/MS), damit 409/410 sauber
+                        #    zwischen FS- und EM-Versionen getrennt werden.
+                        # 2. Fallback: Einträge mit passendem "bus" (ohne modultyp).
+                        # 3. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
                         candidates = [p for p in PARAMETERS if p["id"] == param_id]
-                        param = next((p for p in candidates if p.get("bus") == bus_id), None)
+                        param = next(
+                            (p for p in candidates if p.get("bus") == bus_id and p.get("modultyp") == message[0]),
+                            None,
+                        )
+                        if param is None:
+                            param = next((p for p in candidates if p.get("bus") == bus_id and "modultyp" not in p), None)
                         if param is None:
                             param = next((p for p in candidates if "bus" not in p), None)
 
@@ -239,6 +247,29 @@ class WeishauptAPI(RestoreEntity):
                             self.previous_values[param["name"]] = value
 
                 _LOGGER.debug(f"Received data: {result}")
+
+                # Versionen für FS/EM aus den Rohwerten (High/Low) berechnen
+
+                # Kessel (Bus 0) – nur FS-Version (EM ist bei Manuel N/V)
+                kessel_fs_high = result.get("Kessel Version FS High")
+                kessel_fs_low = result.get("Kessel Version FS Low")
+                if kessel_fs_high is not None and kessel_fs_low is not None and kessel_fs_high != 0:
+                    result["Kessel Config Version FS"] = f"{kessel_fs_high}.{kessel_fs_low}"
+
+                # Heizkreise HK1/HK2 – FS/EM-Version pro Kreis
+                for hk in (1, 2):
+                    fs_high = result.get(f"HK{hk} Version FS High")
+                    fs_low = result.get(f"HK{hk} Version FS Low")
+                    em_high = result.get(f"HK{hk} Version EM High")
+                    em_low = result.get(f"HK{hk} Version EM Low")
+
+                    if fs_high is not None and fs_low is not None and fs_high != 0:
+                        result[f"HK{hk} Config Version FS"] = f"{fs_high}.{fs_low}"
+
+                    if em_high is not None and em_low is not None and em_high != 0:
+                        result[f"HK{hk} Config Version EM"] = f"{em_high}.{em_low}"
+
+                _LOGGER.debug(f"Received data (with versions): {result}")
                 self._data = result  # Speichern Sie die aktualisierten Daten
                 return  # Erfolgreiches Ende der Schleife, Daten erfolgreich abgerufen
 
@@ -266,6 +297,62 @@ class WeishauptAPI(RestoreEntity):
             return raw_value / 10
         else:
             return (raw_value - 65536) / 10
+
+    def write_parameter(self, parameter_id: int, bus: int, modultyp: int, code: int) -> None:
+        """Write a simple enum parameter (HK1 config) via CoCo telegram.
+
+        This mirrors the structure used in the read path, but with
+        TEL_COMMAND set to write (2) and the code in the low byte.
+        The high byte is 0 because all our enums are small.
+        """
+
+        ENDPOINT = "/parameter.json"
+        url = f"http://{self._host}{ENDPOINT}"
+
+        telegram = {
+            "prot": "coco",
+            "telegramm": [
+                [
+                    modultyp,  # TEL_MODULTYP (destination)
+                    bus,       # TEL_BUSKENNUNG (HK1 = 1)
+                    2,         # TEL_COMMAND (2 = write)
+                    parameter_id,  # TEL_INFONR
+                    0,         # TEL_INDEX
+                    0,         # TEL_PROT
+                    code & 0xFF,      # TEL_DATA low
+                    (code >> 8) & 0xFF,  # TEL_DATA high
+                ]
+            ],
+        }
+
+        _LOGGER.debug("Writing parameter %s (bus=%s, modultyp=%s) with code %s", parameter_id, bus, modultyp, code)
+
+        # Optional Auth wie im Read-Pfad
+        if self._username and self._password:
+            auth = HTTPDigestAuth(self._username, self._password)
+        else:
+            auth = None
+
+        try:
+            req = requests.post(
+                url,
+                auth=auth,
+                data=json.dumps(telegram),
+                headers={"Content-Type": "application/json"},
+                timeout=30,
+            )
+
+            # "Server busy"-Antworten (HTML) nicht als harten Fehler werten,
+            # sondern nur warnen – das Gerät ist träge und lässt sich ggf.
+            # mit dem nächsten regulären Poll wieder einfangen.
+            if "<HTML>" in req.text.upper():
+                _LOGGER.warning("WCM-COM returned 'server busy' on write for parameter %s", parameter_id)
+                return
+
+            req.raise_for_status()
+            _LOGGER.debug("Write result: %s", req.text)
+        except Exception as err:  # pragma: no cover
+            _LOGGER.error("Error writing parameter %s: %s", parameter_id, err)
 
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""

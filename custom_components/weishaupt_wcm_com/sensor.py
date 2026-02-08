@@ -24,6 +24,12 @@ from .const import (
     ERROR_CODE_KEY,
     OPERATION_MODE_MAP,
     OPERATION_PHASE_MAP,
+    HK_CONFIG_PUMP_MAP,
+    HK_CONFIG_VOLTAGE_MAP,
+    HK_CONFIG_HK_TYPE_MAP,
+    HK_CONFIG_REGELVARIANTE_MAP,
+    HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+    EXPERT_BOILER_ADDRESS_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -43,6 +49,11 @@ async def async_setup_entry(
 
     sensors: list[WeishauptSensor] = []
     for param in PARAMETERS:
+        # Interne Rohwerte (z. B. High/Low-Bytes für Versionsnummern)
+        # sollen keine eigenen Sensoren bekommen.
+        if param.get("internal"):
+            continue
+
         sensor_name = param["name"]
         p_type = param["type"]
         unit = None
@@ -103,6 +114,72 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         if slug.startswith("expert_"):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+        # Firmware-/Versionsanzeigen als Diagnose-Entities behandeln
+        if self._sensor_name in (
+            "Kessel Config Version FS",
+            "HK1 Config Version FS",
+            "HK2 Config Version FS",
+            "HK1 Config Version EM",
+            "HK2 Config Version EM",
+        ):
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_icon = "mdi:chip"
+
+        # HK-Konfigurations-Sensoren: eigene Icons
+        if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
+            self._attr_icon = "mdi:pump"
+        elif self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
+            self._attr_icon = "mdi:flash-triangle-outline"
+        elif self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
+            self._attr_icon = "mdi:radiator"
+        elif self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
+            self._attr_icon = "mdi:chart-bell-curve"
+        elif self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
+            self._attr_icon = "mdi:home-thermometer-outline"
+
+        # Kessel-/HK-Prozesswerte: Icons, wo es eindeutig ist
+        if self._sensor_name == "Status":
+            self._attr_icon = "mdi:alert-circle-outline"
+        elif self._sensor_name == "Außentemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Warmwassertemperatur":
+            self._attr_icon = "mdi:thermometer-water"
+        elif self._sensor_name == "Flamme":
+            self._attr_icon = "mdi:fire"
+        elif self._sensor_name == "Heizung":
+            self._attr_icon = "mdi:radiator"
+        elif self._sensor_name == "Warmwasser":
+            self._attr_icon = "mdi:water-thermometer"
+        elif self._sensor_name == "Kesseltemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Betriebsphase":
+            self._attr_icon = "mdi:cog-play"
+        elif self._sensor_name == "Puffer Oben":
+            self._attr_icon = "mdi:thermometer-lines"
+        elif self._sensor_name == "Laststellung":
+            self._attr_icon = "mdi:chart-line"
+        elif self._sensor_name == "Gedämpfte Außentemperatur":
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name == "Schaltspielzahl Brenner":
+            self._attr_icon = "mdi:counter"
+        elif self._sensor_name == "Betriebsstunden Brenner":
+            self._attr_icon = "mdi:clock-time-eight-outline"
+        elif self._sensor_name == "Zeit seit letzter Wartung":
+            self._attr_icon = "mdi:calendar-clock"
+
+        elif self._sensor_name in ("HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name in ("HK1 Raumtemperatur", "HK2 Raumtemperatur"):
+            self._attr_icon = "mdi:home-thermometer"
+        elif self._sensor_name in ("HK1 Vorlauftemperatur", "HK2 Vorlauftemperatur"):
+            self._attr_icon = "mdi:thermometer"
+        elif self._sensor_name in ("HK1 Warmwassertemperatur", "HK2 Warmwassertemperatur"):
+            self._attr_icon = "mdi:thermometer-water"
+        elif self._sensor_name in ("HK1 Zirkulationstemperatur", "HK2 Zirkulationstemperatur"):
+            self._attr_icon = "mdi:pipe"
+        elif self._sensor_name in ("HK1 Solltemperatur", "HK2 Solltemperatur", "HK1 Solltemperatur System", "HK2 Solltemperatur System"):
+            self._attr_icon = "mdi:thermostat"
+
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
         # Wir erzwingen sie NICHT manuell, um Probleme mit Umlauten
         # und zukünftigen Slug-Regeln zu vermeiden.
@@ -113,23 +190,57 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
         slug = self._sensor_name.lower().replace(" ", "_")
 
+        data = self.coordinator.data or {}
+        sw_version: str | None = None
+
+        # FS/EM-Versionen auf die jeweiligen Geräte mappen:
+        # - Kessel: EM-Version (falls vorhanden)
+        # - HK1/HK2: FS-Version des jeweiligen Heizkreises
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
             name = "Weishaupt Heizkreis 1"
+            fs = data.get("HK1 Config Version FS")
+            em = data.get("HK1 Config Version EM")
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"
+            elif em:
+                sw_version = f"EM {em}"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
+            fs = data.get("HK2 Config Version FS")
+            em = data.get("HK2 Config Version EM")
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"
+            elif em:
+                sw_version = f"EM {em}"
         else:
             # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
+            fs = data.get("Kessel Config Version FS")
+            em = None  # Bus 0 EM ist bei dir N/V
+            if fs and em:
+                sw_version = f"FS {fs}, EM {em}"
+            elif fs:
+                sw_version = f"FS {fs}"  # z.B. "FS 327.30"
 
-        return DeviceInfo(
-            identifiers={(DOMAIN, ident)},
-            name=name,
-            manufacturer="Weishaupt",
-            model="WCM-COM",
-        )
+        info_kwargs = {
+            "identifiers": {(DOMAIN, ident)},
+            "name": name,
+            "manufacturer": "Weishaupt",
+            "model": "WCM-COM",
+        }
+
+        # Firmware-Version nur setzen, wenn wir einen String haben
+        if isinstance(sw_version, str) and sw_version:
+            info_kwargs["sw_version"] = sw_version
+
+        return DeviceInfo(**info_kwargs)
 
     @property
     def native_value(self):
@@ -163,6 +274,33 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     value,
                     f"Unbekannte Phase ({value})",
                 )
+
+            # HK-Konfigurations-Sensoren: Codes auf lesbare Texte abbilden
+            if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
+                return HK_CONFIG_PUMP_MAP.get(value, f"Pumpe (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
+                return HK_CONFIG_VOLTAGE_MAP.get(value, f"Spannung (Code {value})")
+
+            if self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
+                return HK_CONFIG_HK_TYPE_MAP.get(value, f"HK-Typ (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
+                return HK_CONFIG_REGELVARIANTE_MAP.get(value, f"Regelvariante (Code {value})")
+
+            if self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
+                return HK_CONFIG_EXT_ROOM_SENSOR_MAP.get(value, f"Externer Raumfühler (Code {value})")
+
+            # Fachmann-Adresse (P12 / ID 376) als 1/A/B/C/D/E darstellen
+            if self._sensor_name == "Expert Boiler Address":
+                return EXPERT_BOILER_ADDRESS_MAP.get(value, f"Adresse (Code {value})")
+
+            # Fachmann-Prozentwerte übernehmen wir 1:1 (0-100 %)
+            if self._sensor_name in (
+                "Expert Max Power Heating",
+                "Expert Max Power WW",
+            ):
+                return value
 
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),

@@ -69,7 +69,7 @@ PARAMETERS = [
     {"id": 3101, "name": "Vorlauftemperatur Zone",    "type": "temperature"},
     {"id": 2,    "name": "Wärmeanforderung",          "type": "temperature"},
     {"id": 13,   "name": "Vorlauftemperatur",         "type": "temperature"},
-    {"id": 118,  "name": "Puffer Oben",               "type": "value"},
+    {"id": 118,  "name": "Puffer Oben",               "type": "temperature"},
     {"id": 138,  "name": "Laststellung",              "type": "percent"},
     {"id": 1497, "name": "Gasventil 1",               "type": "binary"},
     {"id": 1498, "name": "Gasventil 2",               "type": "binary"},
@@ -92,6 +92,42 @@ PARAMETERS = [
     {"id": 345,  "name": "Expert Max Power WW",            "type": "percent"},
     {"id": 384,  "name": "Expert Max Charge Time WW",      "type": "minutes"},
 
+    # Heizkreis-Konfiguration HK1/HK2
+    # Pumpen-/Spannungs- und Regelungsparameter (abgeleitet aus WTC WebApp Dumps)
+    {"id": 857,   "name": "HK1 Config Pump",              "type": "value", "bus": 1, "modultyp": 12},
+    {"id": 65019, "name": "HK1 Config Voltage",           "type": "value", "bus": 1, "modultyp": 12},
+    {"id": 16,    "name": "HK1 Config HK Type",           "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 2419,  "name": "HK1 Config Regelvariante",     "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 321,   "name": "HK1 Config Ext Room Sensor",   "type": "value", "bus": 1, "modultyp": 6},
+
+    {"id": 857,   "name": "HK2 Config Pump",              "type": "value", "bus": 2, "modultyp": 12},
+    {"id": 65019, "name": "HK2 Config Voltage",           "type": "value", "bus": 2, "modultyp": 12},
+    {"id": 16,    "name": "HK2 Config HK Type",           "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
+
+    # Rohwerte für Versionsanzeigen (werden intern zu Major.Minor kombiniert)
+    # Kessel (Bus 0) – Rohwerte für FS-Version
+    {"id": 409, "name": "Kessel Version FS High", "type": "value", "bus": 0, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "Kessel Version FS Low",  "type": "value", "bus": 0, "modultyp": 6,  "internal": True},
+
+    # HK1/HK2 – Rohwerte für FS/EM-Versionen
+    {"id": 409, "name": "HK1 Version FS High", "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "HK1 Version FS Low",  "type": "value", "bus": 1, "modultyp": 6,  "internal": True},
+    {"id": 409, "name": "HK1 Version EM High", "type": "value", "bus": 1, "modultyp": 12, "internal": True},
+    {"id": 410, "name": "HK1 Version EM Low",  "type": "value", "bus": 1, "modultyp": 12, "internal": True},
+    {"id": 409, "name": "HK2 Version FS High", "type": "value", "bus": 2, "modultyp": 6,  "internal": True},
+    {"id": 410, "name": "HK2 Version FS Low",  "type": "value", "bus": 2, "modultyp": 6,  "internal": True},
+    {"id": 409, "name": "HK2 Version EM High", "type": "value", "bus": 2, "modultyp": 12, "internal": True},
+    {"id": 410, "name": "HK2 Version EM Low",  "type": "value", "bus": 2, "modultyp": 12, "internal": True},
+
+    # Virtuelle Parameter für Versionsanzeigen (werden aus den Rohwerten berechnet)
+    {"id": 0, "name": "Kessel Config Version FS", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Config Version FS", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Config Version FS", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Config Version EM", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Config Version EM", "type": "value", "virtual": True},
+
     # Heizkreis-Prozesswerte HK1/HK2 (Form_Heizkreis_Prozesswerte)
     # HK1 (Buskennung 1)
     {"id": 2586, "name": "HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 1, "modultyp": 6},
@@ -111,6 +147,48 @@ PARAMETERS = [
     {"id": 2,    "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 6},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 ]
+
+# HK-Konfigurations-Mappings (Enums)
+HK_CONFIG_PUMP_MAP = {
+    0: "Pumpe stufig",
+}
+
+HK_CONFIG_VOLTAGE_MAP = {
+    2: "Spannung: Auto Aus",
+}
+
+HK_CONFIG_HK_TYPE_MAP = {
+    0: "HK-Typ: n/v",
+    1: "HK-Typ: ext. Raumfühler",
+    2: "HK-Typ: int. Raumfühler",
+    3: "HK-Typ: n/v",
+    4: "HK-Typ: Im Kessel",
+}
+
+HK_CONFIG_REGELVARIANTE_MAP = {
+    0: "Regelvariante: Fußbodenerwärmung",
+    1: "Regelvariante: Fußbodenheizung",
+    2: "Regelvariante: Radiator 60°C",
+    3: "Regelvariante: Radiator 75°C",
+    4: "Regelvariante: Konvektor",
+    5: "Regelvariante: Universal",
+}
+
+HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
+    0: "Externer Raumfühler: Konstantvorlauf",
+    1: "Externer Raumfühler: Witterungsführung",
+    2: "Externer Raumfühler: Witterungs-/Raumführung",
+    3: "Externer Raumfühler: Raumführung",
+}
+
+EXPERT_BOILER_ADDRESS_MAP = {
+    0: "1",
+    1: "A",
+    2: "B",
+    3: "C",
+    4: "D",
+    5: "E",
+}
 
 ERROR_CODE_MAP = {
     0: "normal",
