@@ -72,8 +72,8 @@ async def async_setup_entry(
             parameter_id=31,
             min_value=8.0,
             max_value=85.0,
-            step=0.5,
-            scale=10.0,
+            step=1.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
         )
     )
@@ -86,8 +86,8 @@ async def async_setup_entry(
             parameter_id=39,
             min_value=8.0,
             max_value=85.0,
-            step=0.5,
-            scale=10.0,
+            step=1.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
         )
     )
@@ -101,8 +101,8 @@ async def async_setup_entry(
             parameter_id=34,
             min_value=-7.0,
             max_value=7.0,
-            step=0.5,
-            scale=10.0,
+            step=1.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
         )
     )
