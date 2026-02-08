@@ -18,7 +18,7 @@ from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[str] = ["sensor", "select"]
+PLATFORMS: list[str] = ["sensor", "select", "number"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
