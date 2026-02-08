@@ -132,23 +132,39 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
         slug = self._sensor_name.lower().replace(" ", "_")
 
+        data = self.coordinator.data or {}
+        sw_version: str | None = None
+
+        # FS/EM-Versionen auf die jeweiligen Geräte mappen:
+        # - Kessel: EM-Version (falls vorhanden)
+        # - HK1/HK2: FS-Version des jeweiligen Heizkreises
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
             name = "Weishaupt Heizkreis 1"
+            sw_version = data.get("HK1 Config Version FS")
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
             name = "Weishaupt Heizkreis 2"
+            sw_version = data.get("HK2 Config Version FS")
         else:
             # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
             name = "Weishaupt Kessel"
+            # Bevorzuge HK1 EM-Version, falls vorhanden, sonst HK2
+            sw_version = data.get("HK1 Config Version EM") or data.get("HK2 Config Version EM")
 
-        return DeviceInfo(
-            identifiers={(DOMAIN, ident)},
-            name=name,
-            manufacturer="Weishaupt",
-            model="WCM-COM",
-        )
+        info_kwargs = {
+            "identifiers": {(DOMAIN, ident)},
+            "name": name,
+            "manufacturer": "Weishaupt",
+            "model": "WCM-COM",
+        }
+
+        # Firmware-Version nur setzen, wenn wir einen String haben
+        if isinstance(sw_version, str) and sw_version:
+            info_kwargs["sw_version"] = sw_version
+
+        return DeviceInfo(**info_kwargs)
 
     @property
     def native_value(self):
