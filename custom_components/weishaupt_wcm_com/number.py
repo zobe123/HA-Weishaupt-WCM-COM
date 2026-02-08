@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,6 +43,8 @@ async def async_setup_entry(
             min_value=8,
             max_value=85,
             step=1,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
         )
     )
 
@@ -56,6 +58,111 @@ async def async_setup_entry(
             min_value=-4,
             max_value=4,
             step=1,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+        )
+    )
+
+    # Expert Min/Max VL Target (P30/P31 / ID 31/39) – Min/Max Vorlauf-Solltemp.
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Min VL Target",
+            parameter_id=31,
+            min_value=8.0,
+            max_value=85.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Max VL Target",
+            parameter_id=39,
+            min_value=8.0,
+            max_value=85.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+        )
+    )
+
+    # Expert Switch Diff VL (P32 / ID 34) – Schaltdifferenz Vorlauf
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Switch Diff VL",
+            parameter_id=34,
+            min_value=-7.0,
+            max_value=7.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+        )
+    )
+
+    # Expert Burner Pulse Lock (P34 / ID 323) – Brenner-Taktsperre in Minuten
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Burner Pulse Lock",
+            parameter_id=323,
+            min_value=1,
+            max_value=15,
+            step=1,
+            scale=1.0,
+            unit=UnitOfTime.MINUTES,
+        )
+    )
+
+    # Expert Max Power Heating / WW (P37/P38 / ID 319/345) – Prozentwerte
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Max Power Heating",
+            parameter_id=319,
+            min_value=20.0,
+            max_value=100.0,
+            step=1.0,
+            scale=10.0,
+            unit=PERCENTAGE,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Max Power WW",
+            parameter_id=345,
+            min_value=20.0,
+            max_value=100.0,
+            step=1.0,
+            scale=10.0,
+            unit=PERCENTAGE,
+        )
+    )
+
+    # Expert Max Charge Time WW (P52 / ID 384) – max. WW-Ladezeit in Minuten
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Expert Max Charge Time WW",
+            parameter_id=384,
+            min_value=10,
+            max_value=60,
+            step=1,
+            scale=1.0,
+            unit=UnitOfTime.MINUTES,
         )
     )
 
@@ -66,9 +173,6 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
     """Number entity for expert parameters (slider-based configuration)."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    # Einheit ist je nach Parameter entweder °C (Spezialniveau) oder K (Korrektur),
-    # wir verwenden hier °C als generische Temperatur-Einheit.
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -79,6 +183,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         min_value: float,
         max_value: float,
         step: float,
+        scale: float = 1.0,
+        unit: str | None = None,
     ) -> None:
         """Initialize the expert number entity."""
 
@@ -87,6 +193,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         self._sensor_name = sensor_name
         self._parameter_id = parameter_id
+        self._scale = float(scale) if scale else 1.0
 
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
@@ -97,8 +204,21 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._attr_native_max_value = float(max_value)
         self._attr_native_step = float(step)
 
-        # Klar machen, dass es sich um eine Korrektur handelt
-        self._attr_icon = "mdi:thermometer-minus"
+        # Einheit optional setzen
+        if unit is not None:
+            self._attr_native_unit_of_measurement = unit
+
+        # Icon je nach Parameter leicht variieren
+        if "Corr Outside Sensor" in sensor_name:
+            self._attr_icon = "mdi:thermometer-minus"
+        elif "Spec Level Heating Mode" in sensor_name:
+            self._attr_icon = "mdi:thermometer"
+        elif "Power" in sensor_name:
+            self._attr_icon = "mdi:gauge"
+        elif "Pulse Lock" in sensor_name or "Charge Time" in sensor_name:
+            self._attr_icon = "mdi:clock-outline"
+        else:
+            self._attr_icon = "mdi:tune-variant"
 
     @property
     def device_info(self):
@@ -124,7 +244,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         self._attr_available = True
         try:
-            return float(value)
+            return float(value) / self._scale
         except (TypeError, ValueError):
             return None
 
@@ -134,9 +254,10 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Clamp to allowed range just in case
         value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
 
-        # P20 / ID 3103 is a global expert parameter; WebApp uses TEL_MTYPE_WG
-        # which corresponds to the WG module type (10) on bus 0 in the CoCo telegrams.
-        code = int(round(value))
+        # Skalierten Rohwert berechnen (DIV=10 etc. analog zur WebApp-Logik)
+        code = int(round(value * self._scale))
+
+        # Expert-Parameter sind globale WG‑Parameter (Modultyp 10, Bus 0)
         self.api.write_parameter(parameter_id=self._parameter_id, bus=0, modultyp=10, code=code)
 
         # Nach dem Schreiben den Coordinator aktualisieren

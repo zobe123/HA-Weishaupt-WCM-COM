@@ -295,6 +295,21 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if self._sensor_name == "Expert Boiler Address":
                 return EXPERT_BOILER_ADDRESS_MAP.get(value, f"Adresse (Code {value})")
 
+            # Fachmann-Temperaturen mit DIV=10 skalieren
+            if self._sensor_name in (
+                "Expert Min VL Target",
+                "Expert Max VL Target",
+                "Expert Switch Diff VL",
+            ):
+                return value / 10 if value is not None else None
+
+            # Fachmann-Prozentwerte mit DIV=10 skalieren
+            if self._sensor_name in (
+                "Expert Max Power Heating",
+                "Expert Max Power WW",
+            ):
+                return value / 10 if value is not None else None
+
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
                 None,
