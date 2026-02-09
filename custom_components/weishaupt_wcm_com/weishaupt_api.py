@@ -106,6 +106,7 @@ class WeishauptAPI(RestoreEntity):
         # beantwortet (begrenzte Anzahl pro Antwort).
         #  - globale Prozesswerte (Kessel)
         #  - Heizkreis-Prozesswerte (HK1/HK2)
+        #  - Benutzer-/Konfig-Parameter (HK/WW-Betriebsarten, Pumpen, Versionen)
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
             p for p in PARAMETERS
@@ -115,7 +116,25 @@ class WeishauptAPI(RestoreEntity):
             p for p in PARAMETERS
             if p["name"].startswith("Expert ")
         ]
-        hk_params = [p for p in PARAMETERS if "bus" in p or "modultyp" in p]
+        # Heizkreis-Prozesswerte (Temperaturen/Sollwerte) priorisieren, damit sie
+        # bei begrenzter Telegrammzahl nicht von zusätzlichen Konfig/User-Parametern
+        # verdrängt werden.
+        hk_process_params = [
+            p
+            for p in PARAMETERS
+            if ("bus" in p or "modultyp" in p)
+            and not p["name"].startswith("HK1 Config")
+            and not p["name"].startswith("HK2 Config")
+            and not p["name"].startswith("HK1 User")
+            and not p["name"].startswith("HK2 User")
+            and not p.get("internal")
+        ]
+        hk_config_params = [
+            p
+            for p in PARAMETERS
+            if ("bus" in p or "modultyp" in p)
+            and p not in hk_process_params
+        ]
 
         url = f"http://{self._host}{ENDPOINT}"
 
@@ -129,9 +148,10 @@ class WeishauptAPI(RestoreEntity):
             try:
                 result = {}
 
-                # Drei Requests: globale Parameter, Heizkreis-Parameter (HK1/HK2)
-                # und Fachmann-/Expert-Parameter separat, analog zur WebApp.
-                for params in (global_params, hk_params, expert_params):
+                # Mehrere Requests: globale Parameter, Heizkreis-Prozesswerte,
+                # Heizkreis-Konfig/User-Parameter und Fachmann-/Expert-Parameter
+                # separat, analog zur WebApp.
+                for params in (global_params, hk_process_params, hk_config_params, expert_params):
                     if not params:
                         continue
 
