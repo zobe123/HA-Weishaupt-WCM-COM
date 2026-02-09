@@ -100,11 +100,11 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if coordinator is None:
         return
 
-    coordinator.update_interval = timedelta(seconds=scan_interval)
-    entry_data["allow_write"] = allow_write
+    # Reload the entry so that entities pick up changed options (e.g. allow_write)
+    await hass.config_entries.async_reload(entry.entry_id)
 
     _LOGGER.info(
-        "Updated options for entry %s: scan_interval=%s, allow_write=%s",
+        "Reloaded config entry %s after options update (scan_interval=%s, allow_write=%s)",
         entry.entry_id,
         scan_interval,
         allow_write,
