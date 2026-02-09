@@ -25,6 +25,8 @@ from .const import (
     HK_CONFIG_HK_TYPE_MAP,
     HK_CONFIG_REGELVARIANTE_MAP,
     HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+    HK_USER_OPERATION_MODE_MAP,
+    WW_USER_OPERATION_MODE_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -132,6 +134,63 @@ async def async_setup_entry(
         )
     )
 
+    # HK/WW user operation mode selects (Form_Heizung_Benutzer)
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK1 User Betriebsart HK",
+            "hk1_user_op_mode_hk",
+            HK_USER_OPERATION_MODE_MAP,
+            parameter_id=274,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK1 User Betriebsart WW",
+            "hk1_user_op_mode_ww",
+            WW_USER_OPERATION_MODE_MAP,
+            parameter_id=274,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 User Betriebsart HK",
+            "hk2_user_op_mode_hk",
+            HK_USER_OPERATION_MODE_MAP,
+            parameter_id=274,
+            bus=2,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 User Betriebsart WW",
+            "hk2_user_op_mode_ww",
+            WW_USER_OPERATION_MODE_MAP,
+            parameter_id=274,
+            bus=2,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
     async_add_entities(selects)
 
 
@@ -184,6 +243,18 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         elif sensor_name == "HK2 Config Ext Room Sensor":
             self._attr_name = "HK2 Externer Raumfühler"
             self._attr_icon = "mdi:home-thermometer-outline"
+        elif sensor_name == "HK1 User Betriebsart HK":
+            self._attr_name = "HK1 Betriebsart Heizung"
+            self._attr_icon = "mdi:home-thermometer"
+        elif sensor_name == "HK1 User Betriebsart WW":
+            self._attr_name = "HK1 Betriebsart Warmwasser"
+            self._attr_icon = "mdi:water-thermometer"
+        elif sensor_name == "HK2 User Betriebsart HK":
+            self._attr_name = "HK2 Betriebsart Heizung"
+            self._attr_icon = "mdi:home-thermometer"
+        elif sensor_name == "HK2 User Betriebsart WW":
+            self._attr_name = "HK2 Betriebsart Warmwasser"
+            self._attr_icon = "mdi:water-thermometer"
         else:
             self._attr_name = sensor_name
 

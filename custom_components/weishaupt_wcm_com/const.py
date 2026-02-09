@@ -110,6 +110,12 @@ PARAMETERS = [
     {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
     {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
+    # Benutzer-Betriebsarten HK/WW (Form_Heizung_Benutzer)
+    {"id": 274,  "name": "HK1 User Betriebsart HK", "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 274,  "name": "HK1 User Betriebsart WW", "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 274,  "name": "HK2 User Betriebsart HK", "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 274,  "name": "HK2 User Betriebsart WW", "type": "value", "bus": 2, "modultyp": 6},
+
     # Rohwerte für Versionsanzeigen (werden intern zu Major.Minor kombiniert)
     # Kessel (Bus 0) – Rohwerte für FS-Version
     {"id": 409, "name": "Kessel Version FS High", "type": "value", "bus": 0, "modultyp": 6,  "internal": True},
@@ -183,6 +189,26 @@ HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
     1: "Externer Raumfühler: Witterungsführung",
     2: "Externer Raumfühler: Witterungs-/Raumführung",
     3: "Externer Raumfühler: Raumführung",
+}
+
+# Benutzer-Betriebsarten (Form_Heizung_Benutzer)
+HK_USER_OPERATION_MODE_MAP = {
+    11: "Programm 1",
+    12: "Programm 2",
+    13: "Programm 3",
+    1: "Standby",
+    5: "Sommer",
+    4: "Absenk",
+    3: "Normal",
+    255: "Wie Leitstelle",
+}
+
+WW_USER_OPERATION_MODE_MAP = {
+    11: "WW-Programm",
+    1: "Standby",
+    4: "Absenk",
+    3: "Normal",
+    255: "Wie Leitstelle",
 }
 
 EXPERT_BOILER_ADDRESS_MAP = {
