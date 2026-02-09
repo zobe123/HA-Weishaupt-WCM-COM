@@ -41,6 +41,7 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     coordinator: DataUpdateCoordinator = entry_data["coordinator"]
     api = entry_data["api"]
+    allow_write: bool = entry_data.get("allow_write", False)
 
     selects: list[WeishauptHK1ConfigSelect] = []
 
@@ -56,6 +57,7 @@ async def async_setup_entry(
             parameter_id=16,
             bus=1,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -69,6 +71,7 @@ async def async_setup_entry(
             parameter_id=2419,
             bus=1,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -82,6 +85,7 @@ async def async_setup_entry(
             parameter_id=321,
             bus=1,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -96,6 +100,7 @@ async def async_setup_entry(
             parameter_id=16,
             bus=2,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -109,6 +114,7 @@ async def async_setup_entry(
             parameter_id=2419,
             bus=2,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -122,6 +128,7 @@ async def async_setup_entry(
             parameter_id=321,
             bus=2,
             modultyp=6,
+            allow_write=allow_write,
         )
     )
 
@@ -143,6 +150,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         parameter_id: int,
         bus: int,
         modultyp: int,
+        allow_write: bool = False,
     ) -> None:
         """Initialize the select entity."""
 
@@ -155,6 +163,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._parameter_id = parameter_id
         self._bus = bus
         self._modultyp = modultyp
+        self._allow_write = allow_write
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name == "HK1 Config HK Type":
@@ -239,6 +248,10 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
     async def async_select_option(self, option: str) -> None:
         """Handle user selection by sending a write telegram to WCM-COM."""
+
+        if not self._allow_write:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Weishaupt WCM-COM integration is in read-only mode.")
 
         # Finde den passenden Roh-Code für das gewählte Label
         code = None
