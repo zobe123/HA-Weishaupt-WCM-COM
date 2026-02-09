@@ -129,11 +129,20 @@ class WeishauptAPI(RestoreEntity):
             and not p["name"].startswith("HK2 User")
             and not p.get("internal")
         ]
+        # Versions-Parameter (FS/EM High/Low) separat abfragen, damit sie immer
+        # vollständig geliefert werden.
+        hk_version_params = [
+            p
+            for p in PARAMETERS
+            if p.get("internal")
+            and "Version" in p["name"]
+        ]
         hk_config_params = [
             p
             for p in PARAMETERS
             if ("bus" in p or "modultyp" in p)
             and p not in hk_process_params
+            and p not in hk_version_params
         ]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -149,9 +158,9 @@ class WeishauptAPI(RestoreEntity):
                 result = {}
 
                 # Mehrere Requests: globale Parameter, Heizkreis-Prozesswerte,
-                # Heizkreis-Konfig/User-Parameter und Fachmann-/Expert-Parameter
-                # separat, analog zur WebApp.
-                for params in (global_params, hk_process_params, hk_config_params, expert_params):
+                # Versionsparameter, Heizkreis-Konfig/User-Parameter und
+                # Fachmann-/Expert-Parameter separat, analog zur WebApp.
+                for params in (global_params, hk_process_params, hk_version_params, hk_config_params, expert_params):
                     if not params:
                         continue
 
