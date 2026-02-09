@@ -210,8 +210,17 @@ class WeishauptAPI(RestoreEntity):
 
                             elif param["type"] == "temperature":
                                 value = self.get_temperature(low_byte, high_byte)
+
+                                # Bekannter Weishaupt-Sentinelwert für "kein gültiger Wert": -3276.8 °C
+                                # -> leise auf vorherigen Wert oder None zurückfallen, ohne Log-Spam.
+                                if value == -3276.8:
+                                    if param["name"] in self.previous_values:
+                                        value = self.previous_values[param["name"]]
+                                    else:
+                                        value = None
+
                                 # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
-                                if value < -50 or value > 150:
+                                elif value < -50 or value > 150:
                                     _LOGGER.warning(
                                         "Unplausibler Temperaturwert für %s: %s. Nutze vorherigen Wert oder setze auf 'unavailable'.",
                                         param["name"],
