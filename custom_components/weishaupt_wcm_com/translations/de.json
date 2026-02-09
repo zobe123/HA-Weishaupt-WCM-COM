@@ -11,6 +11,10 @@
     "step": {
       "init": {
         "data": {
+          "host": "Host",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "scan_interval": "Abfrageintervall (Sekunden)",
           "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)"
         }
       }
