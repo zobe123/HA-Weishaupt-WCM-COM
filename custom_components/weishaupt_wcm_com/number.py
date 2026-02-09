@@ -62,6 +62,7 @@ async def async_setup_entry(
             step=1,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
         )
     )
 
@@ -77,6 +78,7 @@ async def async_setup_entry(
             step=1.0,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
         )
     )
 
@@ -91,6 +93,7 @@ async def async_setup_entry(
             step=1.0,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
         )
     )
 
@@ -106,6 +109,7 @@ async def async_setup_entry(
             step=1.0,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
         )
     )
 
@@ -121,6 +125,7 @@ async def async_setup_entry(
             step=1,
             scale=1.0,
             unit=UnitOfTime.MINUTES,
+            allow_write=allow_write,
         )
     )
 
@@ -136,6 +141,7 @@ async def async_setup_entry(
             step=1.0,
             scale=1.0,
             unit=PERCENTAGE,
+            allow_write=allow_write,
         )
     )
 
@@ -150,6 +156,7 @@ async def async_setup_entry(
             step=1.0,
             scale=1.0,
             unit=PERCENTAGE,
+            allow_write=allow_write,
         )
     )
 
@@ -165,6 +172,7 @@ async def async_setup_entry(
             step=1,
             scale=1.0,
             unit=UnitOfTime.MINUTES,
+            allow_write=allow_write,
         )
     )
 
@@ -187,6 +195,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         step: float,
         scale: float = 1.0,
         unit: str | None = None,
+        allow_write: bool = False,
     ) -> None:
         """Initialize the expert number entity."""
 
@@ -196,6 +205,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._sensor_name = sensor_name
         self._parameter_id = parameter_id
         self._scale = float(scale) if scale else 1.0
+        self._allow_write = allow_write
 
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
@@ -252,6 +262,10 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
     async def async_set_native_value(self, value: float) -> None:
         """Handle value changes from Home Assistant."""
+
+        if not self._allow_write:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError("Weishaupt WCM-COM integration is in read-only mode.")
 
         # Clamp to allowed range just in case
         value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
