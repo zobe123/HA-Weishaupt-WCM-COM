@@ -85,6 +85,20 @@ Expert sensors are marked as diagnostic entities in Home Assistant and may be `u
 - If you see a "server busy" HTML response, increase the scan interval.
 - Some values (especially expert or circulation temperatures) may be temporarily `unavailable` if the controller reports invalid values (e.g. −100 °C) or does not support the parameter in your configuration.
 
+### Read-only vs. write mode
+
+By default the integration runs in a **read-only** mode:
+
+- All process and expert values are read from the WCM-COM and exposed as entities.
+- Configuration entities (expert sliders, HK1/HK2 config selects) are visible but writes are blocked.
+
+If you really want to change configuration parameters from Home Assistant, you must explicitly enable writes in the integration options:
+
+1. Go to **Settings → Devices & Services → Weishaupt WCM-COM → Configure**.
+2. Enable **"Allow writes to WCM-COM (expert mode)"**.
+
+When this flag is disabled again, all further write attempts from HA are rejected and logged, while reading continues as usual.
+
 ## Debugging
 
 To enable detailed logging for debugging, add the following to your `configuration.yaml`:

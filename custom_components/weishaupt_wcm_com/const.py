@@ -11,6 +11,10 @@ DEFAULT_SCAN_INTERVAL = 60
 # Scan Interval Konfiguration
 CONF_SCAN_INTERVAL = "scan_interval"
 
+# Global write flag (read-only mode when False)
+CONF_ALLOW_WRITE = "allow_write"
+DEFAULT_ALLOW_WRITE = False
+
 
 # Sensor Keys
 OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"

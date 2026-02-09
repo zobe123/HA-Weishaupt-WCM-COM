@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with WCM-COM: {err}") from err
 
-    # Read scan interval from options (or use default)
+    # Read scan interval and write flag from options (or use defaults)
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
 
     coordinator = DataUpdateCoordinator[
         dict
@@ -63,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
+        "allow_write": allow_write,
     }
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -88,6 +90,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """
 
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
 
     entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
@@ -98,9 +101,11 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     coordinator.update_interval = timedelta(seconds=scan_interval)
+    entry_data["allow_write"] = allow_write
 
     _LOGGER.info(
-        "Updated scan interval to %s seconds for entry %s",
-        scan_interval,
+        "Updated options for entry %s: scan_interval=%s, allow_write=%s",
         entry.entry_id,
+        scan_interval,
+        allow_write,
     )

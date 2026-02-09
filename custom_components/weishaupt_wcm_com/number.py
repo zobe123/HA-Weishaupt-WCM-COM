@@ -30,6 +30,7 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     coordinator: DataUpdateCoordinator = entry_data["coordinator"]
     api = entry_data["api"]
+    allow_write: bool = entry_data.get("allow_write", False)
 
     numbers: list[WeishauptExpertNumber] = []
 
@@ -45,6 +46,7 @@ async def async_setup_entry(
             step=1,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
         )
     )
 

@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
-from .const import DOMAIN, DEFAULT_SCAN_INTERVAL
+from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,6 +79,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_SCAN_INTERVAL,
             DEFAULT_SCAN_INTERVAL,
         )
+        allow_write = self._config_entry.options.get(
+            CONF_ALLOW_WRITE,
+            DEFAULT_ALLOW_WRITE,
+        )
 
         data_schema = vol.Schema(
             {
@@ -89,6 +93,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_SCAN_INTERVAL,
                     default=scan_interval,
                 ): vol.All(vol.Coerce(int), vol.Range(min=10, max=3600)),
+                vol.Required(
+                    CONF_ALLOW_WRITE,
+                    default=allow_write,
+                ): bool,
             }
         )
 
