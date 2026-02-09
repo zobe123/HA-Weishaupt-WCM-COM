@@ -355,11 +355,24 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
     @property
     def device_info(self):
-        """Attach expert numbers to the boiler device."""
+        """Attach numbers to the appropriate device (boiler or HK1/HK2)."""
+
+        name = self._sensor_name or ""
+        slug = name.lower().replace(" ", "_")
+
+        if slug.startswith("hk1_"):
+            ident = "weishaupt_hk1"
+            dev_name = "Weishaupt Heizkreis 1"
+        elif slug.startswith("hk2_"):
+            ident = "weishaupt_hk2"
+            dev_name = "Weishaupt Heizkreis 2"
+        else:
+            ident = "weishaupt_kessel"
+            dev_name = "Weishaupt Kessel"
 
         return {
-            "identifiers": {(DOMAIN, "weishaupt_kessel")},
-            "name": "Weishaupt Kessel",
+            "identifiers": {(DOMAIN, ident)},
+            "name": dev_name,
             "manufacturer": "Weishaupt",
             "model": "WCM-COM",
         }
