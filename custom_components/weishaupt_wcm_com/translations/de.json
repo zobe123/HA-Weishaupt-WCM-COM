@@ -4,19 +4,14 @@
       "user": {
         "title": "Weishaupt WCM-COM",
         "description": "Verbindung zu einem Weishaupt WCM-COM Heizungsregler herstellen"
-      },
+      }
+    }
+  },
+  "options": {
+    "step": {
       "init": {
         "data": {
           "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)"
-        }
-      }
-    },
-    "options": {
-      "step": {
-        "init": {
-          "data": {
-            "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)"
-          }
         }
       }
     }

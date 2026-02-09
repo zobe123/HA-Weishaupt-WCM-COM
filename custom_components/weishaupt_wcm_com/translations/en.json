@@ -4,19 +4,14 @@
       "user": {
         "title": "Weishaupt WCM-COM",
         "description": "Connect to a Weishaupt WCM-COM heating controller"
-      },
+      }
+    }
+  },
+  "options": {
+    "step": {
       "init": {
         "data": {
           "allow_write": "Allow writes to WCM-COM (expert mode)"
-        }
-      }
-    },
-    "options": {
-      "step": {
-        "init": {
-          "data": {
-            "allow_write": "Allow writes to WCM-COM (expert mode)"
-          }
         }
       }
     }
