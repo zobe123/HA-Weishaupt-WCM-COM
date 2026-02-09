@@ -176,6 +176,127 @@ async def async_setup_entry(
         )
     )
 
+    # HK2 User heating parameters (Form_Heizung_Benutzer, Bus=2)
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Normal Raumtemperatur",
+            parameter_id=5,
+            min_value=10.0,
+            max_value=35.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Absenk Raumtemperatur",
+            parameter_id=8,
+            min_value=10.0,
+            max_value=35.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Normal VL Soll",
+            parameter_id=297,
+            min_value=8.0,
+            max_value=85.0,
+            step=1.0,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Absenk VL Soll",
+            parameter_id=298,
+            min_value=8.0,
+            max_value=85.0,
+            step=1.0,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Steilheit",
+            parameter_id=270,
+            min_value=2.5,
+            max_value=40.0,
+            step=0.5,
+            scale=10.0,
+            unit=None,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Raumfrosttemperatur",
+            parameter_id=2580,
+            min_value=4.0,
+            max_value=35.0,
+            step=0.5,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User SoWi Umschaltung",
+            parameter_id=278,
+            min_value=8.0,
+            max_value=30.0,
+            step=1.0,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 User Sollwert Solar",
+            parameter_id=129,
+            min_value=0.0,
+            max_value=10.0,
+            step=0.1,
+            scale=10.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
     async_add_entities(numbers)
 
 
