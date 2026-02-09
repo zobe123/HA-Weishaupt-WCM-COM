@@ -273,8 +273,15 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Skalierten Rohwert berechnen (DIV=10 etc. analog zur WebApp-Logik)
         code = int(round(value * self._scale))
 
-        # Expert-Parameter sind globale WG‑Parameter (Modultyp 10, Bus 0)
-        self.api.write_parameter(parameter_id=self._parameter_id, bus=0, modultyp=10, code=code)
+        # Expert-Parameter sind globale WG‑Parameter (Modultyp 10, Bus 0).
+        # Schreibzugriffe laufen synchron im Executor, um den Event Loop nicht zu blockieren.
+        await self.hass.async_add_executor_job(
+            self.api.write_parameter,
+            self._parameter_id,
+            0,
+            10,
+            code,
+        )
 
         # Nach dem Schreiben den Coordinator aktualisieren
         await self.coordinator.async_request_refresh()
