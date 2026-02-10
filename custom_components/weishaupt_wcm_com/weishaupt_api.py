@@ -238,7 +238,18 @@ class WeishauptAPI(RestoreEntity):
                                 value = message[6]
 
                             elif param["type"] == "temperature":
-                                value = self.get_temperature(low_byte, high_byte)
+                                raw_value = self.get_temperature(low_byte, high_byte)
+                                value = raw_value
+
+                                # Für Debugging von HK2 User-Parametern explizit loggen, was ankommt
+                                if param["name"].startswith("HK2 User"):
+                                    _LOGGER.debug(
+                                        "HK2 User parameter %s (id=%s, bus=%s) raw temperature=%s",
+                                        param["name"],
+                                        param["id"],
+                                        bus_id,
+                                        raw_value,
+                                    )
 
                                 # Bekannter Weishaupt-Sentinelwert für "kein gültiger Wert": -3276.8 °C
                                 # -> leise auf vorherigen Wert oder None zurückfallen, ohne Log-Spam.
