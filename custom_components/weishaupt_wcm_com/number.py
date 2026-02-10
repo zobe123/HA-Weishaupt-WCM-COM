@@ -168,8 +168,40 @@ async def async_setup_entry(
             "Expert Max Charge Time WW",
             parameter_id=384,
             min_value=10,
-            max_value=60,
+            max_value=180,
             step=1,
+            scale=1.0,
+            unit=UnitOfTime.MINUTES,
+            allow_write=allow_write,
+        )
+    )
+
+    # Frostheizgrenze (ID 702) – Fachmann / Heizung, -20..0 °C
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Frostheizgrenze",
+            parameter_id=702,
+            min_value=-20.0,
+            max_value=0.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    # Ein Opti MAX (ID 272) – Fachmann / Heizung, 0..240 Minuten in 15er-Schritten
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "Ein Opti MAX",
+            parameter_id=272,
+            min_value=0.0,
+            max_value=240.0,
+            step=15.0,
             scale=1.0,
             unit=UnitOfTime.MINUTES,
             allow_write=allow_write,
@@ -466,8 +498,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Icon je nach Parameter leicht variieren
         name = sensor_name
 
+        # Fachmann / Heizung
+        if name == "Frostheizgrenze":
+            self._attr_icon = "mdi:snowflake-thermometer"
+        elif name == "Ein Opti MAX":
+            self._attr_icon = "mdi:clock-outline"
+
         # Allgemeine Expert-Parameter
-        if "Corr Outside Sensor" in name:
+        elif "Corr Outside Sensor" in name:
             self._attr_icon = "mdi:thermometer-minus"
         elif "Spec Level Heating Mode" in name:
             self._attr_icon = "mdi:thermometer"
