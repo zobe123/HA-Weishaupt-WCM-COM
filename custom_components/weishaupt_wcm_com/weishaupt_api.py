@@ -16,7 +16,7 @@ _lock = threading.Lock()
 class WeishauptAPI(RestoreEntity):
     """API class for interacting with the Weishaupt WCM-COM."""
 
-    def __init__(self, host, username=None, password=None):
+    def __init__(self, host, username=None, password=None, advanced_logging: bool = False):
         """Initialize the API."""
         self._host = host
         self._username = username
@@ -24,6 +24,8 @@ class WeishauptAPI(RestoreEntity):
         self._data = {}
         self.previous_values = {}
         self._state = None
+        # Optionaler Modus für zusätzliche Debug-Logs
+        self.advanced_logging = advanced_logging
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
@@ -242,7 +244,7 @@ class WeishauptAPI(RestoreEntity):
                                 value = raw_value
 
                                 # Für Debugging von HK2 User-Parametern explizit loggen, was ankommt
-                                if param["name"].startswith("HK2 User"):
+                                if getattr(self, "advanced_logging", False) and param["name"].startswith("HK2 User"):
                                     _LOGGER.debug(
                                         "HK2 User parameter %s (id=%s, bus=%s) raw temperature=%s",
                                         param["name"],

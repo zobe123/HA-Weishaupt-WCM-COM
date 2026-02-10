@@ -15,6 +15,10 @@ CONF_SCAN_INTERVAL = "scan_interval"
 CONF_ALLOW_WRITE = "allow_write"
 DEFAULT_ALLOW_WRITE = False
 
+# Advanced logging flag (more verbose debug logs when True)
+CONF_ADVANCED_LOGGING = "advanced_logging"
+DEFAULT_ADVANCED_LOGGING = False
+
 
 # Sensor Keys
 OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"

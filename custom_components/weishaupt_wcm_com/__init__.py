@@ -13,7 +13,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE
+from .const import (
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    CONF_ALLOW_WRITE,
+    DEFAULT_ALLOW_WRITE,
+    CONF_ADVANCED_LOGGING,
+    DEFAULT_ADVANCED_LOGGING,
+)
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     username: str | None = entry.data.get("username")
     password: str | None = entry.data.get("password")
 
-    api = WeishauptAPI(host, username, password)
+    # Read scan interval, write flag and advanced logging from options (or use defaults)
+    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
+    advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
+
+    api = WeishauptAPI(host, username, password, advanced_logging=advanced_logging)
 
     async def async_update_data() -> dict:
         """Fetch the latest data from the WCM-COM API.
@@ -43,9 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with WCM-COM: {err}") from err
 
-    # Read scan interval and write flag from options (or use defaults)
+    # Read scan interval, write flag and advanced logging from options (or use defaults)
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
+    advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
 
     coordinator = DataUpdateCoordinator[
         dict
@@ -65,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "api": api,
         "coordinator": coordinator,
         "allow_write": allow_write,
+        "advanced_logging": advanced_logging,
     }
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -91,6 +106,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
+    advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
 
     entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if not entry_data:
@@ -104,8 +120,9 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
     _LOGGER.info(
-        "Reloaded config entry %s after options update (scan_interval=%s, allow_write=%s)",
+        "Reloaded config entry %s after options update (scan_interval=%s, allow_write=%s, advanced_logging=%s)",
         entry.entry_id,
         scan_interval,
         allow_write,
+        advanced_logging,
     )

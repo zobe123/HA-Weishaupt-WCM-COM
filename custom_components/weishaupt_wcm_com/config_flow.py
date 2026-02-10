@@ -6,7 +6,14 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
-from .const import DOMAIN, DEFAULT_SCAN_INTERVAL, CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE
+from .const import (
+    DOMAIN,
+    DEFAULT_SCAN_INTERVAL,
+    CONF_ALLOW_WRITE,
+    DEFAULT_ALLOW_WRITE,
+    CONF_ADVANCED_LOGGING,
+    DEFAULT_ADVANCED_LOGGING,
+)
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,6 +90,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_ALLOW_WRITE,
             DEFAULT_ALLOW_WRITE,
         )
+        advanced_logging = self._config_entry.options.get(
+            CONF_ADVANCED_LOGGING,
+            DEFAULT_ADVANCED_LOGGING,
+        )
 
         data_schema = vol.Schema(
             {
@@ -96,6 +107,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_ALLOW_WRITE,
                     default=allow_write,
+                ): bool,
+                vol.Required(
+                    CONF_ADVANCED_LOGGING,
+                    default=advanced_logging,
                 ): bool,
             }
         )
