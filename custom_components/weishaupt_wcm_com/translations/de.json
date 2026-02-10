@@ -64,7 +64,15 @@
       "expert_burner_pulse_lock":       { "name": "Brenner-Taktsperre (P34)" },
       "expert_max_power_heating":       { "name": "Max. Leistung Heizung (P37)" },
       "expert_max_power_ww":            { "name": "Max. Leistung WW (P38)" },
-      "expert_max_charge_time_ww":      { "name": "Max. WW-Ladezeit (P52)" }
+      "expert_max_charge_time_ww":      { "name": "Max. WW-Ladezeit (P52)" },
+
+      "system_date":                    { "name": "Systemdatum" },
+      "system_time":                    { "name": "Systemzeit" },
+      "hk1_holiday_start":              { "name": "HK1 Urlaubsbeginn" },
+      "hk1_holiday_end":                { "name": "HK1 Urlaubsende" },
+      "hk1_urlaubstemperaturniveau":    { "name": "HK1 Urlaubstemperaturniveau" },
+      "dst_start":                      { "name": "Sommerzeitbeginn" },
+      "dst_end":                        { "name": "Sommerzeitende" }
     }
   }
 }

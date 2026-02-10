@@ -64,7 +64,15 @@
       "expert_burner_pulse_lock":       { "name": "Burner pulse lock (P34)" },
       "expert_max_power_heating":       { "name": "Max. power heating (P37)" },
       "expert_max_power_ww":            { "name": "Max. power DHW (P38)" },
-      "expert_max_charge_time_ww":      { "name": "Max. DHW charge time (P52)" }
+      "expert_max_charge_time_ww":      { "name": "Max. DHW charge time (P52)" },
+
+      "system_date":                    { "name": "System date" },
+      "system_time":                    { "name": "System time" },
+      "hk1_holiday_start":              { "name": "HK1 holiday start" },
+      "hk1_holiday_end":                { "name": "HK1 holiday end" },
+      "hk1_urlaubstemperaturniveau":    { "name": "HK1 holiday temperature level" },
+      "dst_start":                      { "name": "DST start" },
+      "dst_end":                        { "name": "DST end" }
     }
   }
 }
