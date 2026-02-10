@@ -173,9 +173,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:calendar-clock"
         elif self._sensor_name == "System Time":
             self._attr_icon = "mdi:clock-time-four-outline"
-        elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End"):
+        elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End", "HK2 Holiday Start", "HK2 Holiday End"):
             self._attr_icon = "mdi:calendar-star"
-        elif self._sensor_name == "HK1 Urlaubstemperaturniveau":
+        elif self._sensor_name in ("HK1 Urlaubstemperaturniveau", "HK2 Urlaubstemperaturniveau"):
             self._attr_icon = "mdi:snowflake"
         elif self._sensor_name in ("DST Start", "DST End"):
             self._attr_icon = "mdi:calendar-clock"
@@ -332,6 +332,50 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
             if self._sensor_name == "HK1 Urlaubstemperaturniveau":
                 level = data.get("HK1 Holiday Temp Level")
+                if level is None:
+                    self._attr_available = False
+                    return None
+                self._attr_available = True
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "HK2 Holiday Start":
+                day = data.get("HK2 Holiday Start Day")
+                month = data.get("HK2 Holiday Start Month")
+                year_raw = data.get("HK2 Holiday Start Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK2 Holiday End":
+                day = data.get("HK2 Holiday End Day")
+                month = data.get("HK2 Holiday End Month")
+                year_raw = data.get("HK2 Holiday End Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK2 Urlaubstemperaturniveau":
+                level = data.get("HK2 Holiday Temp Level")
                 if level is None:
                     self._attr_available = False
                     return None

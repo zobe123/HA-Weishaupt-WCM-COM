@@ -182,12 +182,12 @@ PARAMETERS = [
     {"id": 129,  "name": "HK2 User Sollwert Solar",         "type": "temperature", "bus": 2, "modultyp": 6},
 
     # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
-    {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 284,   "name": "HK1 Holiday Start Month",        "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 285,   "name": "HK1 Holiday Start Year",         "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 284,   "name": "HK1 Holiday Start Month",        "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 285,   "name": "HK1 Holiday Start Year",         "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6, "internal": True},
     {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6, "internal": True},
 
     {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6, "internal": True},
@@ -201,12 +201,24 @@ PARAMETERS = [
     {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6, "internal": True},
     {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6, "internal": True},
 
-    # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4)
+    # HK2 Holiday (mirror of HK1, bus=2)
+    {"id": 283,   "name": "HK2 Holiday Start Day",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 284,   "name": "HK2 Holiday Start Month",        "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 285,   "name": "HK2 Holiday Start Year",         "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 286,   "name": "HK2 Holiday End Day",            "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 287,   "name": "HK2 Holiday End Month",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 288,   "name": "HK2 Holiday End Year",           "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 317,   "name": "HK2 Holiday Temp Level",         "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+
+    # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4/b8)
     {"id": 0, "name": "System Date",                 "type": "value", "virtual": True},
     {"id": 0, "name": "System Time",                 "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Holiday Start",          "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Holiday End",            "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Urlaubstemperaturniveau", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Holiday Start",          "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Holiday End",            "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Urlaubstemperaturniveau", "type": "value", "virtual": True},
     {"id": 0, "name": "DST Start",                  "type": "value", "virtual": True},
     {"id": 0, "name": "DST End",                    "type": "value", "virtual": True},
 ]

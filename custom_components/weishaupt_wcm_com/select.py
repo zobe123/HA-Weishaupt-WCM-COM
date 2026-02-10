@@ -207,6 +207,21 @@ async def async_setup_entry(
         )
     )
 
+    # HK2 holiday temperature level (P142 / ID 317, bus=2)
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK2 Urlaubstemperaturniveau",
+            "hk2_urlaubstemperaturniveau",
+            HOLIDAY_TEMP_LEVEL_MAP,
+            parameter_id=317,
+            bus=2,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
     async_add_entities(selects)
 
 
@@ -273,6 +288,9 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._attr_icon = "mdi:water-thermometer"
         elif sensor_name == "HK1 Urlaubstemperaturniveau":
             self._attr_name = "HK1 Urlaubstemperaturniveau"
+            self._attr_icon = "mdi:snowflake"
+        elif sensor_name == "HK2 Urlaubstemperaturniveau":
+            self._attr_name = "HK2 Urlaubstemperaturniveau"
             self._attr_icon = "mdi:snowflake"
         else:
             self._attr_name = sensor_name
