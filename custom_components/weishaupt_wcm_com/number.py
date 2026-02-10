@@ -181,13 +181,32 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "Frostheizgrenze",
+            "HK1 Frostheizgrenze",
             parameter_id=702,
             min_value=-20.0,
             max_value=0.0,
             step=1.0,
             scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 Frostheizgrenze",
+            parameter_id=702,
+            min_value=-20.0,
+            max_value=0.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            bus=2,
+            modultyp=6,
             allow_write=allow_write,
         )
     )
@@ -197,13 +216,32 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "Ein Opti MAX",
+            "HK1 Ein Opti MAX",
             parameter_id=272,
             min_value=0.0,
             max_value=240.0,
             step=15.0,
             scale=1.0,
             unit=UnitOfTime.MINUTES,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 Ein Opti MAX",
+            parameter_id=272,
+            min_value=0.0,
+            max_value=240.0,
+            step=15.0,
+            scale=1.0,
+            unit=UnitOfTime.MINUTES,
+            bus=2,
+            modultyp=6,
             allow_write=allow_write,
         )
     )
@@ -471,6 +509,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         scale: float = 1.0,
         unit: str | None = None,
         allow_write: bool = False,
+        bus: int = 0,
+        modultyp: int = 10,
     ) -> None:
         """Initialize the expert number entity."""
 
@@ -481,6 +521,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._parameter_id = parameter_id
         self._scale = float(scale) if scale else 1.0
         self._allow_write = allow_write
+        self._bus = bus
+        self._modultyp = modultyp
 
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
@@ -499,9 +541,9 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         name = sensor_name
 
         # Fachmann / Heizung
-        if name == "Frostheizgrenze":
+        if "Frostheizgrenze" in name:
             self._attr_icon = "mdi:snowflake-thermometer"
-        elif name == "Ein Opti MAX":
+        elif "Ein Opti MAX" in name:
             self._attr_icon = "mdi:clock-outline"
 
         # Allgemeine Expert-Parameter
@@ -595,13 +637,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Skalierten Rohwert berechnen (DIV=10 etc. analog zur WebApp-Logik)
         code = int(round(value * self._scale))
 
-        # Expert-Parameter sind globale WG‑Parameter (Modultyp 10, Bus 0).
-        # Schreibzugriffe laufen synchron im Executor, um den Event Loop nicht zu blockieren.
+        # Für globale Expert-Parameter bleibt bus=0/modultyp=10, für
+        # Heizkreis-spezifische Parameter (z.B. Frostheizgrenze/Opti MAX)
+        # werden bus/modultyp über den Konstruktor gesetzt.
         await self.hass.async_add_executor_job(
             self.api.write_parameter,
             self._parameter_id,
-            0,
-            10,
+            self._bus,
+            self._modultyp,
             code,
         )
 
