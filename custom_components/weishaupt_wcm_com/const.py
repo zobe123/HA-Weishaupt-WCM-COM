@@ -206,7 +206,7 @@ PARAMETERS = [
     {"id": 0, "name": "System Time",                 "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Holiday Start",          "type": "value", "virtual": True},
     {"id": 0, "name": "HK1 Holiday End",            "type": "value", "virtual": True},
-    {"id": 0, "name": "HK1 Holiday Temp Level Text", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Urlaubstemperaturniveau", "type": "value", "virtual": True},
     {"id": 0, "name": "DST Start",                  "type": "value", "virtual": True},
     {"id": 0, "name": "DST End",                    "type": "value", "virtual": True},
 ]
@@ -274,8 +274,8 @@ EXPERT_BOILER_ADDRESS_MAP = {
 }
 
 HOLIDAY_TEMP_LEVEL_MAP = {
-    0: "Frost protection",
-    1: "Reduced temperature",
+    0: "Frostschutz",
+    1: "Absenktemperatur",
 }
 
 ERROR_CODE_MAP = {

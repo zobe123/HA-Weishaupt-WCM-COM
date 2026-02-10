@@ -175,7 +175,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:clock-time-four-outline"
         elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End"):
             self._attr_icon = "mdi:calendar-star"
-        elif self._sensor_name == "HK1 Holiday Temp Level Text":
+        elif self._sensor_name == "HK1 Urlaubstemperaturniveau":
             self._attr_icon = "mdi:snowflake"
         elif self._sensor_name in ("DST Start", "DST End"):
             self._attr_icon = "mdi:calendar-clock"
@@ -330,7 +330,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     self._attr_available = False
                     return None
 
-            if self._sensor_name == "HK1 Holiday Temp Level Text":
+            if self._sensor_name == "HK1 Urlaubstemperaturniveau":
                 level = data.get("HK1 Holiday Temp Level")
                 if level is None:
                     self._attr_available = False
