@@ -342,14 +342,42 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             self._attr_native_unit_of_measurement = unit
 
         # Icon je nach Parameter leicht variieren
-        if "Corr Outside Sensor" in sensor_name:
+        name = sensor_name
+
+        # Allgemeine Expert-Parameter
+        if "Corr Outside Sensor" in name:
             self._attr_icon = "mdi:thermometer-minus"
-        elif "Spec Level Heating Mode" in sensor_name:
+        elif "Spec Level Heating Mode" in name:
             self._attr_icon = "mdi:thermometer"
-        elif "Power" in sensor_name:
+        elif "Min VL Target" in name or "Max VL Target" in name:
+            self._attr_icon = "mdi:thermometer"
+        elif "Switch Diff VL" in name:
+            self._attr_icon = "mdi:thermometer-lines"
+        elif "Power" in name:
             self._attr_icon = "mdi:gauge"
-        elif "Pulse Lock" in sensor_name or "Charge Time" in sensor_name:
+        elif "Pulse Lock" in name or "Charge Time" in name:
             self._attr_icon = "mdi:clock-outline"
+
+        # HK2 User Heizparameter (Form_Heizung_Benutzer, Bus=2)
+        elif "HK2 User Normal Raumtemperatur" in name:
+            self._attr_icon = "mdi:home-thermometer"
+        elif "HK2 User Absenk Raumtemperatur" in name:
+            self._attr_icon = "mdi:home-thermometer-outline"
+        elif "HK2 User Normal VL Soll" in name:
+            self._attr_icon = "mdi:thermostat"
+        elif "HK2 User Absenk VL Soll" in name:
+            # etwas abgesetzter Thermostat für den Absenk-Bereich
+            self._attr_icon = "mdi:thermostat-box-outline"
+        elif "HK2 User Steilheit" in name:
+            self._attr_icon = "mdi:chart-bell-curve"
+        elif "HK2 User Raumfrosttemperatur" in name:
+            self._attr_icon = "mdi:snowflake-thermometer"
+        elif "HK2 User SoWi Umschaltung" in name:
+            self._attr_icon = "mdi:weather-sunny-alert"
+        elif "HK2 User Sollwert Solar" in name:
+            self._attr_icon = "mdi:solar-power"
+
+        # Fallback: generisches Tuning-Icon für sonstige Slider
         else:
             self._attr_icon = "mdi:tune-variant"
 
