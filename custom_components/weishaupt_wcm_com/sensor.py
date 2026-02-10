@@ -450,7 +450,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             ):
                 return WW_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
 
-            # Virtuelle, human readable Sensoren (1.2.6b4)
+            # Virtuelle, human readable Sensoren (Date/Time/Holiday/DST)
             if self._sensor_name == "System Date":
                 day = data.get("System Date Day")
                 month = data.get("System Date Month")
