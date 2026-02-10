@@ -157,7 +157,17 @@ PARAMETERS = [
     {"id": 2,    "name": "HK2 Solltemperatur System",     "type": "temperature", "bus": 2, "modultyp": 6},
     #{"id": 3793, "name": "Ölzähler", "type": "value"}
 
-    # HK2 Benutzerparameter Heizung (Form_Heizung_Benutzer, Bus=2)
+    # HK1/HK2 Benutzerparameter Heizung (Form_Heizung_Benutzer)
+    # HK1 (Bus=1)
+    {"id": 5,    "name": "HK1 User Normal Raumtemperatur",  "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 8,    "name": "HK1 User Absenk Raumtemperatur",  "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 297,  "name": "HK1 User Normal VL Soll",         "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 298,  "name": "HK1 User Absenk VL Soll",         "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 270,  "name": "HK1 User Steilheit",              "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 2580, "name": "HK1 User Raumfrosttemperatur",    "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 278,  "name": "HK1 User SoWi Umschaltung",       "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 129,  "name": "HK1 User Sollwert Solar",         "type": "temperature", "bus": 1, "modultyp": 6},
+    # HK2 (Bus=2)
     {"id": 5,    "name": "HK2 User Normal Raumtemperatur",  "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 8,    "name": "HK2 User Absenk Raumtemperatur",  "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 297,  "name": "HK2 User Normal VL Soll",         "type": "temperature", "bus": 2, "modultyp": 6},

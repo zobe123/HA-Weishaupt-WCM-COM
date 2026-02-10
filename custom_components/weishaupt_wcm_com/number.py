@@ -176,7 +176,129 @@ async def async_setup_entry(
         )
     )
 
-    # HK2 User heating parameters (Form_Heizung_Benutzer, Bus=2)
+    # HK1/HK2 User heating parameters (Form_Heizung_Benutzer)
+    # HK1 (Bus=1)
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Normal Raumtemperatur",
+            parameter_id=5,
+            min_value=10.0,
+            max_value=35.0,
+            step=0.5,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Absenk Raumtemperatur",
+            parameter_id=8,
+            min_value=10.0,
+            max_value=35.0,
+            step=0.5,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Normal VL Soll",
+            parameter_id=297,
+            min_value=8.0,
+            max_value=85.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Absenk VL Soll",
+            parameter_id=298,
+            min_value=8.0,
+            max_value=85.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Steilheit",
+            parameter_id=270,
+            min_value=2.5,
+            max_value=40.0,
+            step=0.5,
+            scale=1.0,
+            unit=None,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Raumfrosttemperatur",
+            parameter_id=2580,
+            min_value=4.0,
+            max_value=35.0,
+            step=0.5,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User SoWi Umschaltung",
+            parameter_id=278,
+            min_value=8.0,
+            max_value=30.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 User Sollwert Solar",
+            parameter_id=129,
+            min_value=0.0,
+            max_value=10.0,
+            step=0.1,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            allow_write=allow_write,
+        )
+    )
+
+    # HK2 (Bus=2)
     numbers.append(
         WeishauptExpertNumber(
             coordinator,
@@ -186,7 +308,7 @@ async def async_setup_entry(
             min_value=10.0,
             max_value=35.0,
             step=0.5,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -201,7 +323,7 @@ async def async_setup_entry(
             min_value=10.0,
             max_value=35.0,
             step=0.5,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -216,7 +338,7 @@ async def async_setup_entry(
             min_value=8.0,
             max_value=85.0,
             step=1.0,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -231,7 +353,7 @@ async def async_setup_entry(
             min_value=8.0,
             max_value=85.0,
             step=1.0,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -246,7 +368,7 @@ async def async_setup_entry(
             min_value=2.5,
             max_value=40.0,
             step=0.5,
-            scale=10.0,
+            scale=1.0,
             unit=None,
             allow_write=allow_write,
         )
@@ -261,7 +383,7 @@ async def async_setup_entry(
             min_value=4.0,
             max_value=35.0,
             step=0.5,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -276,7 +398,7 @@ async def async_setup_entry(
             min_value=8.0,
             max_value=30.0,
             step=1.0,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -291,7 +413,7 @@ async def async_setup_entry(
             min_value=0.0,
             max_value=10.0,
             step=0.1,
-            scale=10.0,
+            scale=1.0,
             unit=UnitOfTemperature.CELSIUS,
             allow_write=allow_write,
         )
@@ -358,23 +480,23 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         elif "Pulse Lock" in name or "Charge Time" in name:
             self._attr_icon = "mdi:clock-outline"
 
-        # HK2 User Heizparameter (Form_Heizung_Benutzer, Bus=2)
-        elif "HK2 User Normal Raumtemperatur" in name:
+        # HK1/HK2 User Heizparameter (Form_Heizung_Benutzer)
+        elif "HK1 User Normal Raumtemperatur" in name or "HK2 User Normal Raumtemperatur" in name:
             self._attr_icon = "mdi:home-thermometer"
-        elif "HK2 User Absenk Raumtemperatur" in name:
+        elif "HK1 User Absenk Raumtemperatur" in name or "HK2 User Absenk Raumtemperatur" in name:
             self._attr_icon = "mdi:home-thermometer-outline"
-        elif "HK2 User Normal VL Soll" in name:
+        elif "HK1 User Normal VL Soll" in name or "HK2 User Normal VL Soll" in name:
             self._attr_icon = "mdi:thermostat"
-        elif "HK2 User Absenk VL Soll" in name:
+        elif "HK1 User Absenk VL Soll" in name or "HK2 User Absenk VL Soll" in name:
             # etwas abgesetzter Thermostat für den Absenk-Bereich
             self._attr_icon = "mdi:thermostat-box-outline"
-        elif "HK2 User Steilheit" in name:
+        elif "HK1 User Steilheit" in name or "HK2 User Steilheit" in name:
             self._attr_icon = "mdi:chart-bell-curve"
-        elif "HK2 User Raumfrosttemperatur" in name:
+        elif "HK1 User Raumfrosttemperatur" in name or "HK2 User Raumfrosttemperatur" in name:
             self._attr_icon = "mdi:snowflake-thermometer"
-        elif "HK2 User SoWi Umschaltung" in name:
+        elif "HK1 User SoWi Umschaltung" in name or "HK2 User SoWi Umschaltung" in name:
             self._attr_icon = "mdi:weather-sunny-alert"
-        elif "HK2 User Sollwert Solar" in name:
+        elif "HK1 User Sollwert Solar" in name or "HK2 User Sollwert Solar" in name:
             self._attr_icon = "mdi:solar-power"
 
         # Fallback: generisches Tuning-Icon für sonstige Slider
