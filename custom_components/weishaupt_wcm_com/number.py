@@ -181,7 +181,7 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "HK1 Frostheizgrenze",
+            "HK1 Expert Frostheizgrenze",
             parameter_id=702,
             min_value=-20.0,
             max_value=0.0,
@@ -198,7 +198,7 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "HK2 Frostheizgrenze",
+            "HK2 Expert Frostheizgrenze",
             parameter_id=702,
             min_value=-20.0,
             max_value=0.0,
@@ -216,7 +216,7 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "HK1 Ein Opti MAX",
+            "HK1 Expert Ein Opti MAX",
             parameter_id=272,
             min_value=0.0,
             max_value=240.0,
@@ -233,7 +233,7 @@ async def async_setup_entry(
         WeishauptExpertNumber(
             coordinator,
             api,
-            "HK2 Ein Opti MAX",
+            "HK2 Expert Ein Opti MAX",
             parameter_id=272,
             min_value=0.0,
             max_value=240.0,

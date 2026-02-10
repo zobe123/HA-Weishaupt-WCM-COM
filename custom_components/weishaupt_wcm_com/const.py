@@ -182,10 +182,10 @@ PARAMETERS = [
     {"id": 129,  "name": "HK2 User Sollwert Solar",         "type": "temperature", "bus": 2, "modultyp": 6},
 
     # Fachmann / Heizung – Frostheizgrenze / Ein Opti MAX (bus-spezifisch)
-    {"id": 702,  "name": "Frostheizgrenze",                "type": "temperature", "bus": 1, "modultyp": 6},
-    {"id": 272,  "name": "Ein Opti MAX",                   "type": "minutes",     "bus": 1, "modultyp": 6},
-    {"id": 702,  "name": "Frostheizgrenze HK2",            "type": "temperature", "bus": 2, "modultyp": 6},
-    {"id": 272,  "name": "Ein Opti MAX HK2",               "type": "minutes",     "bus": 2, "modultyp": 6},
+    {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6},
+    {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6},
 
     # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
     {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
