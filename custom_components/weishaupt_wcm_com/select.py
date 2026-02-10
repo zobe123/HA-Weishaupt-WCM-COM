@@ -27,6 +27,7 @@ from .const import (
     HK_CONFIG_EXT_ROOM_SENSOR_MAP,
     HK_USER_OPERATION_MODE_MAP,
     WW_USER_OPERATION_MODE_MAP,
+    HOLIDAY_TEMP_LEVEL_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -191,6 +192,21 @@ async def async_setup_entry(
         )
     )
 
+    # HK1 holiday temperature level (P142 / ID 317)
+    selects.append(
+        WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK1 Urlaubstemperaturniveau",
+            "hk1_urlaubstemperaturniveau",
+            HOLIDAY_TEMP_LEVEL_MAP,
+            parameter_id=317,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
     async_add_entities(selects)
 
 
@@ -255,6 +271,9 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         elif sensor_name == "HK2 User Betriebsart WW":
             self._attr_name = "HK2 Betriebsart Warmwasser"
             self._attr_icon = "mdi:water-thermometer"
+        elif sensor_name == "HK1 Urlaubstemperaturniveau":
+            self._attr_name = "HK1 Urlaubstemperaturniveau"
+            self._attr_icon = "mdi:snowflake"
         else:
             self._attr_name = sensor_name
 
