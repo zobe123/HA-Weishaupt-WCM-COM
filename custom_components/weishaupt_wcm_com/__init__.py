@@ -10,7 +10,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -82,11 +82,107 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "advanced_logging": advanced_logging,
     }
 
+    # Register services only once per integration domain
+    if not hass.services.has_service(DOMAIN, "set_holiday_date"):
+        _register_services(hass)
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def _register_services(hass: HomeAssistant) -> None:
+    """Register integration-level services (called once)."""
+
+    async def async_set_holiday_date(call: ServiceCall) -> None:
+        """Set HK1/HK2 holiday start/end date via raw Day/Month/Year parameters.
+
+        Fields are mapped as:
+        - HKx Holiday Start: IDs 283/284/285 (Day/Month/Year)
+        - HKx Holiday End:   IDs 286/287/288 (Day/Month/Year)
+
+        Year is encoded as (calendar year - 2000).
+        A null/empty date resets Year to 0 and Day/Month to 1 ("not set").
+        """
+
+        heating_circuit = int(call.data.get("heating_circuit", 1))
+        target = str(call.data.get("target", "start")).lower()
+        date_str = call.data.get("date")
+
+        if heating_circuit not in (1, 2):
+            _LOGGER.error("set_holiday_date: invalid heating_circuit=%s", heating_circuit)
+            return
+        if target not in ("start", "end"):
+            _LOGGER.error("set_holiday_date: invalid target=%s", target)
+            return
+
+        # Determine parameter IDs for the selected HK/target
+        if target == "start":
+            base_id = 283
+        else:
+            base_id = 286
+
+        day_id = base_id
+        month_id = base_id + 1
+        year_id = base_id + 2
+
+        bus = heating_circuit
+        modultyp = 6
+
+        # Lookup a coordinating API instance (any entry for this domain)
+        domain_data = hass.data.get(DOMAIN, {})
+        if not domain_data:
+            _LOGGER.error("set_holiday_date: no %s data found in hass.data", DOMAIN)
+            return
+
+        # Use the first config entry's API/coordinator
+        entry_data = next(iter(domain_data.values()))
+        api: WeishauptAPI = entry_data["api"]
+        coordinator: DataUpdateCoordinator = entry_data["coordinator"]
+
+        # Parse date / reset logic
+        if not date_str:
+            # Reset: Year=0, Day=1, Month=1 (WebUI semantics for "not set")
+            day = 1
+            month = 1
+            year_raw = 0
+        else:
+            from datetime import datetime
+
+            try:
+                dt = datetime.strptime(date_str, "%Y-%m-%d")
+            except (ValueError, TypeError):
+                _LOGGER.error("set_holiday_date: invalid date '%s' (expected YYYY-MM-DD)", date_str)
+                return
+
+            day = dt.day
+            month = dt.month
+            year_raw = dt.year - 2000
+            if year_raw < 0 or year_raw > 99:
+                _LOGGER.error("set_holiday_date: year %s out of encodable range (2000-2099)", dt.year)
+                return
+
+        _LOGGER.debug(
+            "set_holiday_date: HK%s %s -> %s (Day=%s, Month=%s, YearRaw=%s)",
+            heating_circuit,
+            target,
+            date_str or "<not set>",
+            day,
+            month,
+            year_raw,
+        )
+
+        # Perform writes in executor (three parameters: day, month, year)
+        await hass.async_add_executor_job(api.write_parameter, day_id, bus, modultyp, day)
+        await hass.async_add_executor_job(api.write_parameter, month_id, bus, modultyp, month)
+        await hass.async_add_executor_job(api.write_parameter, year_id, bus, modultyp, year_raw)
+
+        # Refresh coordinator so that HKx Holiday Start/End sensors update
+        await coordinator.async_request_refresh()
+
+    hass.services.async_register(DOMAIN, "set_holiday_date", async_set_holiday_date)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
