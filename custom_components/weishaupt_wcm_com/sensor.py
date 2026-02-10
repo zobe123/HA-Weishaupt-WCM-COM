@@ -391,6 +391,19 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     f"Unbekannte Phase ({value})",
                 )
 
+            # HK/WW user operation modes (Form_Heizung_Benutzer): Codes → Texte
+            if self._sensor_name in (
+                "HK1 User Betriebsart HK",
+                "HK2 User Betriebsart HK",
+            ):
+                return HK_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+
+            if self._sensor_name in (
+                "HK1 User Betriebsart WW",
+                "HK2 User Betriebsart WW",
+            ):
+                return WW_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+
             # Virtuelle, human readable Sensoren (1.2.6b4)
             if self._sensor_name == "System Date":
                 day = data.get("System Date Day")
