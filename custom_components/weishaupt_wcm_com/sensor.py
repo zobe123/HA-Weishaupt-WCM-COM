@@ -262,6 +262,109 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         data = self.coordinator.data or {}
 
         try:
+            # Virtuelle, aus Rohwerten berechnete Textsensoren nicht über einen
+            # eigenen Key im coordinator.data abfragen, sondern direkt aus den
+            # Rohfeldern zusammensetzen. Sonst wären sie dauerhaft "unavailable".
+            if self._sensor_name == "System Date":
+                day = data.get("System Date Day")
+                month = data.get("System Date Month")
+                year_raw = data.get("System Date Year")
+                if not day or not month or year_raw is None:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "System Time":
+                hour = data.get("System Time Hour")
+                minute = data.get("System Time Minute")
+                if hour is None or minute is None:
+                    self._attr_available = False
+                    return None
+                try:
+                    self._attr_available = True
+                    return f"{int(hour):02d}:{int(minute):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Holiday Start":
+                day = data.get("HK1 Holiday Start Day")
+                month = data.get("HK1 Holiday Start Month")
+                year_raw = data.get("HK1 Holiday Start Year")
+                # Jahr 0 bedeutet "nicht gesetzt"
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Holiday End":
+                day = data.get("HK1 Holiday End Day")
+                month = data.get("HK1 Holiday End Month")
+                year_raw = data.get("HK1 Holiday End Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Holiday Temp Level Text":
+                level = data.get("HK1 Holiday Temp Level")
+                if level is None:
+                    self._attr_available = False
+                    return None
+                self._attr_available = True
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "DST Start":
+                day = data.get("DST Start Day")
+                month = data.get("DST Start Month")
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                try:
+                    self._attr_available = True
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "DST End":
+                day = data.get("DST End Day")
+                month = data.get("DST End Month")
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                try:
+                    self._attr_available = True
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            # Ab hier: normale Sensoren, die direkt einen Key in data haben
             value = data.get(self._sensor_name)
             if value is None:
                 _LOGGER.debug("Data for %s not found – sensor set to unavailable", self._sensor_name)
