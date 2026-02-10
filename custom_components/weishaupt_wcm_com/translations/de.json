@@ -15,7 +15,8 @@
           "username": "Benutzername",
           "password": "Passwort",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)"
+          "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)",
+          "advanced_logging": "Erweitertes Logging aktivieren (zusätzliche Debug-Ausgaben zur Fehlersuche)"
         }
       }
     }

@@ -15,7 +15,8 @@
           "username": "Username",
           "password": "Password",
           "scan_interval": "Scan interval (seconds)",
-          "allow_write": "Allow writes to WCM-COM (expert mode)"
+          "allow_write": "Allow writes to WCM-COM (expert mode)",
+          "advanced_logging": "Enable advanced logging (extra debug output for troubleshooting)"
         }
       }
     }
