@@ -108,7 +108,8 @@ class WeishauptAPI(RestoreEntity):
         # beantwortet (begrenzte Anzahl pro Antwort).
         #  - globale Prozesswerte (Kessel)
         #  - Heizkreis-Prozesswerte (HK1/HK2)
-        #  - Benutzer-/Konfig-Parameter (HK/WW-Betriebsarten, Pumpen, Versionen)
+        #  - Heizkreis-Konfig-Parameter (Pumpen, Spannungen, HK-Typ, Ext. Fühler)
+        #  - HK-User-Parameter (Betriebsarten & User-Temperaturen)
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
             p for p in PARAMETERS
@@ -139,12 +140,22 @@ class WeishauptAPI(RestoreEntity):
             if p.get("internal")
             and "Version" in p["name"]
         ]
+        # HK-Konfig (Pumpen/Spannung/HK-Typ/Ext. Raumfühler etc., inkl. HKx User Betriebsart)
         hk_config_params = [
             p
             for p in PARAMETERS
             if ("bus" in p or "modultyp" in p)
             and p not in hk_process_params
             and p not in hk_version_params
+            and not p["name"].startswith("HK1 User ")
+            and not p["name"].startswith("HK2 User ")
+        ]
+        # HK-Userparameter (Form_Heizung_Benutzer) explizit trennen, damit sie
+        # in eigenen, kleinen Requests wie in der Original-WebApp abgefragt werden.
+        hk_user_params = [
+            p
+            for p in PARAMETERS
+            if p["name"].startswith("HK1 User ") or p["name"].startswith("HK2 User ")
         ]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -162,7 +173,14 @@ class WeishauptAPI(RestoreEntity):
                 # Mehrere Requests: globale Parameter, Heizkreis-Prozesswerte,
                 # Versionsparameter, Heizkreis-Konfig/User-Parameter und
                 # Fachmann-/Expert-Parameter separat, analog zur WebApp.
-                for params in (global_params, hk_process_params, hk_version_params, hk_config_params, expert_params):
+                for params in (
+                    global_params,
+                    hk_process_params,
+                    hk_version_params,
+                    hk_config_params,
+                    hk_user_params,  # eigener Block nur für HK1/HK2 User-Parameter
+                    expert_params,
+                ): 
                     if not params:
                         continue
 
