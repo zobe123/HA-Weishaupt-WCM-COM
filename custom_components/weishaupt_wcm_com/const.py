@@ -180,6 +180,26 @@ PARAMETERS = [
     {"id": 2580, "name": "HK2 User Raumfrosttemperatur",    "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 278,  "name": "HK2 User SoWi Umschaltung",       "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 129,  "name": "HK2 User Sollwert Solar",         "type": "temperature", "bus": 2, "modultyp": 6},
+
+    # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
+    {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 284,   "name": "HK1 Holiday Start Month",        "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 285,   "name": "HK1 Holiday Start Year",         "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6},
+
+    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6},
+
+    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6},
 ]
 
 # HK-Konfigurations-Mappings (Enums)
