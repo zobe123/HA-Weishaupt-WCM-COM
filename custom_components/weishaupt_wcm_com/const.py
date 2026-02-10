@@ -188,18 +188,18 @@ PARAMETERS = [
     {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6},
     {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6},
     {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6, "internal": True},
 
-    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6, "internal": True},
 
-    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6, "internal": True},
 
     # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4)
     {"id": 0, "name": "System Date",                 "type": "value", "virtual": True},

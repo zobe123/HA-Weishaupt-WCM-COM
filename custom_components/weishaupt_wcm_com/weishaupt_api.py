@@ -131,6 +131,21 @@ class WeishauptAPI(RestoreEntity):
             and not p["name"].startswith("HK1 User")
             and not p["name"].startswith("HK2 User")
             and not p.get("internal")
+            and not p.get("virtual")
+        ]
+
+        # Spezielle Gruppe für HK1 Holiday Temp Level + System Date/Time + DST,
+        # damit diese nicht in einem übervollen Prozess-Telegramm untergehen.
+        date_params = [
+            p
+            for p in PARAMETERS
+            if not p.get("virtual")
+            and (
+                p["name"].startswith("System Date ")
+                or p["name"].startswith("System Time ")
+                or p["name"].startswith("DST ")
+                or p["name"] == "HK1 Holiday Temp Level"
+            )
         ]
         # Versions-Parameter (FS/EM High/Low) separat abfragen, damit sie immer
         # vollständig geliefert werden.
@@ -179,6 +194,7 @@ class WeishauptAPI(RestoreEntity):
                     hk_version_params,
                     hk_config_params,
                     hk_user_params,  # eigener Block nur für HK1/HK2 User-Parameter
+                    date_params,     # HK1 Holiday Temp Level + System Date/Time + DST
                     expert_params,
                 ): 
                     if not params:
