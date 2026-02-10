@@ -30,6 +30,7 @@ from .const import (
     HK_CONFIG_REGELVARIANTE_MAP,
     HK_CONFIG_EXT_ROOM_SENSOR_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
+    HOLIDAY_TEMP_LEVEL_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -167,6 +168,18 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         elif self._sensor_name == "Zeit seit letzter Wartung":
             self._attr_icon = "mdi:calendar-clock"
 
+        # Systemzeit / Datum / Holiday / DST (abgeleitete Textsensoren)
+        elif self._sensor_name == "System Date":
+            self._attr_icon = "mdi:calendar-clock"
+        elif self._sensor_name == "System Time":
+            self._attr_icon = "mdi:clock-time-four-outline"
+        elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End"):
+            self._attr_icon = "mdi:calendar-star"
+        elif self._sensor_name == "HK1 Holiday Temp Level Text":
+            self._attr_icon = "mdi:snowflake"
+        elif self._sensor_name in ("DST Start", "DST End"):
+            self._attr_icon = "mdi:calendar-clock"
+
         elif self._sensor_name in ("HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
             self._attr_icon = "mdi:thermometer"
         elif self._sensor_name in ("HK1 Raumtemperatur", "HK2 Raumtemperatur"):
@@ -274,6 +287,86 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     value,
                     f"Unbekannte Phase ({value})",
                 )
+
+            # Virtuelle, human readable Sensoren (1.2.6b4)
+            if self._sensor_name == "System Date":
+                day = data.get("System Date Day")
+                month = data.get("System Date Month")
+                year_raw = data.get("System Date Year")
+                if not day or not month or year_raw is None:
+                    return "--"
+                # Jahr laut WebUI: 2000 + raw
+                year = 2000 + year_raw
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "System Time":
+                hour = data.get("System Time Hour")
+                minute = data.get("System Time Minute")
+                if hour is None or minute is None:
+                    return "--:--"
+                try:
+                    return f"{int(hour):02d}:{int(minute):02d}"
+                except (TypeError, ValueError):
+                    return "--:--"
+
+            if self._sensor_name == "HK1 Holiday Start":
+                day = data.get("HK1 Holiday Start Day")
+                month = data.get("HK1 Holiday Start Month")
+                year_raw = data.get("HK1 Holiday Start Year")
+                # Jahr 0 bedeutet "nicht gesetzt"
+                if not year_raw:
+                    return "--"
+                year = 2000 + year_raw
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "HK1 Holiday End":
+                day = data.get("HK1 Holiday End Day")
+                month = data.get("HK1 Holiday End Month")
+                year_raw = data.get("HK1 Holiday End Year")
+                if not year_raw:
+                    return "--"
+                year = 2000 + year_raw
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "HK1 Holiday Temp Level Text":
+                level = data.get("HK1 Holiday Temp Level")
+                if level is None:
+                    return None
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "DST Start":
+                day = data.get("DST Start Day")
+                month = data.get("DST Start Month")
+                if not day or not month:
+                    return "--"
+                try:
+                    # Nur Tag/Monat, kein Jahr →  DD.MM
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "DST End":
+                day = data.get("DST End Day")
+                month = data.get("DST End Month")
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    return "--"
 
             # HK-Konfigurations-Sensoren: Codes auf lesbare Texte abbilden
             if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):

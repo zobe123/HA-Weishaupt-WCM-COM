@@ -200,6 +200,15 @@ PARAMETERS = [
     {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6},
     {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6},
     {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6},
+
+    # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4)
+    {"id": 0, "name": "System Date",                 "type": "value", "virtual": True},
+    {"id": 0, "name": "System Time",                 "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Holiday Start",          "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Holiday End",            "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Holiday Temp Level Text", "type": "value", "virtual": True},
+    {"id": 0, "name": "DST Start",                  "type": "value", "virtual": True},
+    {"id": 0, "name": "DST End",                    "type": "value", "virtual": True},
 ]
 
 # HK-Konfigurations-Mappings (Enums)
@@ -262,6 +271,11 @@ EXPERT_BOILER_ADDRESS_MAP = {
     3: "C",
     4: "D",
     5: "E",
+}
+
+HOLIDAY_TEMP_LEVEL_MAP = {
+    0: "Frost protection",
+    1: "Reduced temperature",
 }
 
 ERROR_CODE_MAP = {
