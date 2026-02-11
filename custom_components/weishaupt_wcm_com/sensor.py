@@ -7,6 +7,7 @@ exactly one request to the WCM-COM device per update interval.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
