@@ -212,6 +212,7 @@ async def async_setup_entry(
     )
 
     # Ein Opti MAX (ID 272) – Fachmann / Heizung, 0..240 Minuten in 15er-Schritten
+    # Rohwert kommt in 15-Minuten-Blöcken, in HA wollen wir echte Minuten sehen.
     numbers.append(
         WeishauptExpertNumber(
             coordinator,
@@ -220,8 +221,8 @@ async def async_setup_entry(
             parameter_id=272,
             min_value=0.0,
             max_value=240.0,
-            step=15.0,
-            scale=1.0,
+            step=15.0,              # Schrittweite in Minuten
+            scale=(1.0 / 15.0),     # Rohwert = 15-Minuten-Blöcke → in HA Minuten
             unit=UnitOfTime.MINUTES,
             bus=1,
             modultyp=6,
@@ -237,8 +238,8 @@ async def async_setup_entry(
             parameter_id=272,
             min_value=0.0,
             max_value=240.0,
-            step=15.0,
-            scale=1.0,
+            step=15.0,              # Schrittweite in Minuten
+            scale=(1.0 / 15.0),     # Rohwert = 15-Minuten-Blöcke → in HA Minuten
             unit=UnitOfTime.MINUTES,
             bus=2,
             modultyp=6,
@@ -620,7 +621,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         self._attr_available = True
         try:
-            return float(value) / self._scale
+            raw = float(value)
+
+            # Sonderfall: Frostheizgrenze-Sentinel (ID 702, Rohwert 10 → "--" in der WebUI)
+            # In Home Assistant soll dieser Zustand als "nicht gesetzt" erscheinen.
+            if self._parameter_id == 702 and raw == 10:
+                return None
+
+            return raw / self._scale
         except (TypeError, ValueError):
             return None
 
