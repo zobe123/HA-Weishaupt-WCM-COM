@@ -271,16 +271,23 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 day = data.get("System Date Day")
                 month = data.get("System Date Month")
                 year_raw = data.get("System Date Year")
-                if not day or not month or year_raw is None:
+                if day is None or month is None or year_raw is None:
                     self._attr_available = False
                     return None
-                year = 2000 + year_raw
                 try:
+                    year = 2000 + int(year_raw)
+                    d = datetime(year, int(month), int(day))
+                    # Wenn Datum plausibel ist → nur "OK" anzeigen, um Logbook-Spam zu vermeiden.
                     self._attr_available = True
-                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                    return "OK"
                 except (TypeError, ValueError):
-                    self._attr_available = False
-                    return None
+                    # Unplausible Rohwerte → als String zurückgeben, damit der Fehler sichtbar ist.
+                    self._attr_available = True
+                    try:
+                        year = 2000 + int(year_raw)
+                        return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                    except (TypeError, ValueError):
+                        return None
 
             if self._sensor_name == "System Time":
                 hour = data.get("System Time Hour")
@@ -289,8 +296,15 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     self._attr_available = False
                     return None
                 try:
+                    h = int(hour)
+                    m = int(minute)
+                    if 0 <= h <= 23 and 0 <= m <= 59:
+                        # Plausible Zeit → "OK" statt ständig wechselnder Uhrzeit
+                        self._attr_available = True
+                        return "OK"
+                    # Unplausible Zeit → Rohstring anzeigen
                     self._attr_available = True
-                    return f"{int(hour):02d}:{int(minute):02d}"
+                    return f"{h:02d}:{m:02d}"
                 except (TypeError, ValueError):
                     self._attr_available = False
                     return None
