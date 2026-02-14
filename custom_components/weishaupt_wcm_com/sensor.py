@@ -601,9 +601,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     return None
 
                 # API liefert hier bereits skalierte °C-Werte; "nicht gesetzt"
-                # erscheint in der WebUI als 1.0 °C. Diesen Sentinel spiegeln wir.
+                # erscheint in der WebUI als 1.0 °C. In HA müssen wir bei einem
+                # numerischen Sensor in diesem Fall `None` zurückgeben, sonst
+                # kollidiert es mit der erwarteten Einheit/Präzision.
                 if raw == 1.0:
-                    return "--"
+                    return None
 
                 return raw
 
