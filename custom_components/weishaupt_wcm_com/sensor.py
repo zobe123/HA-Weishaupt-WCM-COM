@@ -278,17 +278,16 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 try:
                     year = 2000 + int(year_raw)
                     d = datetime(year, int(month), int(day))
-                    # Wenn Datum plausibel ist → nur "OK" anzeigen, um Logbook-Spam zu vermeiden.
+                    today = datetime.now().date()
+                    # Health-Check: Datum muss mit dem echten Systemdatum übereinstimmen,
+                    # sonst geben wir das WCM-Datum als YYYY-MM-DD aus.
                     self._attr_available = True
-                    return "OK"
+                    if d.date() == today:
+                        return "OK"
+                    return d.strftime("%Y-%m-%d")
                 except (TypeError, ValueError):
-                    # Unplausible Rohwerte → als String zurückgeben, damit der Fehler sichtbar ist.
-                    self._attr_available = True
-                    try:
-                        year = 2000 + int(year_raw)
-                        return f"{year:04d}-{int(month):02d}-{int(day):02d}"
-                    except (TypeError, ValueError):
-                        return None
+                    self._attr_available = False
+                    return None
 
             if self._sensor_name == "System Time":
                 hour = data.get("System Time Hour")
@@ -299,12 +298,19 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 try:
                     h = int(hour)
                     m = int(minute)
-                    if 0 <= h <= 23 and 0 <= m <= 59:
-                        # Plausible Zeit → "OK" statt ständig wechselnder Uhrzeit
-                        self._attr_available = True
-                        return "OK"
-                    # Unplausible Zeit → Rohstring anzeigen
+                    if not (0 <= h <= 23 and 0 <= m <= 59):
+                        self._attr_available = False
+                        return None
+
+                    now = datetime.now()
+                    wcm_minutes = h * 60 + m
+                    now_minutes = now.hour * 60 + now.minute
+                    drift = abs(now_minutes - wcm_minutes)
                     self._attr_available = True
+
+                    # Bis 5 Minuten Drift noch "OK", sonst WCM-Zeit anzeigen
+                    if drift <= 5:
+                        return "OK"
                     return f"{h:02d}:{m:02d}"
                 except (TypeError, ValueError):
                     self._attr_available = False
@@ -594,8 +600,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 except (TypeError, ValueError):
                     return None
 
-                if raw == 10:
-                    return None
+                # API liefert hier bereits skalierte °C-Werte; "nicht gesetzt"
+                # erscheint in der WebUI als 1.0 °C. Diesen Sentinel spiegeln wir.
+                if raw == 1.0:
+                    return "--"
 
                 return raw
 
