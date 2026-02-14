@@ -572,6 +572,33 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             ):
                 return value
 
+            # Fachmann / Heizung – Ein Opti MAX (ID 272): Rohwert = 15-Minuten-Blöcke
+            # Die Sensoransicht soll – genau wie die Number-Entity – echte Minuten anzeigen.
+            if self._sensor_name in (
+                "HK1 Expert Ein Opti MAX",
+                "HK2 Expert Ein Opti MAX",
+            ):
+                try:
+                    return float(value) * 15.0
+                except (TypeError, ValueError):
+                    return None
+
+            # Fachmann / Heizung – Frostheizgrenze (ID 702): Rohwert 10 = "nicht gesetzt".
+            # In der Sensor-Ansicht behandeln wir diesen Sentinel wie in den Number-Entities.
+            if self._sensor_name in (
+                "HK1 Expert Frostheizgrenze",
+                "HK2 Expert Frostheizgrenze",
+            ):
+                try:
+                    raw = float(value)
+                except (TypeError, ValueError):
+                    return None
+
+                if raw == 10:
+                    return None
+
+                return raw
+
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
                 None,
