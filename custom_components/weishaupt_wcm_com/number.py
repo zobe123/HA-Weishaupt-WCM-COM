@@ -623,9 +623,10 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         try:
             raw = float(value)
 
-            # Sonderfall: Frostheizgrenze-Sentinel (ID 702, Rohwert 10 → "--" in der WebUI)
+            # Sonderfall: Frostheizgrenze-Sentinel (ID 702)
+            # WebUI zeigt "--", der bereits skalierte Wert ist 1.0 °C.
             # In Home Assistant soll dieser Zustand als "nicht gesetzt" erscheinen.
-            if self._parameter_id == 702 and raw == 10:
+            if self._parameter_id == 702 and raw == 1.0:
                 return None
 
             return raw / self._scale
