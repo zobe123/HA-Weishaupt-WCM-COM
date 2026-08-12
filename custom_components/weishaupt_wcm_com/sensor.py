@@ -40,6 +40,19 @@ from .base_entity import WeishauptBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+def _translation_slug(name: str) -> str:
+    """Return a Home Assistant compatible translation key."""
+
+    return (
+        name.lower()
+        .replace(" ", "_")
+        .replace("ä", "ae")
+        .replace("ö", "oe")
+        .replace("ü", "ue")
+        .replace("ß", "ss")
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -100,8 +113,8 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
         # Use a translation_key derived from the parameter name so that
         # translations/en.json and translations/de.json define the visible
-        # label. Keys are lowercase and underscore separated.
-        self._attr_translation_key = slug
+        # label. Home Assistant translation keys must be ASCII-only.
+        self._attr_translation_key = _translation_slug(self._sensor_name)
         # Sichtbarer Name der Entität in HA (z.B. "Außentemperatur",
         # "Heizkreis 1 Solltemperatur"). Wir setzen ihn explizit, damit
         # nicht der Gerätename (z.B. "Weishaupt Kessel") angezeigt wird.
