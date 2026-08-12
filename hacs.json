@@ -3,6 +3,5 @@
   "content_in_root": false,
   "render_readme": true,
   "country": ["AT", "DE", "CH"],
-  "homeassistant": "2023.8.0",
-  "domains": ["weishaupt_wcm_com"]
+  "homeassistant": "2023.8.0"
 }
