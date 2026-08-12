@@ -2,7 +2,7 @@
   "name": "Weishaupt WCM-COM",
   "content_in_root": false,
   "render_readme": true,
-  "country": "AT",
+  "country": ["AT", "DE", "CH"],
   "homeassistant": "2023.8.0",
   "category": "integration",
   "domains": ["weishaupt_wcm_com"]

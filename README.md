@@ -28,19 +28,18 @@ It reads important parameters from your boiler and heating circuits and exposes 
 
 ## Installation
 
-### 1. HACS (recommended – custom repository)
+### 1. HACS (recommended)
 
-Until this integration is part of the official HACS default store, you can install it as a custom repository:
+Install this integration with HACS:
 
 1. In Home Assistant, go to **HACS → Integrations**.
-2. Click the three dots in the top right → **Custom repositories**.
-3. Add:
+2. Search for **Weishaupt WCM-COM** and install it.
+3. Restart Home Assistant.
 
-   - **Repository**: `https://github.com/zobe123/HA-Weishaupt-WCM-COM`  
-   - **Category**: `Integration`
+If the integration is not yet listed in the default HACS store, add it as a custom repository first:
 
-4. After adding the custom repository, search for **Weishaupt WCM-COM** in HACS and install it.
-5. Restart Home Assistant.
+- **Repository**: `https://github.com/zobe123/HA-Weishaupt-WCM-COM`
+- **Category**: `Integration`
 
 ### 2. Manual installation
 
