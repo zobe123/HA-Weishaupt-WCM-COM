@@ -15,6 +15,10 @@ CONF_SCAN_INTERVAL = "scan_interval"
 CONF_ALLOW_WRITE = "allow_write"
 DEFAULT_ALLOW_WRITE = False
 
+# Advanced logging flag (more verbose debug logs when True)
+CONF_ADVANCED_LOGGING = "advanced_logging"
+DEFAULT_ADVANCED_LOGGING = False
+
 
 # Sensor Keys
 OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"
@@ -176,6 +180,53 @@ PARAMETERS = [
     {"id": 2580, "name": "HK2 User Raumfrosttemperatur",    "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 278,  "name": "HK2 User SoWi Umschaltung",       "type": "temperature", "bus": 2, "modultyp": 6},
     {"id": 129,  "name": "HK2 User Sollwert Solar",         "type": "temperature", "bus": 2, "modultyp": 6},
+
+    # Fachmann / Heizung – Frostheizgrenze / Ein Opti MAX (bus-spezifisch)
+    {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6},
+    {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6},
+
+    # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
+    {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 284,   "name": "HK1 Holiday Start Month",        "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 285,   "name": "HK1 Holiday Start Year",         "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+
+    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+
+    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6, "internal": True},
+
+    # HK2 Holiday (mirror of HK1, bus=2)
+    {"id": 283,   "name": "HK2 Holiday Start Day",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 284,   "name": "HK2 Holiday Start Month",        "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 285,   "name": "HK2 Holiday Start Year",         "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 286,   "name": "HK2 Holiday End Day",            "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 287,   "name": "HK2 Holiday End Month",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 288,   "name": "HK2 Holiday End Year",           "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+    {"id": 317,   "name": "HK2 Holiday Temp Level",         "type": "value", "bus": 2, "modultyp": 6, "internal": True},
+
+    # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4/b8)
+    {"id": 0, "name": "System Date",                 "type": "value", "virtual": True},
+    {"id": 0, "name": "System Time",                 "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Holiday Start",          "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Holiday End",            "type": "value", "virtual": True},
+    {"id": 0, "name": "HK1 Urlaubstemperaturniveau", "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Holiday Start",          "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Holiday End",            "type": "value", "virtual": True},
+    {"id": 0, "name": "HK2 Urlaubstemperaturniveau", "type": "value", "virtual": True},
+    {"id": 0, "name": "DST Start",                  "type": "value", "virtual": True},
+    {"id": 0, "name": "DST End",                    "type": "value", "virtual": True},
 ]
 
 # HK-Konfigurations-Mappings (Enums)
@@ -238,6 +289,11 @@ EXPERT_BOILER_ADDRESS_MAP = {
     3: "C",
     4: "D",
     5: "E",
+}
+
+HOLIDAY_TEMP_LEVEL_MAP = {
+    0: "Frostschutz",
+    1: "Absenktemperatur",
 }
 
 ERROR_CODE_MAP = {

@@ -7,6 +7,7 @@ exactly one request to the WCM-COM device per update interval.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,7 +30,10 @@ from .const import (
     HK_CONFIG_HK_TYPE_MAP,
     HK_CONFIG_REGELVARIANTE_MAP,
     HK_CONFIG_EXT_ROOM_SENSOR_MAP,
+    HK_USER_OPERATION_MODE_MAP,
+    WW_USER_OPERATION_MODE_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
+    HOLIDAY_TEMP_LEVEL_MAP,
 )
 from .base_entity import WeishauptBaseEntity
 
@@ -167,6 +171,18 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         elif self._sensor_name == "Zeit seit letzter Wartung":
             self._attr_icon = "mdi:calendar-clock"
 
+        # Systemzeit / Datum / Holiday / DST (abgeleitete Textsensoren)
+        elif self._sensor_name == "System Date":
+            self._attr_icon = "mdi:calendar-clock"
+        elif self._sensor_name == "System Time":
+            self._attr_icon = "mdi:clock-time-four-outline"
+        elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End", "HK2 Holiday Start", "HK2 Holiday End"):
+            self._attr_icon = "mdi:calendar-star"
+        elif self._sensor_name in ("HK1 Urlaubstemperaturniveau", "HK2 Urlaubstemperaturniveau"):
+            self._attr_icon = "mdi:snowflake"
+        elif self._sensor_name in ("DST Start", "DST End"):
+            self._attr_icon = "mdi:calendar-clock"
+
         elif self._sensor_name in ("HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
             self._attr_icon = "mdi:thermometer"
         elif self._sensor_name in ("HK1 Raumtemperatur", "HK2 Raumtemperatur"):
@@ -249,6 +265,173 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         data = self.coordinator.data or {}
 
         try:
+            # Virtuelle, aus Rohwerten berechnete Textsensoren nicht über einen
+            # eigenen Key im coordinator.data abfragen, sondern direkt aus den
+            # Rohfeldern zusammensetzen. Sonst wären sie dauerhaft "unavailable".
+            if self._sensor_name == "System Date":
+                day = data.get("System Date Day")
+                month = data.get("System Date Month")
+                year_raw = data.get("System Date Year")
+                if day is None or month is None or year_raw is None:
+                    self._attr_available = False
+                    return None
+                try:
+                    year = 2000 + int(year_raw)
+                    d = datetime(year, int(month), int(day))
+                    today = datetime.now().date()
+                    # Health-Check: Datum muss mit dem echten Systemdatum übereinstimmen,
+                    # sonst geben wir das WCM-Datum als YYYY-MM-DD aus.
+                    self._attr_available = True
+                    if d.date() == today:
+                        return "OK"
+                    return d.strftime("%Y-%m-%d")
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "System Time":
+                hour = data.get("System Time Hour")
+                minute = data.get("System Time Minute")
+                if hour is None or minute is None:
+                    self._attr_available = False
+                    return None
+                try:
+                    h = int(hour)
+                    m = int(minute)
+                    if not (0 <= h <= 23 and 0 <= m <= 59):
+                        self._attr_available = False
+                        return None
+
+                    now = datetime.now()
+                    wcm_minutes = h * 60 + m
+                    now_minutes = now.hour * 60 + now.minute
+                    drift = abs(now_minutes - wcm_minutes)
+                    self._attr_available = True
+
+                    # Bis 5 Minuten Drift noch "OK", sonst WCM-Zeit anzeigen
+                    if drift <= 5:
+                        return "OK"
+                    return f"{h:02d}:{m:02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Holiday Start":
+                day = data.get("HK1 Holiday Start Day")
+                month = data.get("HK1 Holiday Start Month")
+                year_raw = data.get("HK1 Holiday Start Year")
+                # Jahr 0 bedeutet "nicht gesetzt"
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Holiday End":
+                day = data.get("HK1 Holiday End Day")
+                month = data.get("HK1 Holiday End Month")
+                year_raw = data.get("HK1 Holiday End Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK1 Urlaubstemperaturniveau":
+                level = data.get("HK1 Holiday Temp Level")
+                if level is None:
+                    self._attr_available = False
+                    return None
+                self._attr_available = True
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "HK2 Holiday Start":
+                day = data.get("HK2 Holiday Start Day")
+                month = data.get("HK2 Holiday Start Month")
+                year_raw = data.get("HK2 Holiday Start Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK2 Holiday End":
+                day = data.get("HK2 Holiday End Day")
+                month = data.get("HK2 Holiday End Month")
+                year_raw = data.get("HK2 Holiday End Year")
+                if not year_raw:
+                    self._attr_available = True
+                    return "--"
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                year = 2000 + year_raw
+                try:
+                    self._attr_available = True
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "HK2 Urlaubstemperaturniveau":
+                level = data.get("HK2 Holiday Temp Level")
+                if level is None:
+                    self._attr_available = False
+                    return None
+                self._attr_available = True
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "DST Start":
+                day = data.get("DST Start Day")
+                month = data.get("DST Start Month")
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                try:
+                    self._attr_available = True
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            if self._sensor_name == "DST End":
+                day = data.get("DST End Day")
+                month = data.get("DST End Month")
+                if not day or not month:
+                    self._attr_available = False
+                    return None
+                try:
+                    self._attr_available = True
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    self._attr_available = False
+                    return None
+
+            # Ab hier: normale Sensoren, die direkt einen Key in data haben
             value = data.get(self._sensor_name)
             if value is None:
                 _LOGGER.debug("Data for %s not found – sensor set to unavailable", self._sensor_name)
@@ -274,6 +457,99 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     value,
                     f"Unbekannte Phase ({value})",
                 )
+
+            # HK/WW user operation modes (Form_Heizung_Benutzer): Codes → Texte
+            if self._sensor_name in (
+                "HK1 User Betriebsart HK",
+                "HK2 User Betriebsart HK",
+            ):
+                return HK_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+
+            if self._sensor_name in (
+                "HK1 User Betriebsart WW",
+                "HK2 User Betriebsart WW",
+            ):
+                return WW_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+
+            # Virtuelle, human readable Sensoren (Date/Time/Holiday/DST)
+            if self._sensor_name == "System Date":
+                day = data.get("System Date Day")
+                month = data.get("System Date Month")
+                year_raw = data.get("System Date Year")
+                if not day or not month or year_raw is None:
+                    return "--"
+                # Jahr laut WebUI: 2000 + raw
+                year = 2000 + year_raw
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "System Time":
+                hour = data.get("System Time Hour")
+                minute = data.get("System Time Minute")
+                if hour is None or minute is None:
+                    return "--:--"
+                try:
+                    return f"{int(hour):02d}:{int(minute):02d}"
+                except (TypeError, ValueError):
+                    return "--:--"
+
+            if self._sensor_name == "HK1 Holiday Start":
+                day = data.get("HK1 Holiday Start Day")
+                month = data.get("HK1 Holiday Start Month")
+                year_raw = data.get("HK1 Holiday Start Year")
+                # Jahr 0 bedeutet "nicht gesetzt"
+                if not year_raw:
+                    return "--"
+                year = 2000 + year_raw
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "HK1 Holiday End":
+                day = data.get("HK1 Holiday End Day")
+                month = data.get("HK1 Holiday End Month")
+                year_raw = data.get("HK1 Holiday End Year")
+                if not year_raw:
+                    return "--"
+                year = 2000 + year_raw
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "HK1 Holiday Temp Level Text":
+                level = data.get("HK1 Holiday Temp Level")
+                if level is None:
+                    return None
+                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+
+            if self._sensor_name == "DST Start":
+                day = data.get("DST Start Day")
+                month = data.get("DST Start Month")
+                if not day or not month:
+                    return "--"
+                try:
+                    # Nur Tag/Monat, kein Jahr →  DD.MM
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    return "--"
+
+            if self._sensor_name == "DST End":
+                day = data.get("DST End Day")
+                month = data.get("DST End Month")
+                if not day or not month:
+                    return "--"
+                try:
+                    return f"{int(day):02d}.{int(month):02d}"
+                except (TypeError, ValueError):
+                    return "--"
 
             # HK-Konfigurations-Sensoren: Codes auf lesbare Texte abbilden
             if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
@@ -301,6 +577,37 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 "Expert Max Power WW",
             ):
                 return value
+
+            # Fachmann / Heizung – Ein Opti MAX (ID 272): Rohwert = 15-Minuten-Blöcke
+            # Die Sensoransicht soll – genau wie die Number-Entity – echte Minuten anzeigen.
+            if self._sensor_name in (
+                "HK1 Expert Ein Opti MAX",
+                "HK2 Expert Ein Opti MAX",
+            ):
+                try:
+                    return float(value) * 15.0
+                except (TypeError, ValueError):
+                    return None
+
+            # Fachmann / Heizung – Frostheizgrenze (ID 702): Rohwert 10 = "nicht gesetzt".
+            # In der Sensor-Ansicht behandeln wir diesen Sentinel wie in den Number-Entities.
+            if self._sensor_name in (
+                "HK1 Expert Frostheizgrenze",
+                "HK2 Expert Frostheizgrenze",
+            ):
+                try:
+                    raw = float(value)
+                except (TypeError, ValueError):
+                    return None
+
+                # API liefert hier bereits skalierte °C-Werte; "nicht gesetzt"
+                # erscheint in der WebUI als 1.0 °C. In HA müssen wir bei einem
+                # numerischen Sensor in diesem Fall `None` zurückgeben, sonst
+                # kollidiert es mit der erwarteten Einheit/Präzision.
+                if raw == 1.0:
+                    return None
+
+                return raw
 
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),

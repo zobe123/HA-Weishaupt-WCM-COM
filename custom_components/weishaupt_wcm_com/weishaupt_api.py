@@ -16,7 +16,7 @@ _lock = threading.Lock()
 class WeishauptAPI(RestoreEntity):
     """API class for interacting with the Weishaupt WCM-COM."""
 
-    def __init__(self, host, username=None, password=None):
+    def __init__(self, host, username=None, password=None, advanced_logging: bool = False):
         """Initialize the API."""
         self._host = host
         self._username = username
@@ -24,6 +24,8 @@ class WeishauptAPI(RestoreEntity):
         self._data = {}
         self.previous_values = {}
         self._state = None
+        # Optionaler Modus für zusätzliche Debug-Logs
+        self.advanced_logging = advanced_logging
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
@@ -106,7 +108,8 @@ class WeishauptAPI(RestoreEntity):
         # beantwortet (begrenzte Anzahl pro Antwort).
         #  - globale Prozesswerte (Kessel)
         #  - Heizkreis-Prozesswerte (HK1/HK2)
-        #  - Benutzer-/Konfig-Parameter (HK/WW-Betriebsarten, Pumpen, Versionen)
+        #  - Heizkreis-Konfig-Parameter (Pumpen, Spannungen, HK-Typ, Ext. Fühler)
+        #  - HK-User-Parameter (Betriebsarten & User-Temperaturen)
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
             p for p in PARAMETERS
@@ -128,6 +131,21 @@ class WeishauptAPI(RestoreEntity):
             and not p["name"].startswith("HK1 User")
             and not p["name"].startswith("HK2 User")
             and not p.get("internal")
+            and not p.get("virtual")
+        ]
+
+        # Spezielle Gruppe für HK1 Holiday Temp Level + System Date/Time + DST,
+        # damit diese nicht in einem übervollen Prozess-Telegramm untergehen.
+        date_params = [
+            p
+            for p in PARAMETERS
+            if not p.get("virtual")
+            and (
+                p["name"].startswith("System Date ")
+                or p["name"].startswith("System Time ")
+                or p["name"].startswith("DST ")
+                or p["name"] == "HK1 Holiday Temp Level"
+            )
         ]
         # Versions-Parameter (FS/EM High/Low) separat abfragen, damit sie immer
         # vollständig geliefert werden.
@@ -137,12 +155,22 @@ class WeishauptAPI(RestoreEntity):
             if p.get("internal")
             and "Version" in p["name"]
         ]
+        # HK-Konfig (Pumpen/Spannung/HK-Typ/Ext. Raumfühler etc., inkl. HKx User Betriebsart)
         hk_config_params = [
             p
             for p in PARAMETERS
             if ("bus" in p or "modultyp" in p)
             and p not in hk_process_params
             and p not in hk_version_params
+            and not p["name"].startswith("HK1 User ")
+            and not p["name"].startswith("HK2 User ")
+        ]
+        # HK-Userparameter (Form_Heizung_Benutzer) explizit trennen, damit sie
+        # in eigenen, kleinen Requests wie in der Original-WebApp abgefragt werden.
+        hk_user_params = [
+            p
+            for p in PARAMETERS
+            if p["name"].startswith("HK1 User ") or p["name"].startswith("HK2 User ")
         ]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -160,7 +188,15 @@ class WeishauptAPI(RestoreEntity):
                 # Mehrere Requests: globale Parameter, Heizkreis-Prozesswerte,
                 # Versionsparameter, Heizkreis-Konfig/User-Parameter und
                 # Fachmann-/Expert-Parameter separat, analog zur WebApp.
-                for params in (global_params, hk_process_params, hk_version_params, hk_config_params, expert_params):
+                for params in (
+                    global_params,
+                    hk_process_params,
+                    hk_version_params,
+                    hk_config_params,
+                    hk_user_params,  # eigener Block nur für HK1/HK2 User-Parameter
+                    date_params,     # HK1 Holiday Temp Level + System Date/Time + DST
+                    expert_params,
+                ):
                     if not params:
                         continue
 
@@ -238,7 +274,18 @@ class WeishauptAPI(RestoreEntity):
                                 value = message[6]
 
                             elif param["type"] == "temperature":
-                                value = self.get_temperature(low_byte, high_byte)
+                                raw_value = self.get_temperature(low_byte, high_byte)
+                                value = raw_value
+
+                                # Für Debugging von HK2 User-Parametern explizit loggen, was ankommt
+                                if getattr(self, "advanced_logging", False) and param["name"].startswith("HK2 User"):
+                                    _LOGGER.debug(
+                                        "HK2 User parameter %s (id=%s, bus=%s) raw temperature=%s",
+                                        param["name"],
+                                        param["id"],
+                                        bus_id,
+                                        raw_value,
+                                    )
 
                                 # Bekannter Weishaupt-Sentinelwert für "kein gültiger Wert": -3276.8 °C
                                 # -> leise auf vorherigen Wert oder None zurückfallen, ohne Log-Spam.

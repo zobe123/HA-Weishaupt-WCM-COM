@@ -168,10 +168,81 @@ async def async_setup_entry(
             "Expert Max Charge Time WW",
             parameter_id=384,
             min_value=10,
-            max_value=60,
+            max_value=180,
             step=1,
             scale=1.0,
             unit=UnitOfTime.MINUTES,
+            allow_write=allow_write,
+        )
+    )
+
+    # Frostheizgrenze (ID 702) – Fachmann / Heizung, -20..0 °C
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 Expert Frostheizgrenze",
+            parameter_id=702,
+            min_value=-20.0,
+            max_value=0.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 Expert Frostheizgrenze",
+            parameter_id=702,
+            min_value=-20.0,
+            max_value=0.0,
+            step=1.0,
+            scale=1.0,
+            unit=UnitOfTemperature.CELSIUS,
+            bus=2,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    # Ein Opti MAX (ID 272) – Fachmann / Heizung, 0..240 Minuten in 15er-Schritten
+    # Rohwert kommt in 15-Minuten-Blöcken, in HA wollen wir echte Minuten sehen.
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK1 Expert Ein Opti MAX",
+            parameter_id=272,
+            min_value=0.0,
+            max_value=240.0,
+            step=15.0,              # Schrittweite in Minuten
+            scale=(1.0 / 15.0),     # Rohwert = 15-Minuten-Blöcke → in HA Minuten
+            unit=UnitOfTime.MINUTES,
+            bus=1,
+            modultyp=6,
+            allow_write=allow_write,
+        )
+    )
+
+    numbers.append(
+        WeishauptExpertNumber(
+            coordinator,
+            api,
+            "HK2 Expert Ein Opti MAX",
+            parameter_id=272,
+            min_value=0.0,
+            max_value=240.0,
+            step=15.0,              # Schrittweite in Minuten
+            scale=(1.0 / 15.0),     # Rohwert = 15-Minuten-Blöcke → in HA Minuten
+            unit=UnitOfTime.MINUTES,
+            bus=2,
+            modultyp=6,
             allow_write=allow_write,
         )
     )
@@ -439,6 +510,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         scale: float = 1.0,
         unit: str | None = None,
         allow_write: bool = False,
+        bus: int = 0,
+        modultyp: int = 10,
     ) -> None:
         """Initialize the expert number entity."""
 
@@ -449,6 +522,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._parameter_id = parameter_id
         self._scale = float(scale) if scale else 1.0
         self._allow_write = allow_write
+        self._bus = bus
+        self._modultyp = modultyp
 
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
@@ -466,8 +541,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Icon je nach Parameter leicht variieren
         name = sensor_name
 
+        # Fachmann / Heizung
+        if "Frostheizgrenze" in name:
+            self._attr_icon = "mdi:snowflake-thermometer"
+        elif "Ein Opti MAX" in name:
+            self._attr_icon = "mdi:clock-outline"
+
         # Allgemeine Expert-Parameter
-        if "Corr Outside Sensor" in name:
+        elif "Corr Outside Sensor" in name:
             self._attr_icon = "mdi:thermometer-minus"
         elif "Spec Level Heating Mode" in name:
             self._attr_icon = "mdi:thermometer"
@@ -540,7 +621,15 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         self._attr_available = True
         try:
-            return float(value) / self._scale
+            raw = float(value)
+
+            # Sonderfall: Frostheizgrenze-Sentinel (ID 702)
+            # WebUI zeigt "--", der bereits skalierte Wert ist 1.0 °C.
+            # In Home Assistant soll dieser Zustand als "nicht gesetzt" erscheinen.
+            if self._parameter_id == 702 and raw == 1.0:
+                return None
+
+            return raw / self._scale
         except (TypeError, ValueError):
             return None
 
@@ -557,13 +646,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Skalierten Rohwert berechnen (DIV=10 etc. analog zur WebApp-Logik)
         code = int(round(value * self._scale))
 
-        # Expert-Parameter sind globale WG‑Parameter (Modultyp 10, Bus 0).
-        # Schreibzugriffe laufen synchron im Executor, um den Event Loop nicht zu blockieren.
+        # Für globale Expert-Parameter bleibt bus=0/modultyp=10, für
+        # Heizkreis-spezifische Parameter (z.B. Frostheizgrenze/Opti MAX)
+        # werden bus/modultyp über den Konstruktor gesetzt.
         await self.hass.async_add_executor_job(
             self.api.write_parameter,
             self._parameter_id,
-            0,
-            10,
+            self._bus,
+            self._modultyp,
             code,
         )
 

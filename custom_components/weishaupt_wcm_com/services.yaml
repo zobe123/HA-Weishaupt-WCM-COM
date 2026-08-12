@@ -1,0 +1,36 @@
+set_holiday_date:
+  name: Set holiday date
+  description: Set HK1/HK2 holiday start/end via raw Day/Month/Year parameters.
+  fields:
+    heating_circuit:
+      name: Heating circuit
+      description: 1 = HK1, 2 = HK2
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+          mode: box
+
+    target:
+      name: Target
+      description: Holiday date to set
+      required: false
+      default: start
+      example: start
+      selector:
+        select:
+          options:
+            - start
+            - end
+
+    date:
+      name: Date
+      description: Date in YYYY-MM-DD, or leave empty to reset to "not set".
+      required: false
+      example: "2026-08-01"
+      selector:
+        text:
+          type: text
