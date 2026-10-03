@@ -7,6 +7,7 @@ from requests.auth import HTTPDigestAuth
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
+from .temperature import normalize_temperature_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -287,25 +288,18 @@ class WeishauptAPI(RestoreEntity):
                                         raw_value,
                                     )
 
-                                # Bekannter Weishaupt-Sentinelwert für "kein gültiger Wert": -3276.8 °C
-                                # -> leise auf vorherigen Wert oder None zurückfallen, ohne Log-Spam.
-                                if value == -3276.8:
-                                    if param["name"] in self.previous_values:
-                                        value = self.previous_values[param["name"]]
-                                    else:
-                                        value = None
-
-                                # Plausibilitätsprüfung für Temperaturwerte (z. B. -50 bis 150 °C)
-                                elif value < -50 or value > 150:
+                                value, should_warn = normalize_temperature_value(
+                                    parameter_id=param["id"],
+                                    parameter_name=param["name"],
+                                    value=value,
+                                    previous_values=self.previous_values,
+                                )
+                                if should_warn:
                                     _LOGGER.warning(
                                         "Unplausibler Temperaturwert für %s: %s. Nutze vorherigen Wert oder setze auf 'unavailable'.",
                                         param["name"],
-                                        value,
+                                        raw_value,
                                     )
-                                    if param["name"] in self.previous_values:
-                                        value = self.previous_values[param["name"]]
-                                    else:
-                                        value = None
 
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
