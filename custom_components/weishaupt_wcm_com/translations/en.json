@@ -1,5 +1,8 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "Unable to connect to WCM-COM"
+    },
     "step": {
       "user": {
         "title": "Weishaupt WCM-COM",
@@ -8,6 +11,9 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "The updated connection settings could not be verified"
+    },
     "step": {
       "init": {
         "data": {

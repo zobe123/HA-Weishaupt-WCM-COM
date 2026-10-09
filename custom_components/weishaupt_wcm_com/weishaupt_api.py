@@ -3,10 +3,16 @@ import logging
 import json
 import requests
 import threading
+import time
 from requests.auth import HTTPDigestAuth
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
+from .protocol import (
+    READ_COMMAND,
+    WRITE_COMMAND,
+    build_telegram as build_coco_telegram,
+    parameter_protocol,
+)
 from .temperature import normalize_temperature_value
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 # Lock initialisieren, um sicherzustellen, dass nur eine Anfrage gleichzeitig erfolgt
 _lock = threading.Lock()
 
-class WeishauptAPI(RestoreEntity):
+
+class WeishauptCommunicationError(Exception):
+    """Raised when a complete WCM-COM update or write cannot be completed."""
+
+
+class WeishauptAPI:
     """API class for interacting with the Weishaupt WCM-COM."""
 
     def __init__(self, host, username=None, password=None, advanced_logging: bool = False):
@@ -24,28 +35,13 @@ class WeishauptAPI(RestoreEntity):
         self._password = password
         self._data = {}
         self.previous_values = {}
-        self._state = None
         # Optionaler Modus für zusätzliche Debug-Logs
         self.advanced_logging = advanced_logging
-
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        if (old_state := await self.async_get_last_state()) is not None:
-            self._data = old_state.attributes.get("data", {})
-            self.previous_values = old_state.attributes.get("previous_values", {})
 
     @property
     def data(self):
         """Return the latest data."""
         return self._data
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            "data": self._data,
-            "previous_values": self.previous_values
-        }
 
     def update(self):
         """Fetch new data from the WCM-COM."""
@@ -78,7 +74,7 @@ class WeishauptAPI(RestoreEntity):
         #   6: TEL_DATA low   (0 for read)
         #   7: TEL_DATA high  (0 for read)
 
-        def build_telegram(params):
+        def build_read_request(params):
             telegram = {"prot": "coco", "telegramm": []}
             for param in params:
                 # Default behaviour (existing implementation): use destination=10
@@ -93,16 +89,15 @@ class WeishauptAPI(RestoreEntity):
                 if "bus" in param:
                     bus = param["bus"]
 
-                telegram["telegramm"].append([
-                    modultyp,      # TEL_MODULTYP
-                    bus,           # TEL_BUSKENNUNG
-                    1,             # TEL_COMMAND (read)
-                    param["id"],  # TEL_INFONR
-                    0,             # TEL_INDEX
-                    0,             # TEL_PROT
-                    0,             # TEL_DATA low
-                    0,             # TEL_DATA high
-                ])
+                telegram["telegramm"].append(
+                    build_coco_telegram(
+                        module_type=modultyp,
+                        bus=bus,
+                        command=READ_COMMAND,
+                        parameter_id=param["id"],
+                        protocol=parameter_protocol(param),
+                    )
+                )
             return telegram
 
         # Split in mehrere Requests, damit der WCM-COM alle Telegramme
@@ -163,6 +158,7 @@ class WeishauptAPI(RestoreEntity):
             if ("bus" in p or "modultyp" in p)
             and p not in hk_process_params
             and p not in hk_version_params
+            and p not in date_params
             and not p["name"].startswith("HK1 User ")
             and not p["name"].startswith("HK2 User ")
         ]
@@ -204,7 +200,7 @@ class WeishauptAPI(RestoreEntity):
                     req = requests.post(
                         url,
                         auth=auth,
-                        data=json.dumps(build_telegram(params)),
+                        data=json.dumps(build_read_request(params)),
                         headers={'Content-Type': 'application/json'},
                         timeout=60  # Timeout auf 60 Sekunden erhöhen
                     )
@@ -212,23 +208,23 @@ class WeishauptAPI(RestoreEntity):
 
                     # Prüfen, ob die Antwort gültig ist
                     if req.text.strip() == "":
-                        _LOGGER.warning("Received empty response from Weishaupt WCM-COM, retrying...")
-                        self._data = {}
-                        continue  # Versuchen Sie es erneut
+                        raise WeishauptCommunicationError(
+                            "Received empty response from Weishaupt WCM-COM"
+                        )
 
                     # Prüfen, ob der Server überlastet ist (Server antwortet mit HTML)
                     if "<HTML>" in req.text.upper():
-                        _LOGGER.warning("Received 'server busy' response, retrying...")
-                        self._data = {}
-                        continue  # Versuchen Sie es erneut
+                        raise WeishauptCommunicationError(
+                            "Received 'server busy' response from Weishaupt WCM-COM"
+                        )
 
                     # Versuchen, die Antwort als JSON zu dekodieren
                     try:
                         response_json = req.json()
                     except json.JSONDecodeError as e:
-                        _LOGGER.error(f"JSON decode error: {e}. Response content: {req.text}")
-                        self._data = {}
-                        continue  # Versuchen Sie es erneut
+                        raise WeishauptCommunicationError(
+                            f"Invalid JSON response from Weishaupt WCM-COM: {e}"
+                        ) from e
 
                     # Verarbeiten der empfangenen Daten
                     response_data = response_json.get("telegramm", [])
@@ -244,6 +240,7 @@ class WeishauptAPI(RestoreEntity):
 
                         param_id = message[3]
                         bus_id = message[1]
+                        protocol_id = message[5]
 
                         if len(message) >= 8:
                             low_byte = message[6]
@@ -261,13 +258,36 @@ class WeishauptAPI(RestoreEntity):
                         # 3. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
                         candidates = [p for p in PARAMETERS if p["id"] == param_id]
                         param = next(
-                            (p for p in candidates if p.get("bus") == bus_id and p.get("modultyp") == message[0]),
+                            (
+                                p
+                                for p in candidates
+                                if p.get("bus") == bus_id
+                                and p.get("modultyp") == message[0]
+                                and parameter_protocol(p) == protocol_id
+                            ),
                             None,
                         )
                         if param is None:
-                            param = next((p for p in candidates if p.get("bus") == bus_id and "modultyp" not in p), None)
+                            param = next(
+                                (
+                                    p
+                                    for p in candidates
+                                    if p.get("bus") == bus_id
+                                    and "modultyp" not in p
+                                    and parameter_protocol(p) == protocol_id
+                                ),
+                                None,
+                            )
                         if param is None:
-                            param = next((p for p in candidates if "bus" not in p), None)
+                            param = next(
+                                (
+                                    p
+                                    for p in candidates
+                                    if "bus" not in p
+                                    and parameter_protocol(p) == protocol_id
+                                ),
+                                None,
+                            )
 
                         if param:
                             # Spezialfall: Device Conf (3794) liefert einen Text wie "WAP P3" im letzten Feld.
@@ -349,6 +369,11 @@ class WeishauptAPI(RestoreEntity):
                         result[f"HK{hk} Config Version EM"] = f"{em_high}.{em_low}"
 
                 _LOGGER.debug(f"Received data (with versions): {result}")
+                if not result:
+                    raise WeishauptCommunicationError(
+                        "WCM-COM returned no recognized parameter values"
+                    )
+
                 self._data = result  # Speichern Sie die aktualisierten Daten
                 return  # Erfolgreiches Ende der Schleife, Daten erfolgreich abgerufen
 
@@ -357,17 +382,26 @@ class WeishauptAPI(RestoreEntity):
                     _LOGGER.error("Authentication failed. Please check your username and password.")
                 else:
                     _LOGGER.error(f"HTTP error occurred: {err}")
-                self._data = {}
             except requests.exceptions.RequestException as e:
-                _LOGGER.error(f"HTTP request error: {e}")
-                self._data = {}
+                _LOGGER.warning(
+                    "WCM-COM request attempt %s/3 failed: %s",
+                    attempt + 1,
+                    e,
+                )
             except Exception as e:
-                _LOGGER.error(f"Unexpected error: {e}")
-                self._data = {}
+                _LOGGER.warning(
+                    "WCM-COM update attempt %s/3 failed: %s",
+                    attempt + 1,
+                    e,
+                )
+
+            if attempt < 2:
+                time.sleep(attempt + 1)
 
         # Wenn alle Versuche fehlschlagen
-        _LOGGER.error("Failed to fetch data from Weishaupt WCM-COM after multiple attempts.")
-        self._data = {}
+        raise WeishauptCommunicationError(
+            "Failed to fetch complete data from Weishaupt WCM-COM after 3 attempts"
+        )
 
     def get_temperature(self, low_byte, high_byte):
         """Calculate temperature from two bytes."""
@@ -377,13 +411,45 @@ class WeishauptAPI(RestoreEntity):
         else:
             return (raw_value - 65536) / 10
 
-    def write_parameter(self, parameter_id: int, bus: int, modultyp: int, code: int) -> None:
-        """Write a simple enum parameter (HK1 config) via CoCo telegram.
+    def write_parameter(
+        self,
+        parameter_id: int,
+        bus: int,
+        modultyp: int,
+        code: int,
+        protocol: int = 0,
+    ) -> None:
+        """Write one parameter while excluding concurrent reads and writes."""
 
-        This mirrors the structure used in the read path, but with
-        TEL_COMMAND set to write (2) and the code in the low byte.
-        The high byte is 0 because all our enums are small.
-        """
+        self.write_parameters(
+            [(parameter_id, bus, modultyp, code, protocol)]
+        )
+
+    def write_parameters(
+        self,
+        writes: list[tuple[int, int, int, int, int]],
+    ) -> None:
+        """Write several parameters without allowing a poll between them."""
+
+        with _lock:
+            for parameter_id, bus, modultyp, code, protocol in writes:
+                self._write_parameter_unlocked(
+                    parameter_id,
+                    bus,
+                    modultyp,
+                    code,
+                    protocol,
+                )
+
+    def _write_parameter_unlocked(
+        self,
+        parameter_id: int,
+        bus: int,
+        modultyp: int,
+        code: int,
+        protocol: int,
+    ) -> None:
+        """Write one parameter; caller must hold the shared WCM-COM lock."""
 
         ENDPOINT = "/parameter.json"
         url = f"http://{self._host}{ENDPOINT}"
@@ -391,16 +457,14 @@ class WeishauptAPI(RestoreEntity):
         telegram = {
             "prot": "coco",
             "telegramm": [
-                [
-                    modultyp,  # TEL_MODULTYP (destination)
-                    bus,       # TEL_BUSKENNUNG (HK1 = 1)
-                    2,         # TEL_COMMAND (2 = write)
-                    parameter_id,  # TEL_INFONR
-                    0,         # TEL_INDEX
-                    0,         # TEL_PROT
-                    code & 0xFF,      # TEL_DATA low
-                    (code >> 8) & 0xFF,  # TEL_DATA high
-                ]
+                build_coco_telegram(
+                    module_type=modultyp,
+                    bus=bus,
+                    command=WRITE_COMMAND,
+                    parameter_id=parameter_id,
+                    protocol=protocol,
+                    value=code,
+                )
             ],
         }
 
@@ -421,17 +485,18 @@ class WeishauptAPI(RestoreEntity):
                 timeout=30,
             )
 
-            # "Server busy"-Antworten (HTML) nicht als harten Fehler werten,
-            # sondern nur warnen – das Gerät ist träge und lässt sich ggf.
-            # mit dem nächsten regulären Poll wieder einfangen.
+            # A write is successful only when WCM-COM actually accepts it.
             if "<HTML>" in req.text.upper():
-                _LOGGER.warning("WCM-COM returned 'server busy' on write for parameter %s", parameter_id)
-                return
+                raise WeishauptCommunicationError(
+                    f"WCM-COM returned 'server busy' while writing parameter {parameter_id}"
+                )
 
             req.raise_for_status()
             _LOGGER.debug("Write result: %s", req.text)
-        except Exception as err:  # pragma: no cover
-            _LOGGER.error("Error writing parameter %s: %s", parameter_id, err)
+        except requests.exceptions.RequestException as err:
+            raise WeishauptCommunicationError(
+                f"Error writing WCM-COM parameter {parameter_id}: {err}"
+            ) from err
 
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""

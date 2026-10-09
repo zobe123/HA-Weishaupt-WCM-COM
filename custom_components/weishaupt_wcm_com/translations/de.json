@@ -1,5 +1,8 @@
 {
   "config": {
+    "error": {
+      "cannot_connect": "Verbindung zum WCM-COM konnte nicht hergestellt werden"
+    },
     "step": {
       "user": {
         "title": "Weishaupt WCM-COM",
@@ -8,6 +11,9 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "Die geänderten Verbindungsdaten konnten nicht bestätigt werden"
+    },
     "step": {
       "init": {
         "data": {

@@ -11,6 +11,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -32,9 +33,11 @@ PLATFORMS: list[str] = ["sensor", "select", "number"]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
 
-    host: str | None = entry.data.get("host")
-    username: str | None = entry.data.get("username")
-    password: str | None = entry.data.get("password")
+    # Prefer legacy connection values accidentally stored in options by <=1.2.10,
+    # while the corrected options flow persists them in entry.data.
+    host: str | None = entry.options.get("host", entry.data.get("host"))
+    username: str | None = entry.options.get("username", entry.data.get("username"))
+    password: str | None = entry.options.get("password", entry.data.get("password"))
 
     # Read scan interval, write flag and advanced logging from options (or use defaults)
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -55,11 +58,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return api.data
         except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with WCM-COM: {err}") from err
-
-    # Read scan interval, write flag and advanced logging from options (or use defaults)
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
-    advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
 
     coordinator = DataUpdateCoordinator[
         dict
@@ -112,11 +110,13 @@ def _register_services(hass: HomeAssistant) -> None:
         date_str = call.data.get("date")
 
         if heating_circuit not in (1, 2):
-            _LOGGER.error("set_holiday_date: invalid heating_circuit=%s", heating_circuit)
-            return
+            raise HomeAssistantError(
+                f"Invalid heating_circuit={heating_circuit}; expected 1 or 2"
+            )
         if target not in ("start", "end"):
-            _LOGGER.error("set_holiday_date: invalid target=%s", target)
-            return
+            raise HomeAssistantError(
+                f"Invalid target={target}; expected 'start' or 'end'"
+            )
 
         # Determine parameter IDs for the selected HK/target
         if target == "start":
@@ -131,14 +131,30 @@ def _register_services(hass: HomeAssistant) -> None:
         bus = heating_circuit
         modultyp = 6
 
-        # Lookup a coordinating API instance (any entry for this domain)
+        # Resolve the requested config entry. Never guess when multiple devices exist.
         domain_data = hass.data.get(DOMAIN, {})
         if not domain_data:
-            _LOGGER.error("set_holiday_date: no %s data found in hass.data", DOMAIN)
-            return
+            raise HomeAssistantError(f"No loaded {DOMAIN} config entry found")
 
-        # Use the first config entry's API/coordinator
-        entry_data = next(iter(domain_data.values()))
+        config_entry_id = call.data.get("config_entry_id")
+        if config_entry_id:
+            entry_data = domain_data.get(config_entry_id)
+            if entry_data is None:
+                raise HomeAssistantError(
+                    f"Unknown or unloaded config_entry_id: {config_entry_id}"
+                )
+        elif len(domain_data) == 1:
+            entry_data = next(iter(domain_data.values()))
+        else:
+            raise HomeAssistantError(
+                "config_entry_id is required when multiple WCM-COM entries are loaded"
+            )
+
+        if not entry_data.get("allow_write", False):
+            raise HomeAssistantError(
+                "Weishaupt WCM-COM integration is in read-only mode."
+            )
+
         api: WeishauptAPI = entry_data["api"]
         coordinator: DataUpdateCoordinator = entry_data["coordinator"]
 
@@ -154,15 +170,17 @@ def _register_services(hass: HomeAssistant) -> None:
             try:
                 dt = datetime.strptime(date_str, "%Y-%m-%d")
             except (ValueError, TypeError):
-                _LOGGER.error("set_holiday_date: invalid date '%s' (expected YYYY-MM-DD)", date_str)
-                return
+                raise HomeAssistantError(
+                    f"Invalid date '{date_str}'; expected YYYY-MM-DD"
+                ) from None
 
             day = dt.day
             month = dt.month
             year_raw = dt.year - 2000
             if year_raw < 0 or year_raw > 99:
-                _LOGGER.error("set_holiday_date: year %s out of encodable range (2000-2099)", dt.year)
-                return
+                raise HomeAssistantError(
+                    f"Year {dt.year} is outside the supported range 2000-2099"
+                )
 
         _LOGGER.debug(
             "set_holiday_date: HK%s %s -> %s (Day=%s, Month=%s, YearRaw=%s)",
@@ -174,10 +192,14 @@ def _register_services(hass: HomeAssistant) -> None:
             year_raw,
         )
 
-        # Perform writes in executor (three parameters: day, month, year)
-        await hass.async_add_executor_job(api.write_parameter, day_id, bus, modultyp, day)
-        await hass.async_add_executor_job(api.write_parameter, month_id, bus, modultyp, month)
-        await hass.async_add_executor_job(api.write_parameter, year_id, bus, modultyp, year_raw)
+        # Write all three fields under one API lock so no poll can observe a
+        # half-updated date. Year is written last and activates the date.
+        writes = [
+            (day_id, bus, modultyp, day, 0),
+            (month_id, bus, modultyp, month, 0),
+            (year_id, bus, modultyp, year_raw, 0),
+        ]
+        await hass.async_add_executor_job(api.write_parameters, writes)
 
         # Refresh coordinator so that HKx Holiday Start/End sensors update
         await coordinator.async_request_refresh()

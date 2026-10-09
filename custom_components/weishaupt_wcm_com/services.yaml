@@ -2,6 +2,14 @@ set_holiday_date:
   name: Set holiday date
   description: Set HK1/HK2 holiday start/end via raw Day/Month/Year parameters.
   fields:
+    config_entry_id:
+      name: WCM-COM device
+      description: Required only when more than one WCM-COM integration entry is loaded.
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+
     heating_circuit:
       name: Heating circuit
       description: 1 = HK1, 2 = HK2

@@ -17,7 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Coor
 from homeassistant.config_entries import ConfigEntry
 
 from .base_entity import WeishauptBaseEntity
-from .const import DOMAIN
+from .const import DOMAIN, PARAMETERS
+from .protocol import encode_value, parameter_protocol, write_scale
 
 
 async def async_setup_entry(
@@ -525,6 +526,19 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._bus = bus
         self._modultyp = modultyp
 
+        parameter = next(
+            (
+                item
+                for item in PARAMETERS
+                if item["name"] == sensor_name and item["id"] == parameter_id
+            ),
+            None,
+        )
+        if parameter is None:
+            raise ValueError(f"Missing parameter metadata for {sensor_name}")
+        self._protocol = parameter_protocol(parameter)
+        self._write_scale = write_scale(parameter["type"], parameter_id)
+
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
         self._attr_name = self._sensor_name
@@ -643,8 +657,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Clamp to allowed range just in case
         value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
 
-        # Skalierten Rohwert berechnen (DIV=10 etc. analog zur WebApp-Logik)
-        code = int(round(value * self._scale))
+        # In den vom Original-WebUI verwendeten Wire-Wert umrechnen.
+        code = encode_value(value, self._write_scale)
 
         # Für globale Expert-Parameter bleibt bus=0/modultyp=10, für
         # Heizkreis-spezifische Parameter (z.B. Frostheizgrenze/Opti MAX)
@@ -655,6 +669,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             self._bus,
             self._modultyp,
             code,
+            self._protocol,
         )
 
         # Nach dem Schreiben den Coordinator aktualisieren

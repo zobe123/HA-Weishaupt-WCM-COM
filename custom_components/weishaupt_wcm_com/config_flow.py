@@ -73,24 +73,53 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the Weishaupt options (reconfigure connection)."""
+        errors = {}
+
         if user_input is not None:
-            # Beim Speichern: neuen Host/User/Passwort + Scan-Intervall übernehmen
-            return self.async_create_entry(title="", data=user_input)
+            connection_data = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+            }
+            api = WeishauptAPI(
+                connection_data[CONF_HOST],
+                connection_data[CONF_USERNAME],
+                connection_data[CONF_PASSWORD],
+            )
+            try:
+                data = await self.hass.async_add_executor_job(api.get_data)
+                if not data:
+                    errors["base"] = "cannot_connect"
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        self._config_entry,
+                        data=connection_data,
+                    )
+                    options_data = {
+                        CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                        CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE],
+                        CONF_ADVANCED_LOGGING: user_input[CONF_ADVANCED_LOGGING],
+                    }
+                    return self.async_create_entry(title="", data=options_data)
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error("Error validating updated WCM-COM connection: %s", err)
+                errors["base"] = "cannot_connect"
 
         # Aktuelle Werte aus Entry / Optionen als Default
-        host = self._config_entry.data.get(CONF_HOST, "")
-        username = self._config_entry.data.get(CONF_USERNAME, "")
-        password = self._config_entry.data.get(CONF_PASSWORD, "")
+        source = user_input or self._config_entry.options
+        host = source.get(CONF_HOST, self._config_entry.data.get(CONF_HOST, ""))
+        username = source.get(CONF_USERNAME, self._config_entry.data.get(CONF_USERNAME, ""))
+        password = source.get(CONF_PASSWORD, self._config_entry.data.get(CONF_PASSWORD, ""))
 
-        scan_interval = self._config_entry.options.get(
+        scan_interval = source.get(
             CONF_SCAN_INTERVAL,
             DEFAULT_SCAN_INTERVAL,
         )
-        allow_write = self._config_entry.options.get(
+        allow_write = source.get(
             CONF_ALLOW_WRITE,
             DEFAULT_ALLOW_WRITE,
         )
-        advanced_logging = self._config_entry.options.get(
+        advanced_logging = source.get(
             CONF_ADVANCED_LOGGING,
             DEFAULT_ADVANCED_LOGGING,
         )
@@ -115,4 +144,8 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            errors=errors,
+        )

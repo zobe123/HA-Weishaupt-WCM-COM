@@ -30,6 +30,7 @@ from .const import (
     HOLIDAY_TEMP_LEVEL_MAP,
 )
 from .base_entity import WeishauptBaseEntity
+from .protocol import parameter_protocol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -255,6 +256,18 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._modultyp = modultyp
         self._allow_write = allow_write
 
+        parameter = next(
+            (
+                item
+                for item in PARAMETERS
+                if item["name"] == sensor_name and item["id"] == parameter_id
+            ),
+            None,
+        )
+        if parameter is None:
+            raise ValueError(f"Missing parameter metadata for {sensor_name}")
+        self._protocol = parameter_protocol(parameter)
+
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name == "HK1 Config HK Type":
             self._attr_name = "HK1 HK-Typ"
@@ -379,6 +392,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._bus,
             self._modultyp,
             code,
+            self._protocol,
         )
 
         # Schreiben über die API (synchron, im Executor)
