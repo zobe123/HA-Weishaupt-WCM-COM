@@ -30,7 +30,7 @@ from .const import (
     HOLIDAY_TEMP_LEVEL_MAP,
 )
 from .base_entity import WeishauptBaseEntity
-from .protocol import parameter_protocol
+from .protocol import parameter_protocol, resolve_parameter_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -256,16 +256,14 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._modultyp = modultyp
         self._allow_write = allow_write
 
-        parameter = next(
-            (
-                item
-                for item in PARAMETERS
-                if item["name"] == sensor_name and item["id"] == parameter_id
-            ),
-            None,
+        parameter = resolve_parameter_metadata(
+            PARAMETERS,
+            name=sensor_name,
+            parameter_id=parameter_id,
+            bus=bus,
+            module_type=modultyp,
         )
-        if parameter is None:
-            raise ValueError(f"Missing parameter metadata for {sensor_name}")
+        self._data_name = str(parameter["name"])
         self._protocol = parameter_protocol(parameter)
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
@@ -349,7 +347,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         """Return the currently selected option based on coordinator data."""
 
         data = self.coordinator.data or {}
-        value = data.get(self._sensor_name)
+        value = data.get(self._data_name)
         if value is None:
             return None
 
@@ -386,13 +384,13 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             return
 
         _LOGGER.debug(
-            "Setting %s (id=%s, bus=%s, modultyp=%s) to code %s",
+            "Setting %s (id=%s, bus=%s, modultyp=%s, protocol=%s) to code %s",
             self._sensor_name,
             self._parameter_id,
             self._bus,
             self._modultyp,
-            code,
             self._protocol,
+            code,
         )
 
         # Schreiben über die API (synchron, im Executor)
@@ -402,6 +400,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._bus,
             self._modultyp,
             code,
+            self._protocol,
         )
 
         # Nach dem Schreiben direkt ein Update anstoßen

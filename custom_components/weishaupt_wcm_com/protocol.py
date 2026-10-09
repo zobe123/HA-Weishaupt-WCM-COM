@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 
@@ -14,6 +14,45 @@ def parameter_protocol(parameter: Mapping[str, Any]) -> int:
     """Return the documented TEL_PROT value for a parameter."""
 
     return int(parameter.get("protocol", 0))
+
+
+def resolve_parameter_metadata(
+    parameters: Sequence[Mapping[str, Any]],
+    *,
+    name: str,
+    parameter_id: int,
+    bus: int,
+    module_type: int,
+) -> Mapping[str, Any]:
+    """Resolve metadata by name first, then by a unique wire address.
+
+    Some entities use a user-facing name that differs from the raw parameter
+    name.  The fallback is intentionally limited to a unique ID/bus/module
+    combination so parameters distinguished by TEL_PROT are never guessed.
+    """
+
+    candidates = [
+        parameter
+        for parameter in parameters
+        if not parameter.get("virtual")
+        and int(parameter["id"]) == int(parameter_id)
+        and int(parameter.get("bus", 0)) == int(bus)
+        and int(
+            parameter.get("modultyp", parameter.get("destination", 10))
+        )
+        == int(module_type)
+    ]
+
+    named = [parameter for parameter in candidates if parameter["name"] == name]
+    if len(named) == 1:
+        return named[0]
+    if len(candidates) == 1:
+        return candidates[0]
+
+    raise ValueError(
+        f"Missing or ambiguous parameter metadata for {name} "
+        f"(id={parameter_id}, bus={bus}, module_type={module_type})"
+    )
 
 
 def write_scale(parameter_type: str, parameter_id: int) -> float:

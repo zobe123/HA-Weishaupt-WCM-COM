@@ -42,6 +42,46 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(parameters["HK2 User Betriebsart HK"]["protocol"], 2)
         self.assertEqual(parameters["HK2 User Betriebsart WW"]["protocol"], 3)
 
+    def test_holiday_select_aliases_resolve_by_unique_wire_address(self) -> None:
+        """Localized select names must resolve to their raw metadata."""
+
+        parameters = load_parameters()
+        for circuit in (1, 2):
+            parameter = protocol.resolve_parameter_metadata(
+                parameters,
+                name=f"HK{circuit} Urlaubstemperaturniveau",
+                parameter_id=317,
+                bus=circuit,
+                module_type=6,
+            )
+            self.assertEqual(parameter["name"], f"HK{circuit} Holiday Temp Level")
+            self.assertEqual(protocol.parameter_protocol(parameter), 1)
+
+    def test_exact_name_disambiguates_shared_parameter_address(self) -> None:
+        """TEL_PROT variants sharing ID/bus/module require their exact name."""
+
+        parameters = load_parameters()
+        parameter = protocol.resolve_parameter_metadata(
+            parameters,
+            name="HK1 User Betriebsart WW",
+            parameter_id=274,
+            bus=1,
+            module_type=6,
+        )
+        self.assertEqual(protocol.parameter_protocol(parameter), 3)
+
+    def test_ambiguous_alias_is_rejected(self) -> None:
+        """Never guess between parameters that differ only by TEL_PROT."""
+
+        with self.assertRaisesRegex(ValueError, "ambiguous"):
+            protocol.resolve_parameter_metadata(
+                load_parameters(),
+                name="HK1 translated alias",
+                parameter_id=274,
+                bus=1,
+                module_type=6,
+            )
+
     def test_non_virtual_wire_identities_are_unique(self) -> None:
         """No two values may collapse onto the same complete telegram address."""
 
