@@ -48,16 +48,6 @@ OPERATION_MODE_MAP = {
     # Fügen Sie weitere Modi entsprechend der Dokumentation hinzu
 }
 
-OPERATION_PHASE_MAP = {
-    0: "Bereitschaft",
-    6: "Heizen",
-    8: "Warmwasser",
-    #3: "Störung",
-    #4: "Entlüften",
-    #5: "Vorbereitung",
-    #6: "Nachlauf",
-    # Fügen Sie weitere Phasen hinzu
-}
 # Abfrageparameter und ihre Eigenschaften
 # Standardmäßig wird Zieladresse 10 verwendet. Für einzelne Parameter (z.B.
 # Raumtemperatur über den Raumregler) kann eine abweichende "destination"

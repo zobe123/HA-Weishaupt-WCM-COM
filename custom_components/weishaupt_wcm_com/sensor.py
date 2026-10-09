@@ -24,7 +24,6 @@ from .const import (
     PARAMETERS,
     ERROR_CODE_KEY,
     OPERATION_MODE_MAP,
-    OPERATION_PHASE_MAP,
     HK_CONFIG_PUMP_MAP,
     HK_CONFIG_VOLTAGE_MAP,
     HK_CONFIG_HK_TYPE_MAP,
@@ -35,6 +34,7 @@ from .const import (
     EXPERT_BOILER_ADDRESS_MAP,
     HOLIDAY_TEMP_LEVEL_MAP,
 )
+from .operation_phase import format_operation_phase
 from .base_entity import WeishauptBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -466,9 +466,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 )
 
             if self._sensor_name == "Betriebsphase":
-                return OPERATION_PHASE_MAP.get(
+                return format_operation_phase(
                     value,
-                    f"Unbekannte Phase ({value})",
+                    flame_on=bool(data.get("Flamme")),
                 )
 
             # HK/WW user operation modes (Form_Heizung_Benutzer): Codes → Texte
