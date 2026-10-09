@@ -33,6 +33,8 @@ from .const import (
     WW_USER_OPERATION_MODE_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
     HOLIDAY_TEMP_LEVEL_MAP,
+    HK_REDUCED_MODE_MAP,
+    HK_ROOM_THERMOSTAT_MAP,
 )
 from .operation_phase import format_operation_phase
 from .base_entity import WeishauptBaseEntity
@@ -70,11 +72,13 @@ async def async_setup_entry(
         # sollen keine eigenen Sensoren bekommen.
         if param.get("internal"):
             continue
+        if param.get("conditional") and param["name"] not in (coordinator.data or {}):
+            continue
 
         sensor_name = param["name"]
         p_type = param["type"]
         unit = None
-        if p_type == "temperature":
+        if p_type in ("temperature", "integer_temperature"):
             unit = UnitOfTemperature.CELSIUS
         elif p_type == "temp_delta":
             unit = "K"
@@ -472,17 +476,20 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 )
 
             # HK/WW user operation modes (Form_Heizung_Benutzer): Codes → Texte
-            if self._sensor_name in (
-                "HK1 User Betriebsart HK",
-                "HK2 User Betriebsart HK",
-            ):
-                return HK_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+            if self._sensor_name in ("HK1 User Betriebsart", "HK2 User Betriebsart"):
+                hk = 1 if self._sensor_name.startswith("HK1") else 2
+                mapping = (
+                    WW_USER_OPERATION_MODE_MAP
+                    if data.get(f"HK{hk} User Mode Kind") == "ww"
+                    else HK_USER_OPERATION_MODE_MAP
+                )
+                return mapping.get(value, f"Code {value}")
 
-            if self._sensor_name in (
-                "HK1 User Betriebsart WW",
-                "HK2 User Betriebsart WW",
-            ):
-                return WW_USER_OPERATION_MODE_MAP.get(value, f"Code {value}")
+            if self._sensor_name in ("HK1 Expert Reduziertbetrieb", "HK2 Expert Reduziertbetrieb"):
+                return HK_REDUCED_MODE_MAP.get(value, f"Code {value}")
+
+            if self._sensor_name in ("HK1 Expert Raumthermostat", "HK2 Expert Raumthermostat"):
+                return HK_ROOM_THERMOSTAT_MAP.get(value, f"Code {value}")
 
             # Virtuelle, human readable Sensoren (Date/Time/Holiday/DST)
             if self._sensor_name == "System Date":
@@ -602,26 +609,6 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 except (TypeError, ValueError):
                     return None
 
-            # Fachmann / Heizung – Frostheizgrenze (ID 702): Rohwert 10 = "nicht gesetzt".
-            # In der Sensor-Ansicht behandeln wir diesen Sentinel wie in den Number-Entities.
-            if self._sensor_name in (
-                "HK1 Expert Frostheizgrenze",
-                "HK2 Expert Frostheizgrenze",
-            ):
-                try:
-                    raw = float(value)
-                except (TypeError, ValueError):
-                    return None
-
-                # API liefert hier bereits skalierte °C-Werte; "nicht gesetzt"
-                # erscheint in der WebUI als 1.0 °C. In HA müssen wir bei einem
-                # numerischen Sensor in diesem Fall `None` zurückgeben, sonst
-                # kollidiert es mit der erwarteten Einheit/Präzision.
-                if raw == 1.0:
-                    return None
-
-                return raw
-
             param_type = next(
                 (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
                 None,
@@ -630,7 +617,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if param_type == "binary":
                 return "Ein" if value else "Aus"
 
-            if param_type in ("value", "temperature", "days", "percent", "minutes") or param_type is None:
+            if param_type in ("value", "temperature", "integer_temperature", "ratio_tenths", "days", "percent", "minutes") or param_type is None:
                 return value
 
             if param_type in ("value_1000", "hours_1000"):

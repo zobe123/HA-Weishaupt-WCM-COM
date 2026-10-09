@@ -8,10 +8,14 @@ from requests.auth import HTTPDigestAuth
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 from .protocol import (
+    GENERIC_TELEGRAM,
     READ_COMMAND,
+    STANDARD_TELEGRAM,
     WRITE_COMMAND,
     build_telegram as build_coco_telegram,
-    parameter_protocol,
+    resolve_response_parameter,
+    split_request_groups,
+    user_mode_kind,
 )
 from .temperature import normalize_temperature_value
 
@@ -95,7 +99,7 @@ class WeishauptAPI:
                         bus=bus,
                         command=READ_COMMAND,
                         parameter_id=param["id"],
-                        protocol=parameter_protocol(param),
+                        telegram_type=STANDARD_TELEGRAM,
                     )
                 )
             return telegram
@@ -140,7 +144,7 @@ class WeishauptAPI:
                 p["name"].startswith("System Date ")
                 or p["name"].startswith("System Time ")
                 or p["name"].startswith("DST ")
-                or p["name"] == "HK1 Holiday Temp Level"
+                or p["name"].endswith("Holiday Temp Level")
             )
         ]
         # Versions-Parameter (FS/EM High/Low) separat abfragen, damit sie immer
@@ -185,7 +189,8 @@ class WeishauptAPI:
                 # Mehrere Requests: globale Parameter, Heizkreis-Prozesswerte,
                 # Versionsparameter, Heizkreis-Konfig/User-Parameter und
                 # Fachmann-/Expert-Parameter separat, analog zur WebApp.
-                for params in (
+                request_groups = []
+                for parameter_block in (
                     global_params,
                     hk_process_params,
                     hk_version_params,
@@ -194,6 +199,9 @@ class WeishauptAPI:
                     date_params,     # HK1 Holiday Temp Level + System Date/Time + DST
                     expert_params,
                 ):
+                    request_groups.extend(split_request_groups(parameter_block))
+
+                for params in request_groups:
                     if not params:
                         continue
 
@@ -240,7 +248,10 @@ class WeishauptAPI:
 
                         param_id = message[3]
                         bus_id = message[1]
-                        protocol_id = message[5]
+                        telegram_type = message[5]
+                        if telegram_type != STANDARD_TELEGRAM:
+                            _LOGGER.debug("Ignoring non-standard read response: %s", message)
+                            continue
 
                         if len(message) >= 8:
                             low_byte = message[6]
@@ -250,51 +261,14 @@ class WeishauptAPI:
                             low_byte = 0
                             high_byte = 0
 
-                        # Zuordnung des Parameters:
-                        # 1. Bevorzuge HK-spezifische Einträge mit explizitem "bus" == bus_id
-                        #    und passenden "modultyp" (FS/MS), damit 409/410 sauber
-                        #    zwischen FS- und EM-Versionen getrennt werden.
-                        # 2. Fallback: Einträge mit passendem "bus" (ohne modultyp).
-                        # 3. Fallback: globaler Eintrag ohne "bus" (z.B. Kesselwerte)
-                        candidates = [p for p in PARAMETERS if p["id"] == param_id]
-                        param = next(
-                            (
-                                p
-                                for p in candidates
-                                if p.get("bus") == bus_id
-                                and p.get("modultyp") == message[0]
-                                and parameter_protocol(p) == protocol_id
-                            ),
-                            None,
-                        )
-                        if param is None:
-                            param = next(
-                                (
-                                    p
-                                    for p in candidates
-                                    if p.get("bus") == bus_id
-                                    and "modultyp" not in p
-                                    and parameter_protocol(p) == protocol_id
-                                ),
-                                None,
-                            )
-                        if param is None:
-                            param = next(
-                                (
-                                    p
-                                    for p in candidates
-                                    if "bus" not in p
-                                    and parameter_protocol(p) == protocol_id
-                                ),
-                                None,
-                            )
+                        param = resolve_response_parameter(params, message)
 
                         if param:
                             # Spezialfall: Device Conf (3794) liefert einen Text wie "WAP P3" im letzten Feld.
                             if param["id"] == 3794 and len(message) >= 7 and isinstance(message[6], str):
                                 value = message[6]
 
-                            elif param["type"] == "temperature":
+                            elif param["type"] in ("temperature", "temp_delta", "ratio_tenths"):
                                 raw_value = self.get_temperature(low_byte, high_byte)
                                 value = raw_value
 
@@ -321,6 +295,8 @@ class WeishauptAPI:
                                         raw_value,
                                     )
 
+                            elif param["type"] == "integer_temperature":
+                                value = self.get_signed_value(low_byte, high_byte)
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
                                 # Numerische Prüfung für 'value'
@@ -341,9 +317,14 @@ class WeishauptAPI:
                             else:
                                 value = low_byte + 256 * high_byte  # Fallback
 
-                            # Speichern/Mergen der Werte
-                            result[param["name"]] = value
-                            self.previous_values[param["name"]] = value
+                            if value == param.get("no_value"):
+                                value = None
+
+                            # Speichern/Mergen der Werte. Expected no-value
+                            # markers deliberately remain absent/unknown.
+                            if value is not None:
+                                result[param["name"]] = value
+                                self.previous_values[param["name"]] = value
 
                 _LOGGER.debug(f"Received data: {result}")
 
@@ -357,6 +338,11 @@ class WeishauptAPI:
 
                 # Heizkreise HK1/HK2 – FS/EM-Version pro Kreis
                 for hk in (1, 2):
+                    mode_kind = user_mode_kind(
+                        result.get(f"HK{hk} User Capability Flags"), hk
+                    )
+                    if mode_kind is not None:
+                        result[f"HK{hk} User Mode Kind"] = mode_kind
                     fs_high = result.get(f"HK{hk} Version FS High")
                     fs_low = result.get(f"HK{hk} Version FS Low")
                     em_high = result.get(f"HK{hk} Version EM High")
@@ -417,28 +403,26 @@ class WeishauptAPI:
         bus: int,
         modultyp: int,
         code: int,
-        protocol: int = 0,
     ) -> None:
         """Write one parameter while excluding concurrent reads and writes."""
 
         self.write_parameters(
-            [(parameter_id, bus, modultyp, code, protocol)]
+            [(parameter_id, bus, modultyp, code)]
         )
 
     def write_parameters(
         self,
-        writes: list[tuple[int, int, int, int, int]],
+        writes: list[tuple[int, int, int, int]],
     ) -> None:
         """Write several parameters without allowing a poll between them."""
 
         with _lock:
-            for parameter_id, bus, modultyp, code, protocol in writes:
+            for parameter_id, bus, modultyp, code in writes:
                 self._write_parameter_unlocked(
                     parameter_id,
                     bus,
                     modultyp,
                     code,
-                    protocol,
                 )
 
     def _write_parameter_unlocked(
@@ -447,7 +431,6 @@ class WeishauptAPI:
         bus: int,
         modultyp: int,
         code: int,
-        protocol: int,
     ) -> None:
         """Write one parameter; caller must hold the shared WCM-COM lock."""
 
@@ -462,7 +445,7 @@ class WeishauptAPI:
                     bus=bus,
                     command=WRITE_COMMAND,
                     parameter_id=parameter_id,
-                    protocol=protocol,
+                    telegram_type=GENERIC_TELEGRAM,
                     value=code,
                 )
             ],
@@ -501,6 +484,11 @@ class WeishauptAPI:
     def get_value(self, low_byte, high_byte):
         """Calculate a value from two bytes."""
         return low_byte + 256 * high_byte
+
+    def get_signed_value(self, low_byte, high_byte):
+        """Calculate a signed 16-bit integer from two bytes."""
+        value = low_byte + 256 * high_byte
+        return value - 65536 if value >= 32768 else value
 
     def get_binary(self, low_byte, high_byte):
         """Return binary status as True or False."""

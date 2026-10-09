@@ -33,14 +33,14 @@ def load_parameters() -> list[dict]:
 class ProtocolTest(unittest.TestCase):
     """Verify protocol discriminators and wire-value conversion."""
 
-    def test_hk_and_hot_water_modes_have_distinct_protocols(self) -> None:
-        """Parameter 274 must be separated by TEL_PROT like the original WebUI."""
+    def test_parameter_274_has_one_capability_selected_definition(self) -> None:
+        """The WebUI exposes one parameter-274 interpretation per bus."""
 
         parameters = {item["name"]: item for item in load_parameters()}
-        self.assertEqual(parameters["HK1 User Betriebsart HK"]["protocol"], 2)
-        self.assertEqual(parameters["HK1 User Betriebsart WW"]["protocol"], 3)
-        self.assertEqual(parameters["HK2 User Betriebsart HK"]["protocol"], 2)
-        self.assertEqual(parameters["HK2 User Betriebsart WW"]["protocol"], 3)
+        self.assertEqual(parameters["HK1 User Betriebsart"]["request_group"], 2)
+        self.assertEqual(parameters["HK2 User Betriebsart"]["request_group"], 2)
+        self.assertEqual(protocol.user_mode_kind(0, 1), "hk")
+        self.assertEqual(protocol.user_mode_kind(0x40, 1), "ww")
 
     def test_holiday_select_aliases_resolve_by_unique_wire_address(self) -> None:
         """Localized select names must resolve to their raw metadata."""
@@ -55,35 +55,31 @@ class ProtocolTest(unittest.TestCase):
                 module_type=6,
             )
             self.assertEqual(parameter["name"], f"HK{circuit} Holiday Temp Level")
-            self.assertEqual(protocol.parameter_protocol(parameter), 1)
+            self.assertEqual(protocol.parameter_group(parameter), 1)
 
-    def test_exact_name_disambiguates_shared_parameter_address(self) -> None:
-        """TEL_PROT variants sharing ID/bus/module require their exact name."""
+    def test_exact_name_resolves_operating_mode(self) -> None:
 
         parameters = load_parameters()
         parameter = protocol.resolve_parameter_metadata(
             parameters,
-            name="HK1 User Betriebsart WW",
+            name="HK1 User Betriebsart",
             parameter_id=274,
             bus=1,
             module_type=6,
         )
-        self.assertEqual(protocol.parameter_protocol(parameter), 3)
+        self.assertEqual(parameter["name"], "HK1 User Betriebsart")
 
-    def test_ambiguous_alias_is_rejected(self) -> None:
-        """Never guess between parameters that differ only by TEL_PROT."""
+    def test_response_resolution_is_limited_to_request_group(self) -> None:
+        parameters = [
+            {"id": 1, "name": "first", "bus": 1, "modultyp": 6, "request_group": 1},
+            {"id": 1, "name": "second", "bus": 1, "modultyp": 6, "request_group": 2},
+        ]
+        self.assertEqual(
+            protocol.resolve_response_parameter([parameters[1]], [6, 1, 1, 1, 0, 0, 7, 0])["name"],
+            "second",
+        )
 
-        with self.assertRaisesRegex(ValueError, "ambiguous"):
-            protocol.resolve_parameter_metadata(
-                load_parameters(),
-                name="HK1 translated alias",
-                parameter_id=274,
-                bus=1,
-                module_type=6,
-            )
-
-    def test_non_virtual_wire_identities_are_unique(self) -> None:
-        """No two values may collapse onto the same complete telegram address."""
+    def test_request_group_identities_are_unique(self) -> None:
 
         identities: dict[tuple[int, int, int, int], str] = {}
         for item in load_parameters():
@@ -93,7 +89,8 @@ class ProtocolTest(unittest.TestCase):
                 item["id"],
                 item.get("bus", 0),
                 item.get("modultyp", item.get("destination", 10)),
-                protocol.parameter_protocol(item),
+                item.get("page", "default"),
+                protocol.parameter_group(item),
             )
             self.assertNotIn(
                 identity,
@@ -122,21 +119,53 @@ class ProtocolTest(unittest.TestCase):
             bus=0,
             command=protocol.WRITE_COMMAND,
             parameter_id=3103,
-            protocol=0,
+            telegram_type=protocol.GENERIC_TELEGRAM,
             value=encoded,
         )
-        self.assertEqual(telegram, [10, 0, 2, 3103, 0, 0, 216, 255])
+        self.assertEqual(telegram, [10, 0, 2, 3103, 0, 1, 216, 255])
 
-    def test_write_telegram_preserves_protocol(self) -> None:
+    def test_write_telegram_uses_generic_type(self) -> None:
         telegram = protocol.build_telegram(
             module_type=6,
             bus=1,
             command=protocol.WRITE_COMMAND,
             parameter_id=274,
-            protocol=3,
+            telegram_type=protocol.GENERIC_TELEGRAM,
             value=11,
         )
-        self.assertEqual(telegram, [6, 1, 2, 274, 0, 3, 11, 0])
+        self.assertEqual(telegram, [6, 1, 2, 274, 0, 1, 11, 0])
+
+    def test_frost_limit_is_integer_and_slope_is_tenths(self) -> None:
+        self.assertEqual(protocol.write_scale("integer_temperature", 702), 1)
+        self.assertEqual(protocol.write_scale("ratio_tenths", 270), 10)
+
+    def test_phantom_solar_parameter_is_absent(self) -> None:
+        names = {item["name"] for item in load_parameters()}
+        self.assertNotIn("HK1 User Sollwert Solar", names)
+        self.assertNotIn("HK2 User Sollwert Solar", names)
+
+    def test_browser_groups_never_become_telegram_types(self) -> None:
+        parameters = load_parameters()
+        self.assertFalse(any("protocol" in item for item in parameters))
+        groups = protocol.split_request_groups(
+            [item for item in parameters if item.get("page") == "hk_user"]
+        )
+        self.assertGreaterEqual(len(groups), 6)
+        for group in groups:
+            for item in group:
+                telegram = protocol.build_telegram(
+                    module_type=item.get("modultyp", 10),
+                    bus=item.get("bus", 0),
+                    command=protocol.READ_COMMAND,
+                    parameter_id=item["id"],
+                )
+                self.assertEqual(telegram[5], protocol.STANDARD_TELEGRAM)
+
+    def test_original_webui_parameters_are_modelled(self) -> None:
+        identities = {(item["id"], item.get("bus", 0)) for item in load_parameters()}
+        for circuit in (1, 2):
+            for parameter_id in (19, 650, 2418, 306, 2414, 2588):
+                self.assertIn((parameter_id, circuit), identities)
 
 
 if __name__ == "__main__":

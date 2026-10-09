@@ -96,10 +96,18 @@ select_module = load_module(f"{PACKAGE}.select", ROOT / "select.py")
 
 
 class SelectPlatformTest(unittest.TestCase):
-    """Verify the holiday aliases and protocol-aware write call."""
+    """Verify select discovery, aliases and generic writes."""
 
     def test_platform_setup_creates_every_select(self) -> None:
         coordinator = Mock()
+        coordinator.data = {
+            "HK1 User Mode Kind": "hk",
+            "HK2 User Mode Kind": "ww",
+            "HK1 Expert Reduziertbetrieb": 1,
+            "HK2 Expert Reduziertbetrieb": 0,
+            "HK1 Expert Raumthermostat": 0,
+            "HK2 Expert Raumthermostat": 1,
+        }
         api = Mock()
         hass = Mock()
         hass.data = {
@@ -122,7 +130,7 @@ class SelectPlatformTest(unittest.TestCase):
             )
         )
 
-        self.assertEqual(len(added), 12)
+        self.assertEqual(len(added), 14)
 
     def test_holiday_select_uses_raw_data_name(self) -> None:
         coordinator = Mock()
@@ -140,9 +148,8 @@ class SelectPlatformTest(unittest.TestCase):
         )
 
         self.assertEqual(entity.current_option, "Absenktemperatur")
-        self.assertEqual(entity._protocol, 1)
 
-    def test_select_write_passes_protocol(self) -> None:
+    def test_select_write_uses_generic_api_call(self) -> None:
         coordinator = Mock()
         coordinator.data = {"HK1 Holiday Temp Level": 0}
         coordinator.async_request_refresh = AsyncMock()
@@ -166,7 +173,7 @@ class SelectPlatformTest(unittest.TestCase):
         entity.hass.async_add_executor_job = run_executor
         asyncio.run(entity.async_select_option("Absenktemperatur"))
 
-        api.write_parameter.assert_called_once_with(317, 1, 6, 1, 1)
+        api.write_parameter.assert_called_once_with(317, 1, 6, 1)
         coordinator.async_request_refresh.assert_awaited_once()
 
 

@@ -28,9 +28,11 @@ from .const import (
     HK_USER_OPERATION_MODE_MAP,
     WW_USER_OPERATION_MODE_MAP,
     HOLIDAY_TEMP_LEVEL_MAP,
+    HK_REDUCED_MODE_MAP,
+    HK_ROOM_THERMOSTAT_MAP,
 )
 from .base_entity import WeishauptBaseEntity
-from .protocol import parameter_protocol, resolve_parameter_metadata
+from .protocol import resolve_parameter_metadata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,62 +138,34 @@ async def async_setup_entry(
         )
     )
 
-    # HK/WW user operation mode selects (Form_Heizung_Benutzer)
-    selects.append(
-        WeishauptHKConfigSelect(
-            coordinator,
-            api,
-            "HK1 User Betriebsart HK",
-            "hk1_user_op_mode_hk",
-            HK_USER_OPERATION_MODE_MAP,
-            parameter_id=274,
-            bus=1,
-            modultyp=6,
-            allow_write=allow_write,
-        )
-    )
+    # Parameter 274 has exactly one meaning per bus. The capability flags
+    # decide whether the WebUI exposes it as heating or hot-water mode.
+    for hk in (1, 2):
+        mode_kind = (coordinator.data or {}).get(f"HK{hk} User Mode Kind")
+        if mode_kind in ("hk", "ww"):
+            selects.append(
+                WeishauptHKConfigSelect(
+                    coordinator, api, f"HK{hk} User Betriebsart",
+                    f"hk{hk}_user_op_mode",
+                    HK_USER_OPERATION_MODE_MAP if mode_kind == "hk" else WW_USER_OPERATION_MODE_MAP,
+                    parameter_id=274, bus=hk, modultyp=6,
+                    allow_write=allow_write,
+                    display_name=(f"HK{hk} Betriebsart Heizung" if mode_kind == "hk" else f"HK{hk} Betriebsart Warmwasser"),
+                )
+            )
 
-    selects.append(
-        WeishauptHKConfigSelect(
-            coordinator,
-            api,
-            "HK1 User Betriebsart WW",
-            "hk1_user_op_mode_ww",
-            WW_USER_OPERATION_MODE_MAP,
-            parameter_id=274,
-            bus=1,
-            modultyp=6,
-            allow_write=allow_write,
-        )
-    )
-
-    selects.append(
-        WeishauptHKConfigSelect(
-            coordinator,
-            api,
-            "HK2 User Betriebsart HK",
-            "hk2_user_op_mode_hk",
-            HK_USER_OPERATION_MODE_MAP,
-            parameter_id=274,
-            bus=2,
-            modultyp=6,
-            allow_write=allow_write,
-        )
-    )
-
-    selects.append(
-        WeishauptHKConfigSelect(
-            coordinator,
-            api,
-            "HK2 User Betriebsart WW",
-            "hk2_user_op_mode_ww",
-            WW_USER_OPERATION_MODE_MAP,
-            parameter_id=274,
-            bus=2,
-            modultyp=6,
-            allow_write=allow_write,
-        )
-    )
+        for name, slug, mapping, parameter_id in (
+            (f"HK{hk} Expert Reduziertbetrieb", f"hk{hk}_expert_reduced_mode", HK_REDUCED_MODE_MAP, 306),
+            (f"HK{hk} Expert Raumthermostat", f"hk{hk}_expert_room_thermostat", HK_ROOM_THERMOSTAT_MAP, 2588),
+        ):
+            if name in (coordinator.data or {}):
+                selects.append(
+                    WeishauptHKConfigSelect(
+                        coordinator, api, name, slug, mapping,
+                        parameter_id=parameter_id, bus=hk, modultyp=6,
+                        allow_write=allow_write,
+                    )
+                )
 
     # HK1 holiday temperature level (P142 / ID 317)
     selects.append(
@@ -242,6 +216,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         bus: int,
         modultyp: int,
         allow_write: bool = False,
+        display_name: str | None = None,
     ) -> None:
         """Initialize the select entity."""
 
@@ -264,7 +239,6 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             module_type=modultyp,
         )
         self._data_name = str(parameter["name"])
-        self._protocol = parameter_protocol(parameter)
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name == "HK1 Config HK Type":
@@ -285,18 +259,9 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         elif sensor_name == "HK2 Config Ext Room Sensor":
             self._attr_name = "HK2 Externer Raumfühler"
             self._attr_icon = "mdi:home-thermometer-outline"
-        elif sensor_name == "HK1 User Betriebsart HK":
-            self._attr_name = "HK1 Betriebsart Heizung"
-            self._attr_icon = "mdi:home-thermometer"
-        elif sensor_name == "HK1 User Betriebsart WW":
-            self._attr_name = "HK1 Betriebsart Warmwasser"
-            self._attr_icon = "mdi:water-thermometer"
-        elif sensor_name == "HK2 User Betriebsart HK":
-            self._attr_name = "HK2 Betriebsart Heizung"
-            self._attr_icon = "mdi:home-thermometer"
-        elif sensor_name == "HK2 User Betriebsart WW":
-            self._attr_name = "HK2 Betriebsart Warmwasser"
-            self._attr_icon = "mdi:water-thermometer"
+        elif sensor_name.endswith("User Betriebsart"):
+            self._attr_name = display_name or sensor_name
+            self._attr_icon = "mdi:home-thermometer" if "Heizung" in self._attr_name else "mdi:water-thermometer"
         elif sensor_name == "HK1 Urlaubstemperaturniveau":
             self._attr_name = "HK1 Urlaubstemperaturniveau"
             self._attr_icon = "mdi:snowflake"
@@ -384,12 +349,11 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             return
 
         _LOGGER.debug(
-            "Setting %s (id=%s, bus=%s, modultyp=%s, protocol=%s) to code %s",
+            "Setting %s (id=%s, bus=%s, modultyp=%s) to code %s",
             self._sensor_name,
             self._parameter_id,
             self._bus,
             self._modultyp,
-            self._protocol,
             code,
         )
 
@@ -400,7 +364,6 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._bus,
             self._modultyp,
             code,
-            self._protocol,
         )
 
         # Nach dem Schreiben direkt ein Update anstoßen

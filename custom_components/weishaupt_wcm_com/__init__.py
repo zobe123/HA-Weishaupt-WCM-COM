@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_SCAN_INTERVAL,
@@ -22,12 +23,56 @@ from .const import (
     DEFAULT_ALLOW_WRITE,
     CONF_ADVANCED_LOGGING,
     DEFAULT_ADVANCED_LOGGING,
+    PARAMETERS,
 )
 from .weishaupt_api import WeishauptAPI
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[str] = ["sensor", "select", "number"]
+
+OBSOLETE_ENTITY_UNIQUE_IDS = {
+    "sensor": {
+        "weishaupt_hk1_user_sollwert_solar",
+        "weishaupt_hk2_user_sollwert_solar",
+        "weishaupt_hk1_user_betriebsart_hk",
+        "weishaupt_hk1_user_betriebsart_ww",
+        "weishaupt_hk2_user_betriebsart_hk",
+        "weishaupt_hk2_user_betriebsart_ww",
+    },
+    "number": {
+        "weishaupt_hk1_user_sollwert_solar_number",
+        "weishaupt_hk2_user_sollwert_solar_number",
+    },
+    "select": {
+        "weishaupt_hk1_user_op_mode_hk_select",
+        "weishaupt_hk1_user_op_mode_ww_select",
+        "weishaupt_hk2_user_op_mode_hk_select",
+        "weishaupt_hk2_user_op_mode_ww_select",
+    },
+}
+
+
+def _remove_obsolete_entities(hass: HomeAssistant, data: dict) -> None:
+    """Remove invalid and unsupported conditional registry entries."""
+
+    registry = er.async_get(hass)
+    unique_ids_by_platform = {
+        platform: set(unique_ids)
+        for platform, unique_ids in OBSOLETE_ENTITY_UNIQUE_IDS.items()
+    }
+    for parameter in PARAMETERS:
+        if not parameter.get("conditional") or parameter["name"] in data:
+            continue
+        slug = parameter["name"].lower().replace(" ", "_")
+        unique_ids_by_platform["sensor"].add(f"weishaupt_{slug}")
+        unique_ids_by_platform["number"].add(f"weishaupt_{slug}_number")
+
+    for platform, unique_ids in unique_ids_by_platform.items():
+        for unique_id in unique_ids:
+            entity_id = registry.async_get_entity_id(platform, DOMAIN, unique_id)
+            if entity_id is not None:
+                registry.async_remove(entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -71,6 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # First refresh before entities are created
     await coordinator.async_config_entry_first_refresh()
+    _remove_obsolete_entities(hass, coordinator.data or {})
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -195,9 +241,9 @@ def _register_services(hass: HomeAssistant) -> None:
         # Write all three fields under one API lock so no poll can observe a
         # half-updated date. Year is written last and activates the date.
         writes = [
-            (day_id, bus, modultyp, day, 0),
-            (month_id, bus, modultyp, month, 0),
-            (year_id, bus, modultyp, year_raw, 0),
+            (day_id, bus, modultyp, day),
+            (month_id, bus, modultyp, month),
+            (year_id, bus, modultyp, year_raw),
         ]
         await hass.async_add_executor_job(api.write_parameters, writes)
 

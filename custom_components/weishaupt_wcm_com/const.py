@@ -83,12 +83,12 @@ PARAMETERS = [
     {"id": 3103, "name": "Expert Corr Outside Sensor",     "type": "temp_delta"},
     {"id": 2560, "name": "Expert Facility Frost Cont",     "type": "temperature"},
     {"id": 31,   "name": "Expert Min VL Target",           "type": "temperature"},
-    {"id": 39,   "name": "Expert Max VL Target",           "type": "temperature", "protocol": 1},
-    {"id": 34,   "name": "Expert Switch Diff VL",          "type": "temperature", "protocol": 1},
-    {"id": 323,  "name": "Expert Burner Pulse Lock",       "type": "minutes",     "protocol": 1},
-    {"id": 319,  "name": "Expert Max Power Heating",       "type": "percent",     "protocol": 1},
-    {"id": 345,  "name": "Expert Max Power WW",            "type": "percent",     "protocol": 1},
-    {"id": 384,  "name": "Expert Max Charge Time WW",      "type": "minutes",     "protocol": 1},
+    {"id": 39,   "name": "Expert Max VL Target",           "type": "temperature", "request_group": 1, "page": "wtc_expert"},
+    {"id": 34,   "name": "Expert Switch Diff VL",          "type": "temperature", "request_group": 1, "page": "wtc_expert"},
+    {"id": 323,  "name": "Expert Burner Pulse Lock",       "type": "minutes",     "request_group": 1, "page": "wtc_expert"},
+    {"id": 319,  "name": "Expert Max Power Heating",       "type": "percent",     "request_group": 1, "page": "wtc_expert"},
+    {"id": 345,  "name": "Expert Max Power WW",            "type": "percent",     "request_group": 1, "page": "wtc_expert"},
+    {"id": 384,  "name": "Expert Max Charge Time WW",      "type": "minutes",     "request_group": 1, "page": "wtc_expert"},
 
     # Heizkreis-Konfiguration HK1/HK2
     # Pumpen-/Spannungs- und Regelungsparameter (abgeleitet aus WTC WebApp Dumps)
@@ -104,11 +104,15 @@ PARAMETERS = [
     {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
     {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
-    # Benutzer-Betriebsarten HK/WW (Form_Heizung_Benutzer)
-    {"id": 274,  "name": "HK1 User Betriebsart HK", "type": "value", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 274,  "name": "HK1 User Betriebsart WW", "type": "value", "bus": 1, "modultyp": 6, "protocol": 3},
-    {"id": 274,  "name": "HK2 User Betriebsart HK", "type": "value", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 274,  "name": "HK2 User Betriebsart WW", "type": "value", "bus": 2, "modultyp": 6, "protocol": 3},
+    # Benutzerseite: Die Zahl nach u16Data im WebUI-Konstruktor ist eine
+    # interne Abrufgruppe, kein TEL_PROT. ID 104 entscheidet, ob ID 274 als
+    # Heizungs- oder Warmwasser-Betriebsart dargestellt wird.
+    {"id": 104,  "name": "HK1 User Capability Flags", "type": "value", "bus": 1, "modultyp": 6, "request_group": 0, "page": "hk_user", "internal": True},
+    {"id": 2585, "name": "HK1 User WW Type",          "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_user", "internal": True},
+    {"id": 274,  "name": "HK1 User Betriebsart",      "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 104,  "name": "HK2 User Capability Flags", "type": "value", "bus": 2, "modultyp": 6, "request_group": 0, "page": "hk_user", "internal": True},
+    {"id": 2585, "name": "HK2 User WW Type",          "type": "value", "bus": 2, "modultyp": 6, "request_group": 1, "page": "hk_user", "internal": True},
+    {"id": 274,  "name": "HK2 User Betriebsart",      "type": "value", "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
 
     # Rohwerte für Versionsanzeigen (werden intern zu Major.Minor kombiniert)
     # Kessel (Bus 0) – Rohwerte für FS-Version
@@ -153,29 +157,41 @@ PARAMETERS = [
 
     # HK1/HK2 Benutzerparameter Heizung (Form_Heizung_Benutzer)
     # HK1 (Bus=1)
-    {"id": 5,    "name": "HK1 User Normal Raumtemperatur",  "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 8,    "name": "HK1 User Absenk Raumtemperatur",  "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 297,  "name": "HK1 User Normal VL Soll",         "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 298,  "name": "HK1 User Absenk VL Soll",         "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 270,  "name": "HK1 User Steilheit",              "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 2},
-    {"id": 2580, "name": "HK1 User Raumfrosttemperatur",    "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 3},
-    {"id": 278,  "name": "HK1 User SoWi Umschaltung",       "type": "temperature", "bus": 1, "modultyp": 6, "protocol": 3},
-    {"id": 129,  "name": "HK1 User Sollwert Solar",         "type": "temperature", "bus": 1, "modultyp": 6},
+    {"id": 5,    "name": "HK1 User Normal Raumtemperatur",  "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 8,    "name": "HK1 User Absenk Raumtemperatur",  "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 297,  "name": "HK1 User Normal VL Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+    {"id": 298,  "name": "HK1 User Absenk VL Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+    {"id": 270,  "name": "HK1 User Steilheit",              "type": "ratio_tenths", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 2580, "name": "HK1 User Raumfrosttemperatur",    "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+    {"id": 278,  "name": "HK1 User SoWi Umschaltung",       "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+    {"id": 19,   "name": "HK1 User Normal WW Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 650,  "name": "HK1 User Absenk WW Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 2418, "name": "HK1 User Vorverlegung",           "type": "minutes",      "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
     # HK2 (Bus=2)
-    {"id": 5,    "name": "HK2 User Normal Raumtemperatur",  "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 8,    "name": "HK2 User Absenk Raumtemperatur",  "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 297,  "name": "HK2 User Normal VL Soll",         "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 298,  "name": "HK2 User Absenk VL Soll",         "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 270,  "name": "HK2 User Steilheit",              "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 2},
-    {"id": 2580, "name": "HK2 User Raumfrosttemperatur",    "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 3},
-    {"id": 278,  "name": "HK2 User SoWi Umschaltung",       "type": "temperature", "bus": 2, "modultyp": 6, "protocol": 3},
-    {"id": 129,  "name": "HK2 User Sollwert Solar",         "type": "temperature", "bus": 2, "modultyp": 6},
+    {"id": 5,    "name": "HK2 User Normal Raumtemperatur",  "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 8,    "name": "HK2 User Absenk Raumtemperatur",  "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 297,  "name": "HK2 User Normal VL Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+    {"id": 298,  "name": "HK2 User Absenk VL Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+    {"id": 270,  "name": "HK2 User Steilheit",              "type": "ratio_tenths", "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+    {"id": 2580, "name": "HK2 User Raumfrosttemperatur",    "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+    {"id": 278,  "name": "HK2 User SoWi Umschaltung",       "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+    {"id": 19,   "name": "HK2 User Normal WW Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 650,  "name": "HK2 User Absenk WW Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 2418, "name": "HK2 User Vorverlegung",           "type": "minutes",      "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
 
     # Fachmann / Heizung – Frostheizgrenze / Ein Opti MAX (bus-spezifisch)
-    {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "temperature", "bus": 1, "modultyp": 6},
-    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6},
-    {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "temperature", "bus": 2, "modultyp": 6},
-    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6},
+    {"id": 306,  "name": "HK1 Expert Reduziertbetrieb",    "type": "value",               "bus": 1, "modultyp": 6, "page": "hk_expert"},
+    {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 10},
+    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert"},
+    {"id": 2414, "name": "HK1 Expert Ein Opti IST",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
+    {"id": 2588, "name": "HK1 Expert Raumthermostat",      "type": "value",       "bus": 1, "modultyp": 6, "page": "hk_expert"},
+    {"id": 384,  "name": "HK1 Expert Max Charge Time WW",  "type": "minutes",     "bus": 1, "modultyp": 12, "page": "hk_expert", "conditional": True},
+    {"id": 306,  "name": "HK2 Expert Reduziertbetrieb",    "type": "value",               "bus": 2, "modultyp": 6, "page": "hk_expert"},
+    {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 10},
+    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert"},
+    {"id": 2414, "name": "HK2 Expert Ein Opti IST",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
+    {"id": 2588, "name": "HK2 Expert Raumthermostat",      "type": "value",       "bus": 2, "modultyp": 6, "page": "hk_expert"},
+    {"id": 384,  "name": "HK2 Expert Max Charge Time WW",  "type": "minutes",     "bus": 2, "modultyp": 12, "page": "hk_expert", "conditional": True},
 
     # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
     {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
@@ -184,18 +200,18 @@ PARAMETERS = [
     {"id": 286,   "name": "HK1 Holiday End Day",            "type": "value", "bus": 1, "modultyp": 6, "internal": True},
     {"id": 287,   "name": "HK1 Holiday End Month",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},
     {"id": 288,   "name": "HK1 Holiday End Year",           "type": "value", "bus": 1, "modultyp": 6, "internal": True},
-    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
+    {"id": 317,   "name": "HK1 Holiday Temp Level",         "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
 
-    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
-    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
-    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
-    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
-    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6, "protocol": 1, "internal": True},
+    {"id": 290,   "name": "System Date Day",                "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
+    {"id": 291,   "name": "System Date Month",              "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
+    {"id": 292,   "name": "System Date Year",               "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
+    {"id": 293,   "name": "System Time Hour",               "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
+    {"id": 294,   "name": "System Time Minute",             "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
 
-    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6, "protocol": 2, "internal": True},
-    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6, "protocol": 2, "internal": True},
-    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6, "protocol": 2, "internal": True},
-    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6, "protocol": 2, "internal": True},
+    {"id": 64990, "name": "DST Start Day",                  "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_date", "internal": True},
+    {"id": 64991, "name": "DST Start Month",                "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_date", "internal": True},
+    {"id": 64992, "name": "DST End Day",                    "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_date", "internal": True},
+    {"id": 64993, "name": "DST End Month",                  "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_date", "internal": True},
 
     # HK2 Holiday (mirror of HK1, bus=2)
     {"id": 283,   "name": "HK2 Holiday Start Day",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
@@ -204,7 +220,7 @@ PARAMETERS = [
     {"id": 286,   "name": "HK2 Holiday End Day",            "type": "value", "bus": 2, "modultyp": 6, "internal": True},
     {"id": 287,   "name": "HK2 Holiday End Month",          "type": "value", "bus": 2, "modultyp": 6, "internal": True},
     {"id": 288,   "name": "HK2 Holiday End Year",           "type": "value", "bus": 2, "modultyp": 6, "internal": True},
-    {"id": 317,   "name": "HK2 Holiday Temp Level",         "type": "value", "bus": 2, "modultyp": 6, "protocol": 1, "internal": True},
+    {"id": 317,   "name": "HK2 Holiday Temp Level",         "type": "value", "bus": 2, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
 
     # Virtuelle, aus den Rohwerten berechnete Text-Sensoren (1.2.6b4/b8)
     {"id": 0, "name": "System Date",                 "type": "value", "virtual": True},
@@ -270,6 +286,19 @@ WW_USER_OPERATION_MODE_MAP = {
     4: "Absenk",
     3: "Normal",
     255: "Wie Leitstelle",
+}
+
+HK_REDUCED_MODE_MAP = {
+    0: "Frostschutz",
+    1: "Absenkbetrieb",
+}
+
+HK_ROOM_THERMOSTAT_MAP = {
+    0: "Aus",
+    1: "Tag ein",
+    2: "1 K",
+    3: "2 K",
+    4: "3 K",
 }
 
 EXPERT_BOILER_ADDRESS_MAP = {

@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 
 from .base_entity import WeishauptBaseEntity
 from .const import DOMAIN, PARAMETERS
-from .protocol import encode_value, parameter_protocol, write_scale
+from .protocol import encode_value, write_scale
 
 
 async def async_setup_entry(
@@ -355,21 +355,6 @@ async def async_setup_entry(
         )
     )
 
-    numbers.append(
-        WeishauptExpertNumber(
-            coordinator,
-            api,
-            "HK1 User Sollwert Solar",
-            parameter_id=129,
-            min_value=0.0,
-            max_value=10.0,
-            step=0.1,
-            scale=1.0,
-            unit=UnitOfTemperature.CELSIUS,
-            allow_write=allow_write,
-        )
-    )
-
     # HK2 (Bus=2)
     numbers.append(
         WeishauptExpertNumber(
@@ -476,22 +461,33 @@ async def async_setup_entry(
         )
     )
 
-    numbers.append(
-        WeishauptExpertNumber(
-            coordinator,
-            api,
-            "HK2 User Sollwert Solar",
-            parameter_id=129,
-            min_value=0.0,
-            max_value=10.0,
-            step=0.1,
-            scale=1.0,
-            unit=UnitOfTemperature.CELSIUS,
-            allow_write=allow_write,
-        )
-    )
+    # Additional values exposed by the original User/Expert WebUI. They are
+    # added only when the appliance returned the parameter during discovery.
+    for hk in (1, 2):
+        for name, parameter_id, minimum, maximum, step, unit, module_type in (
+            (f"HK{hk} User Normal WW Soll", 19, 8, 80, 1, UnitOfTemperature.CELSIUS, 6),
+            (f"HK{hk} User Absenk WW Soll", 650, 8, 80, 1, UnitOfTemperature.CELSIUS, 6),
+            (f"HK{hk} User Vorverlegung", 2418, 5, 270, 5, UnitOfTime.MINUTES, 6),
+            (f"HK{hk} Expert Max Charge Time WW", 384, 10, 180, 10, UnitOfTime.MINUTES, 12),
+        ):
+            if name in (coordinator.data or {}):
+                numbers.append(
+                    WeishauptExpertNumber(
+                        coordinator, api, name, parameter_id=parameter_id,
+                        min_value=minimum, max_value=maximum, step=step,
+                        unit=unit, bus=hk, modultyp=module_type,
+                        allow_write=allow_write,
+                    )
+                )
 
-    async_add_entities(numbers)
+    async_add_entities(
+        [
+            number
+            for number in numbers
+            if not number._conditional
+            or number._sensor_name in (coordinator.data or {})
+        ]
+    )
 
 
 class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity):
@@ -523,8 +519,6 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._parameter_id = parameter_id
         self._scale = float(scale) if scale else 1.0
         self._allow_write = allow_write
-        self._bus = bus
-        self._modultyp = modultyp
 
         parameter = next(
             (
@@ -536,8 +530,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         )
         if parameter is None:
             raise ValueError(f"Missing parameter metadata for {sensor_name}")
-        self._protocol = parameter_protocol(parameter)
+        # The catalog is authoritative. This also prevents a caller from
+        # accidentally addressing an HK parameter as global bus 0/module 10.
+        self._bus = int(parameter.get("bus", bus))
+        self._modultyp = int(
+            parameter.get("modultyp", parameter.get("destination", modultyp))
+        )
         self._write_scale = write_scale(parameter["type"], parameter_id)
+        self._conditional = bool(parameter.get("conditional"))
 
         slug = self._sensor_name.lower().replace(" ", "_")
         self._attr_translation_key = slug
@@ -591,9 +591,6 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             self._attr_icon = "mdi:snowflake-thermometer"
         elif "HK1 User SoWi Umschaltung" in name or "HK2 User SoWi Umschaltung" in name:
             self._attr_icon = "mdi:weather-sunny-alert"
-        elif "HK1 User Sollwert Solar" in name or "HK2 User Sollwert Solar" in name:
-            self._attr_icon = "mdi:solar-power"
-
         # Fallback: generisches Tuning-Icon für sonstige Slider
         else:
             self._attr_icon = "mdi:tune-variant"
@@ -637,12 +634,6 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         try:
             raw = float(value)
 
-            # Sonderfall: Frostheizgrenze-Sentinel (ID 702)
-            # WebUI zeigt "--", der bereits skalierte Wert ist 1.0 °C.
-            # In Home Assistant soll dieser Zustand als "nicht gesetzt" erscheinen.
-            if self._parameter_id == 702 and raw == 1.0:
-                return None
-
             return raw / self._scale
         except (TypeError, ValueError):
             return None
@@ -669,7 +660,6 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             self._bus,
             self._modultyp,
             code,
-            self._protocol,
         )
 
         # Nach dem Schreiben den Coordinator aktualisieren
