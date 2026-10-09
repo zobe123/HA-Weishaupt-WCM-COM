@@ -12,11 +12,29 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Extract release notes
+        env:
+          RELEASE_VERSION: ${{ github.ref_name }}
+        run: |
+          awk -v version="$RELEASE_VERSION" '
+            $0 == "## [" version "]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "No CHANGELOG.md section found for $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          gh release create "$GITHUB_REF_NAME"
-          --repo "$GITHUB_REPOSITORY"
-          --title "$GITHUB_REF_NAME"
-          --generate-notes
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Version $GITHUB_REF_NAME" \
+            --notes-file release-notes.md
