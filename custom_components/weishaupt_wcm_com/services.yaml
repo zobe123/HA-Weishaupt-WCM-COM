@@ -1,1 +1,211 @@
-c2V0X2hvbGlkYXlfZGF0ZToKICBuYW1lOiBTZXQgaG9saWRheSBkYXRlCiAgZGVzY3JpcHRpb246IFNldCBISzEvSEsyIGhvbGlkYXkgc3RhcnQvZW5kIHZpYSByYXcgRGF5L01vbnRoL1llYXIgcGFyYW1ldGVycy4KICBmaWVsZHM6CiAgICBjb25maWdfZW50cnlfaWQ6CiAgICAgIG5hbWU6IFdDTS1DT00gZGV2aWNlCiAgICAgIGRlc2NyaXB0aW9uOiBSZXF1aXJlZCBvbmx5IHdoZW4gbW9yZSB0aGFuIG9uZSBXQ00tQ09NIGludGVncmF0aW9uIGVudHJ5IGlzIGxvYWRlZC4KICAgICAgcmVxdWlyZWQ6IGZhbHNlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIGNvbmZpZ19lbnRyeToKICAgICAgICAgIGludGVncmF0aW9uOiB3ZWlzaGF1cHRfd2NtX2NvbQoKICAgIGhlYXRpbmdfY2lyY3VpdDoKICAgICAgbmFtZTogSGVhdGluZyBjaXJjdWl0CiAgICAgIGRlc2NyaXB0aW9uOiAxID0gSEsxLCAyID0gSEsyCiAgICAgIHJlcXVpcmVkOiBmYWxzZQogICAgICBleGFtcGxlOiAxCiAgICAgIHNlbGVjdG9yOgogICAgICAgIG51bWJlcjoKICAgICAgICAgIG1pbjogMQogICAgICAgICAgbWF4OiAyCiAgICAgICAgICBzdGVwOiAxCiAgICAgICAgICBtb2RlOiBib3gKCiAgICB0YXJnZXQ6CiAgICAgIG5hbWU6IFRhcmdldAogICAgICBkZXNjcmlwdGlvbjogSG9saWRheSBkYXRlIHRvIHNldAogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgZGVmYXVsdDogc3RhcnQKICAgICAgZXhhbXBsZTogc3RhcnQKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgb3B0aW9uczoKICAgICAgICAgICAgLSBzdGFydAogICAgICAgICAgICAtIGVuZAoKICAgIGRhdGU6CiAgICAgIG5hbWU6IERhdGUKICAgICAgZGVzY3JpcHRpb246IERhdGUgaW4gWVlZWS1NTS1ERCwgb3IgbGVhdmUgZW1wdHkgdG8gcmVzZXQgdG8gIm5vdCBzZXQiLgogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgZXhhbXBsZTogIjIwMjYtMDgtMDEiCiAgICAgIHNlbGVjdG9yOgogICAgICAgIHRleHQ6CiAgICAgICAgICB0eXBlOiB0ZXh0CgpzZXRfdGltZV9wcm9ncmFtX2RheToKICBuYW1lOiBTZXQgdGltZS1wcm9ncmFtIGRheQogIGRlc2NyaXB0aW9uOiBSZXBsYWNlIGFsbCB0aW1lIHdpbmRvd3Mgb2Ygb25lIFdDTS1DT00gcHJvZ3JhbSBkYXkgYW5kIHZlcmlmeSB0aGUgcmVzdWx0LgogIGZpZWxkczoKICAgIGNvbmZpZ19lbnRyeV9pZDoKICAgICAgbmFtZTogV0NNLUNPTSBkZXZpY2UKICAgICAgcmVxdWlyZWQ6IGZhbHNlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIGNvbmZpZ19lbnRyeToKICAgICAgICAgIGludGVncmF0aW9uOiB3ZWlzaGF1cHRfd2NtX2NvbQogICAgaGVhdGluZ19jaXJjdWl0OgogICAgICBuYW1lOiBIZWF0aW5nIGNpcmN1aXQKICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgb3B0aW9uczoKICAgICAgICAgICAgLSBsYWJlbDogSEsxCiAgICAgICAgICAgICAgdmFsdWU6ICIxIgogICAgICAgICAgICAtIGxhYmVsOiBISzIKICAgICAgICAgICAgICB2YWx1ZTogIjIiCiAgICBwcm9ncmFtOgogICAgICBuYW1lOiBQcm9ncmFtCiAgICAgIHJlcXVpcmVkOiB0cnVlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIHNlbGVjdDoKICAgICAgICAgIHRyYW5zbGF0aW9uX2tleTogdGltZV9wcm9ncmFtCiAgICAgICAgICBvcHRpb25zOgogICAgICAgICAgICAtIGhlYXRpbmdfMQogICAgICAgICAgICAtIGhlYXRpbmdfMgogICAgICAgICAgICAtIGhlYXRpbmdfMwogICAgICAgICAgICAtIGhvdF93YXRlcgogICAgICAgICAgICAtIGNpcmN1bGF0aW9uCiAgICBkYXk6CiAgICAgIG5hbWU6IFdlZWtkYXkKICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgdHJhbnNsYXRpb25fa2V5OiB3ZWVrZGF5CiAgICAgICAgICBvcHRpb25zOgogICAgICAgICAgICAtIG1vbmRheQogICAgICAgICAgICAtIHR1ZXNkYXkKICAgICAgICAgICAgLSB3ZWRuZXNkYXkKICAgICAgICAgICAgLSB0aHVyc2RheQogICAgICAgICAgICAtIGZyaWRheQogICAgICAgICAgICAtIHNhdHVyZGF5CiAgICAgICAgICAgIC0gc3VuZGF5CiAgICBzdGFydF8xOgogICAgICBuYW1lOiBXaW5kb3cgMSBzdGFydAogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgc2VsZWN0b3I6CiAgICAgICAgdGltZToKICAgIGVuZF8xOgogICAgICBuYW1lOiBXaW5kb3cgMSBlbmQKICAgICAgcmVxdWlyZWQ6IGZhbHNlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIHRpbWU6CiAgICBzdGFydF8yOgogICAgICBuYW1lOiBXaW5kb3cgMiBzdGFydAogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgc2VsZWN0b3I6CiAgICAgICAgdGltZToKICAgIGVuZF8yOgogICAgICBuYW1lOiBXaW5kb3cgMiBlbmQKICAgICAgcmVxdWlyZWQ6IGZhbHNlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIHRpbWU6CiAgICBzdGFydF8zOgogICAgICBuYW1lOiBXaW5kb3cgMyBzdGFydAogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgc2VsZWN0b3I6CiAgICAgICAgdGltZToKICAgIGVuZF8zOgogICAgICBuYW1lOiBXaW5kb3cgMyBlbmQKICAgICAgcmVxdWlyZWQ6IGZhbHNlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIHRpbWU6Cgpjb3B5X3RpbWVfcHJvZ3JhbV9kYXk6CiAgbmFtZTogQ29weSB0aW1lLXByb2dyYW0gZGF5CiAgZGVzY3JpcHRpb246IENvcHkgb25lIHNvdXJjZSBkYXkgdG8gb25lIG9yIG1vcmUgdGFyZ2V0IGRheXMuCiAgZmllbGRzOgogICAgY29uZmlnX2VudHJ5X2lkOgogICAgICBuYW1lOiBXQ00tQ09NIGRldmljZQogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgc2VsZWN0b3I6CiAgICAgICAgY29uZmlnX2VudHJ5OgogICAgICAgICAgaW50ZWdyYXRpb246IHdlaXNoYXVwdF93Y21fY29tCiAgICBzb3VyY2VfaGVhdGluZ19jaXJjdWl0OgogICAgICBuYW1lOiBTb3VyY2UgaGVhdGluZyBjaXJjdWl0CiAgICAgIHJlcXVpcmVkOiB0cnVlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIG51bWJlcjoKICAgICAgICAgIG1pbjogMQogICAgICAgICAgbWF4OiAyCiAgICAgICAgICBzdGVwOiAxCiAgICBzb3VyY2VfcHJvZ3JhbToKICAgICAgbmFtZTogU291cmNlIHByb2dyYW0KICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgdHJhbnNsYXRpb25fa2V5OiB0aW1lX3Byb2dyYW0KICAgICAgICAgIG9wdGlvbnM6IFtoZWF0aW5nXzEsIGhlYXRpbmdfMiwgaGVhdGluZ18zLCBob3Rfd2F0ZXIsIGNpcmN1bGF0aW9uXQogICAgc291cmNlX2RheToKICAgICAgbmFtZTogU291cmNlIHdlZWtkYXkKICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgdHJhbnNsYXRpb25fa2V5OiB3ZWVrZGF5CiAgICAgICAgICBvcHRpb25zOiBbbW9uZGF5LCB0dWVzZGF5LCB3ZWRuZXNkYXksIHRodXJzZGF5LCBmcmlkYXksIHNhdHVyZGF5LCBzdW5kYXldCiAgICB0YXJnZXRfaGVhdGluZ19jaXJjdWl0OgogICAgICBuYW1lOiBUYXJnZXQgaGVhdGluZyBjaXJjdWl0CiAgICAgIHJlcXVpcmVkOiB0cnVlCiAgICAgIHNlbGVjdG9yOgogICAgICAgIG51bWJlcjoKICAgICAgICAgIG1pbjogMQogICAgICAgICAgbWF4OiAyCiAgICAgICAgICBzdGVwOiAxCiAgICB0YXJnZXRfcHJvZ3JhbToKICAgICAgbmFtZTogVGFyZ2V0IHByb2dyYW0KICAgICAgcmVxdWlyZWQ6IHRydWUKICAgICAgc2VsZWN0b3I6CiAgICAgICAgc2VsZWN0OgogICAgICAgICAgdHJhbnNsYXRpb25fa2V5OiB0aW1lX3Byb2dyYW0KICAgICAgICAgIG9wdGlvbnM6IFtoZWF0aW5nXzEsIGhlYXRpbmdfMiwgaGVhdGluZ18zLCBob3Rfd2F0ZXIsIGNpcmN1bGF0aW9uXQogICAgdGFyZ2V0X2RheXM6CiAgICAgIG5hbWU6IFRhcmdldCB3ZWVrZGF5cwogICAgICByZXF1aXJlZDogdHJ1ZQogICAgICBzZWxlY3RvcjoKICAgICAgICBzZWxlY3Q6CiAgICAgICAgICB0cmFuc2xhdGlvbl9rZXk6IHdlZWtkYXkKICAgICAgICAgIG11bHRpcGxlOiB0cnVlCiAgICAgICAgICBvcHRpb25zOiBbbW9uZGF5LCB0dWVzZGF5LCB3ZWRuZXNkYXksIHRodXJzZGF5LCBmcmlkYXksIHNhdHVyZGF5LCBzdW5kYXldCgpjbGVhcl90aW1lX3Byb2dyYW1fZGF5czoKICBuYW1lOiBDbGVhciB0aW1lLXByb2dyYW0gZGF5cwogIGRlc2NyaXB0aW9uOiBEaXNhYmxlIGFsbCB0aHJlZSB0aW1lIHdpbmRvd3Mgb24gb25lIG9yIG1vcmUgd2Vla2RheXMuCiAgZmllbGRzOgogICAgY29uZmlnX2VudHJ5X2lkOgogICAgICBuYW1lOiBXQ00tQ09NIGRldmljZQogICAgICByZXF1aXJlZDogZmFsc2UKICAgICAgc2VsZWN0b3I6CiAgICAgICAgY29uZmlnX2VudHJ5OgogICAgICAgICAgaW50ZWdyYXRpb246IHdlaXNoYXVwdF93Y21fY29tCiAgICBoZWF0aW5nX2NpcmN1aXQ6CiAgICAgIG5hbWU6IEhlYXRpbmcgY2lyY3VpdAogICAgICByZXF1aXJlZDogdHJ1ZQogICAgICBzZWxlY3RvcjoKICAgICAgICBudW1iZXI6CiAgICAgICAgICBtaW46IDEKICAgICAgICAgIG1heDogMgogICAgICAgICAgc3RlcDogMQogICAgcHJvZ3JhbToKICAgICAgbmFtZTogUHJvZ3JhbQogICAgICByZXF1aXJlZDogdHJ1ZQogICAgICBzZWxlY3RvcjoKICAgICAgICBzZWxlY3Q6CiAgICAgICAgICB0cmFuc2xhdGlvbl9rZXk6IHRpbWVfcHJvZ3JhbQogICAgICAgICAgb3B0aW9uczogW2hlYXRpbmdfMSwgaGVhdGluZ18yLCBoZWF0aW5nXzMsIGhvdF93YXRlciwgY2lyY3VsYXRpb25dCiAgICBkYXlzOgogICAgICBuYW1lOiBXZWVrZGF5cwogICAgICByZXF1aXJlZDogdHJ1ZQogICAgICBzZWxlY3RvcjoKICAgICAgICBzZWxlY3Q6CiAgICAgICAgICB0cmFuc2xhdGlvbl9rZXk6IHdlZWtkYXkKICAgICAgICAgIG11bHRpcGxlOiB0cnVlCiAgICAgICAgICBvcHRpb25zOiBbbW9uZGF5LCB0dWVzZGF5LCB3ZWRuZXNkYXksIHRodXJzZGF5LCBmcmlkYXksIHNhdHVyZGF5LCBzdW5kYXldCg==
+set_holiday_date:
+  name: Set holiday date
+  description: Set HK1/HK2 holiday start/end via raw Day/Month/Year parameters.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      description: Required only when more than one WCM-COM integration entry is loaded.
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+
+    heating_circuit:
+      name: Heating circuit
+      description: 1 = HK1, 2 = HK2
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+          mode: box
+
+    target:
+      name: Target
+      description: Holiday date to set
+      required: false
+      default: start
+      example: start
+      selector:
+        select:
+          options:
+            - start
+            - end
+
+    date:
+      name: Date
+      description: Date in YYYY-MM-DD, or leave empty to reset to "not set".
+      required: false
+      example: "2026-08-01"
+      selector:
+        text:
+          type: text
+
+set_time_program_day:
+  name: Set time-program day
+  description: Replace all time windows of one WCM-COM program day and verify the result.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    heating_circuit:
+      name: Heating circuit
+      required: true
+      selector:
+        select:
+          options:
+            - label: HK1
+              value: "1"
+            - label: HK2
+              value: "2"
+    program:
+      name: Program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options:
+            - heating_1
+            - heating_2
+            - heating_3
+            - hot_water
+            - circulation
+    day:
+      name: Weekday
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    start_1:
+      name: Window 1 start
+      required: false
+      selector:
+        time:
+    end_1:
+      name: Window 1 end
+      required: false
+      selector:
+        time:
+    start_2:
+      name: Window 2 start
+      required: false
+      selector:
+        time:
+    end_2:
+      name: Window 2 end
+      required: false
+      selector:
+        time:
+    start_3:
+      name: Window 3 start
+      required: false
+      selector:
+        time:
+    end_3:
+      name: Window 3 end
+      required: false
+      selector:
+        time:
+
+copy_time_program_day:
+  name: Copy time-program day
+  description: Copy one source day to one or more target days.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    source_heating_circuit:
+      name: Source heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    source_program:
+      name: Source program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    source_day:
+      name: Source weekday
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+    target_heating_circuit:
+      name: Target heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    target_program:
+      name: Target program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    target_days:
+      name: Target weekdays
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          multiple: true
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+clear_time_program_days:
+  name: Clear time-program days
+  description: Disable all three time windows on one or more weekdays.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    heating_circuit:
+      name: Heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    program:
+      name: Program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    days:
+      name: Weekdays
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          multiple: true
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
