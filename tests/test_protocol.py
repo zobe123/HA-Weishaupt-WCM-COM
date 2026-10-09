@@ -30,6 +30,21 @@ def load_parameters() -> list[dict]:
     raise AssertionError("PARAMETERS not found")
 
 
+def load_constant(name: str):
+    """Read one literal constant without importing Home Assistant."""
+
+    module = ast.parse(CONST_PATH.read_text(encoding="utf-8"))
+    for node in module.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if any(
+            isinstance(target, ast.Name) and target.id == name
+            for target in node.targets
+        ):
+            return ast.literal_eval(node.value)
+    raise AssertionError(f"{name} not found")
+
+
 class ProtocolTest(unittest.TestCase):
     """Verify protocol discriminators and wire-value conversion."""
 
@@ -182,6 +197,17 @@ class ProtocolTest(unittest.TestCase):
                 parameters[f"HK{circuit} Expert Max Charge Time WW"]["no_value"],
                 0,
             )
+
+    def test_voltage_codes_match_original_webui(self) -> None:
+        self.assertEqual(
+            load_constant("HK_CONFIG_VOLTAGE_MAP"),
+            {
+                0: "Pumpenspannung: Manuell Aus",
+                1: "Pumpenspannung: Manuell Ein",
+                2: "Pumpenspannung: Automatik Aus",
+                3: "Pumpenspannung: Automatik Ein",
+            },
+        )
 
 
 if __name__ == "__main__":

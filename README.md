@@ -74,6 +74,9 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `Status` – error/warning code with mapped description
 - `HK1/HK2 …` – heating circuit 1/2 process values
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
+- Ten calendar entities expose the three heating, hot-water and circulation
+  weekly programs for HK1 and HK2. Schedules are loaded on demand and cached so
+  they do not increase the normal one-minute polling load.
 
 Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
 
@@ -97,6 +100,18 @@ If you really want to change configuration parameters from Home Assistant, you m
 2. Enable **"Allow writes to WCM-COM (expert mode)"**.
 
 When this flag is disabled again, all further write attempts from HA are rejected and logged, while reading continues as usual.
+
+The integration provides these time-program actions when write mode is enabled:
+
+- `weishaupt_wcm_com.set_time_program_day` replaces the complete day (up to
+  three non-overlapping windows in 15-minute steps).
+- `weishaupt_wcm_com.copy_time_program_day` copies one day to one or more days,
+  heating circuits or programs.
+- `weishaupt_wcm_com.clear_time_program_days` disables all windows on the
+  selected days.
+
+Every changed day is written under the shared device lock, read back and
+verified. If verification fails, the integration restores the previous day.
 
 ## Debugging
 

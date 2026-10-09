@@ -30,6 +30,7 @@ set_holiday_date:
       example: start
       selector:
         select:
+          translation_key: time_program
           options:
             - start
             - end
@@ -42,3 +43,169 @@ set_holiday_date:
       selector:
         text:
           type: text
+
+set_time_program_day:
+  name: Set time-program day
+  description: Replace all time windows of one WCM-COM program day and verify the result.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    heating_circuit:
+      name: Heating circuit
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          options:
+            - label: HK1
+              value: 1
+            - label: HK2
+              value: 2
+    program:
+      name: Program
+      required: true
+      selector:
+        select:
+          options:
+            - heating_1
+            - heating_2
+            - heating_3
+            - hot_water
+            - circulation
+    day:
+      name: Weekday
+      required: true
+      selector:
+        select:
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    start_1:
+      name: Window 1 start
+      required: false
+      selector:
+        time:
+    end_1:
+      name: Window 1 end
+      required: false
+      selector:
+        time:
+    start_2:
+      name: Window 2 start
+      required: false
+      selector:
+        time:
+    end_2:
+      name: Window 2 end
+      required: false
+      selector:
+        time:
+    start_3:
+      name: Window 3 start
+      required: false
+      selector:
+        time:
+    end_3:
+      name: Window 3 end
+      required: false
+      selector:
+        time:
+
+copy_time_program_day:
+  name: Copy time-program day
+  description: Copy one source day to one or more target days.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    source_heating_circuit:
+      name: Source heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    source_program:
+      name: Source program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    source_day:
+      name: Source weekday
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+    target_heating_circuit:
+      name: Target heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    target_program:
+      name: Target program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    target_days:
+      name: Target weekdays
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          multiple: true
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+
+clear_time_program_days:
+  name: Clear time-program days
+  description: Disable all three time windows on one or more weekdays.
+  fields:
+    config_entry_id:
+      name: WCM-COM device
+      required: false
+      selector:
+        config_entry:
+          integration: weishaupt_wcm_com
+    heating_circuit:
+      name: Heating circuit
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 2
+          step: 1
+    program:
+      name: Program
+      required: true
+      selector:
+        select:
+          translation_key: time_program
+          options: [heating_1, heating_2, heating_3, hot_water, circulation]
+    days:
+      name: Weekdays
+      required: true
+      selector:
+        select:
+          translation_key: weekday
+          multiple: true
+          options: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]

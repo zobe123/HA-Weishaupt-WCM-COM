@@ -18,6 +18,13 @@ from .protocol import (
     user_mode_kind,
 )
 from .temperature import normalize_temperature_value
+from .time_program import (
+    WEEKDAYS,
+    decode_day,
+    parameter_ids as time_program_parameter_ids,
+    request_groups as time_program_request_groups,
+    validate_program,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -424,6 +431,146 @@ class WeishauptAPI:
                     modultyp,
                     code,
                 )
+
+    def read_time_program(
+        self,
+        heating_circuit: int,
+        program: str,
+    ) -> dict[str, tuple[tuple[str, str], ...]]:
+        """Read one complete weekly program using the original WebUI groups."""
+
+        if int(heating_circuit) not in (1, 2):
+            raise ValueError("Heating circuit must be 1 or 2")
+        program = validate_program(program)
+
+        with _lock:
+            raw: dict[int, int] = {}
+            for parameter_group in time_program_request_groups(program):
+                raw.update(
+                    self._read_raw_parameters_unlocked(
+                        parameter_group,
+                        bus=int(heating_circuit),
+                        modultyp=6,
+                    )
+                )
+
+        schedule = {}
+        for day in WEEKDAYS:
+            ids = time_program_parameter_ids(program, day)
+            try:
+                schedule[day] = decode_day(raw[parameter_id] for parameter_id in ids)
+            except KeyError as err:
+                raise WeishauptCommunicationError(
+                    f"WCM-COM omitted time-program parameter {err.args[0]}"
+                ) from err
+        return schedule
+
+    def write_time_program_day(
+        self,
+        heating_circuit: int,
+        program: str,
+        day: str,
+        encoded_intervals: tuple[int, int, int],
+    ) -> None:
+        """Write one complete day and verify it while holding the API lock.
+
+        If the controller does not return the requested values, the previous
+        three values are restored before the error is surfaced.
+        """
+
+        if int(heating_circuit) not in (1, 2):
+            raise ValueError("Heating circuit must be 1 or 2")
+        ids = time_program_parameter_ids(program, day)
+        values = tuple(int(value) for value in encoded_intervals)
+        if len(values) != 3:
+            raise ValueError("Exactly three encoded intervals are required")
+
+        bus = int(heating_circuit)
+        with _lock:
+            original = self._read_raw_parameters_unlocked(ids, bus=bus, modultyp=6)
+            if set(original) != set(ids):
+                raise WeishauptCommunicationError(
+                    "Cannot safely update time program because the original day is incomplete"
+                )
+
+            try:
+                for parameter_id, value in zip(ids, values):
+                    self._write_parameter_unlocked(parameter_id, bus, 6, value)
+                verified = self._read_raw_parameters_unlocked(ids, bus=bus, modultyp=6)
+                if tuple(verified.get(parameter_id) for parameter_id in ids) != values:
+                    raise WeishauptCommunicationError(
+                        "Time-program verification failed after writing the complete day"
+                    )
+            except Exception:
+                _LOGGER.warning(
+                    "Restoring previous time program after an incomplete or unverified write"
+                )
+                for parameter_id in ids:
+                    self._write_parameter_unlocked(
+                        parameter_id, bus, 6, original[parameter_id]
+                    )
+                raise
+
+    def _read_raw_parameters_unlocked(
+        self,
+        parameter_ids: tuple[int, ...] | list[int],
+        *,
+        bus: int,
+        modultyp: int,
+    ) -> dict[int, int]:
+        """Read standard raw values; caller must hold the shared API lock."""
+
+        url = f"http://{self._host}/parameter.json"
+        telegram = {
+            "prot": "coco",
+            "telegramm": [
+                build_coco_telegram(
+                    module_type=modultyp,
+                    bus=bus,
+                    command=READ_COMMAND,
+                    parameter_id=parameter_id,
+                    telegram_type=STANDARD_TELEGRAM,
+                )
+                for parameter_id in parameter_ids
+            ],
+        }
+        auth = (
+            HTTPDigestAuth(self._username, self._password)
+            if self._username and self._password
+            else None
+        )
+
+        try:
+            response = requests.post(
+                url,
+                auth=auth,
+                data=json.dumps(telegram),
+                headers={"Content-Type": "application/json"},
+                timeout=60,
+            )
+            if "<HTML>" in response.text.upper():
+                raise WeishauptCommunicationError(
+                    "WCM-COM returned 'server busy' while reading a time program"
+                )
+            response.raise_for_status()
+            payload = response.json()
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as err:
+            raise WeishauptCommunicationError(
+                f"Error reading WCM-COM time program: {err}"
+            ) from err
+
+        requested = set(int(parameter_id) for parameter_id in parameter_ids)
+        values: dict[int, int] = {}
+        for message in payload.get("telegramm", []):
+            if (
+                len(message) >= 8
+                and int(message[0]) == modultyp
+                and int(message[1]) == bus
+                and int(message[3]) in requested
+                and int(message[5]) == STANDARD_TELEGRAM
+            ):
+                values[int(message[3])] = int(message[6]) + 256 * int(message[7])
+        return values
 
     def _write_parameter_unlocked(
         self,

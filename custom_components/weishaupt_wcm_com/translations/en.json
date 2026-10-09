@@ -27,6 +27,28 @@
       }
     }
   },
+  "selector": {
+    "time_program": {
+      "options": {
+        "heating_1": "Heating program 1",
+        "heating_2": "Heating program 2",
+        "heating_3": "Heating program 3",
+        "hot_water": "Hot water",
+        "circulation": "Circulation"
+      }
+    },
+    "weekday": {
+      "options": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "status": { "name": "Status" },

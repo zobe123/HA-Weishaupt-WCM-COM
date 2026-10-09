@@ -241,7 +241,10 @@ HK_CONFIG_PUMP_MAP = {
 }
 
 HK_CONFIG_VOLTAGE_MAP = {
-    2: "Spannung: Auto Aus",
+    0: "Pumpenspannung: Manuell Aus",
+    1: "Pumpenspannung: Manuell Ein",
+    2: "Pumpenspannung: Automatik Aus",
+    3: "Pumpenspannung: Automatik Ein",
 }
 
 HK_CONFIG_HK_TYPE_MAP = {

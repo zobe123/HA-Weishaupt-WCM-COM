@@ -3,6 +3,7 @@
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 from unittest.mock import Mock, patch
+import json
 import sys
 import types
 import unittest
@@ -137,6 +138,68 @@ class ApiTransportTest(unittest.TestCase):
         self.assertIn('[[6, 1, 2, 283, 0, 1, 1, 0]]', payloads[0])
         self.assertIn('[[6, 1, 2, 284, 0, 1, 8, 0]]', payloads[1])
         self.assertIn('[[6, 1, 2, 285, 0, 1, 26, 0]]', payloads[2])
+
+    def test_time_program_read_uses_webui_groups_and_byte_order(self) -> None:
+        active = (24 << 8) | 32  # 06:00-08:00
+
+        def respond(*args, **kwargs):
+            payload = json.loads(kwargs["data"])
+            response = []
+            for telegram in payload["telegramm"]:
+                parameter_id = telegram[3]
+                value = active if parameter_id == 5136 else 32896
+                response.append(
+                    [6, 1, 1, parameter_id, 0, 0, value & 0xFF, value >> 8]
+                )
+            return json_response(response)
+
+        with patch.object(api_module.requests, "post", side_effect=respond) as post:
+            schedule = api_module.WeishauptAPI("wcm.test").read_time_program(
+                1, "heating_1"
+            )
+
+        self.assertEqual(post.call_count, 3)
+        self.assertEqual(schedule["monday"], (("06:00", "08:00"),))
+        self.assertEqual(schedule["sunday"], ())
+
+    def test_time_program_day_write_is_read_write_verify_transaction(self) -> None:
+        ids = (5136, 5137, 5138)
+        state = {parameter_id: 32896 for parameter_id in ids}
+        commands = []
+
+        def respond(*args, **kwargs):
+            payload = json.loads(kwargs["data"])
+            telegrams = payload["telegramm"]
+            command = telegrams[0][2]
+            commands.append(command)
+            if command == protocol.READ_COMMAND:
+                return json_response(
+                    [
+                        [
+                            6,
+                            1,
+                            1,
+                            telegram[3],
+                            0,
+                            0,
+                            state[telegram[3]] & 0xFF,
+                            state[telegram[3]] >> 8,
+                        ]
+                        for telegram in telegrams
+                    ]
+                )
+            telegram = telegrams[0]
+            state[telegram[3]] = telegram[6] + 256 * telegram[7]
+            return json_response([])
+
+        values = ((24 << 8) | 32, (48 << 8) | 52, 32896)
+        with patch.object(api_module.requests, "post", side_effect=respond):
+            api_module.WeishauptAPI("wcm.test").write_time_program_day(
+                1, "heating_1", "monday", values
+            )
+
+        self.assertEqual(commands, [1, 2, 2, 2, 1])
+        self.assertEqual(tuple(state[parameter_id] for parameter_id in ids), values)
 
 
 if __name__ == "__main__":

@@ -26,10 +26,11 @@ from .const import (
     PARAMETERS,
 )
 from .weishaupt_api import WeishauptAPI
+from .time_program_manager import TimeProgramManager
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[str] = ["sensor", "select", "number"]
+PLATFORMS: list[str] = ["sensor", "select", "number", "calendar"]
 
 OBSOLETE_ENTITY_UNIQUE_IDS = {
     "sensor": {
@@ -127,6 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
+        "time_program_manager": TimeProgramManager(hass, api),
         "allow_write": allow_write,
         "advanced_logging": advanced_logging,
     }
@@ -255,7 +257,103 @@ def _register_services(hass: HomeAssistant) -> None:
         # Refresh coordinator so that HKx Holiday Start/End sensors update
         await coordinator.async_request_refresh()
 
+    def resolve_writable_entry(call: ServiceCall) -> dict:
+        """Resolve a loaded writable config entry without guessing."""
+
+        domain_data = hass.data.get(DOMAIN, {})
+        if not domain_data:
+            raise HomeAssistantError(f"No loaded {DOMAIN} config entry found")
+        config_entry_id = call.data.get("config_entry_id")
+        if config_entry_id:
+            entry_data = domain_data.get(config_entry_id)
+            if entry_data is None:
+                raise HomeAssistantError(
+                    f"Unknown or unloaded config_entry_id: {config_entry_id}"
+                )
+        elif len(domain_data) == 1:
+            entry_data = next(iter(domain_data.values()))
+        else:
+            raise HomeAssistantError(
+                "config_entry_id is required when multiple WCM-COM entries are loaded"
+            )
+        if not entry_data.get("allow_write", False):
+            raise HomeAssistantError(
+                "Weishaupt WCM-COM integration is in read-only mode."
+            )
+        return entry_data
+
+    async def async_set_time_program_day(call: ServiceCall) -> None:
+        """Replace all three intervals of one time-program day."""
+
+        entry_data = resolve_writable_entry(call)
+        intervals = []
+        for slot in range(1, 4):
+            start = call.data.get(f"start_{slot}")
+            end = call.data.get(f"end_{slot}")
+            if bool(start) != bool(end):
+                raise HomeAssistantError(
+                    f"Time window {slot} requires both start and end"
+                )
+            if start and end:
+                intervals.append((start, end))
+
+        try:
+            await entry_data["time_program_manager"].async_set_day(
+                int(call.data["heating_circuit"]),
+                str(call.data["program"]),
+                str(call.data["day"]),
+                intervals,
+            )
+        except (ValueError, KeyError) as err:
+            raise HomeAssistantError(str(err)) from err
+
+    async def async_copy_time_program_day(call: ServiceCall) -> None:
+        """Copy one source day to one or more target days."""
+
+        entry_data = resolve_writable_entry(call)
+        target_days = call.data["target_days"]
+        if isinstance(target_days, str):
+            target_days = [target_days]
+        try:
+            await entry_data["time_program_manager"].async_copy_day(
+                int(call.data["source_heating_circuit"]),
+                str(call.data["source_program"]),
+                str(call.data["source_day"]),
+                int(call.data["target_heating_circuit"]),
+                str(call.data["target_program"]),
+                list(target_days),
+            )
+        except (ValueError, KeyError) as err:
+            raise HomeAssistantError(str(err)) from err
+
+    async def async_clear_time_program_days(call: ServiceCall) -> None:
+        """Disable all intervals on one or more program days."""
+
+        entry_data = resolve_writable_entry(call)
+        days = call.data["days"]
+        if isinstance(days, str):
+            days = [days]
+        try:
+            for day in days:
+                await entry_data["time_program_manager"].async_set_day(
+                    int(call.data["heating_circuit"]),
+                    str(call.data["program"]),
+                    str(day),
+                    [],
+                )
+        except (ValueError, KeyError) as err:
+            raise HomeAssistantError(str(err)) from err
+
     hass.services.async_register(DOMAIN, "set_holiday_date", async_set_holiday_date)
+    hass.services.async_register(
+        DOMAIN, "set_time_program_day", async_set_time_program_day
+    )
+    hass.services.async_register(
+        DOMAIN, "copy_time_program_day", async_copy_time_program_day
+    )
+    hass.services.async_register(
+        DOMAIN, "clear_time_program_days", async_clear_time_program_days
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
