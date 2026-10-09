@@ -166,7 +166,7 @@ PARAMETERS = [
     {"id": 278,  "name": "HK1 User SoWi Umschaltung",       "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user"},
     {"id": 19,   "name": "HK1 User Normal WW Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
     {"id": 650,  "name": "HK1 User Absenk WW Soll",         "type": "temperature",  "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
-    {"id": 2418, "name": "HK1 User Vorverlegung",           "type": "minutes",      "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 2418, "name": "HK1 User Vorverlegung",           "type": "minutes",      "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True, "no_value": 32768},
     # HK2 (Bus=2)
     {"id": 5,    "name": "HK2 User Normal Raumtemperatur",  "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
     {"id": 8,    "name": "HK2 User Absenk Raumtemperatur",  "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 2, "page": "hk_user"},
@@ -177,21 +177,21 @@ PARAMETERS = [
     {"id": 278,  "name": "HK2 User SoWi Umschaltung",       "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user"},
     {"id": 19,   "name": "HK2 User Normal WW Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
     {"id": 650,  "name": "HK2 User Absenk WW Soll",         "type": "temperature",  "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
-    {"id": 2418, "name": "HK2 User Vorverlegung",           "type": "minutes",      "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+    {"id": 2418, "name": "HK2 User Vorverlegung",           "type": "minutes",      "bus": 2, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True, "no_value": 32768},
 
     # Fachmann / Heizung – Frostheizgrenze / Ein Opti MAX (bus-spezifisch)
     {"id": 306,  "name": "HK1 Expert Reduziertbetrieb",    "type": "value",               "bus": 1, "modultyp": 6, "page": "hk_expert"},
     {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 10},
     {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert"},
     {"id": 2414, "name": "HK1 Expert Ein Opti IST",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
-    {"id": 2588, "name": "HK1 Expert Raumthermostat",      "type": "value",       "bus": 1, "modultyp": 6, "page": "hk_expert"},
-    {"id": 384,  "name": "HK1 Expert Max Charge Time WW",  "type": "minutes",     "bus": 1, "modultyp": 12, "page": "hk_expert", "conditional": True},
+    {"id": 2588, "name": "HK1 Expert Raumthermostat",      "type": "value",       "bus": 1, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
+    {"id": 384,  "name": "HK1 Expert Max Charge Time WW",  "type": "minutes",     "bus": 1, "modultyp": 12, "page": "hk_expert", "conditional": True, "no_value": 0},
     {"id": 306,  "name": "HK2 Expert Reduziertbetrieb",    "type": "value",               "bus": 2, "modultyp": 6, "page": "hk_expert"},
     {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 10},
     {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert"},
     {"id": 2414, "name": "HK2 Expert Ein Opti IST",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
-    {"id": 2588, "name": "HK2 Expert Raumthermostat",      "type": "value",       "bus": 2, "modultyp": 6, "page": "hk_expert"},
-    {"id": 384,  "name": "HK2 Expert Max Charge Time WW",  "type": "minutes",     "bus": 2, "modultyp": 12, "page": "hk_expert", "conditional": True},
+    {"id": 2588, "name": "HK2 Expert Raumthermostat",      "type": "value",       "bus": 2, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
+    {"id": 384,  "name": "HK2 Expert Max Charge Time WW",  "type": "minutes",     "bus": 2, "modultyp": 12, "page": "hk_expert", "conditional": True, "no_value": 0},
 
     # HK1 Holiday / Date / Time / DST (Form_Heizkreis_Datum)
     {"id": 283,   "name": "HK1 Holiday Start Day",          "type": "value", "bus": 1, "modultyp": 6, "internal": True},

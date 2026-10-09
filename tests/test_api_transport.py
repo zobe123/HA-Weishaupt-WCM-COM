@@ -88,6 +88,30 @@ class ApiTransportTest(unittest.TestCase):
 
         self.assertEqual(api.data, {"existing": 42})
 
+    def test_parameter_specific_no_value_marker_is_omitted(self) -> None:
+        parameters = [
+            {
+                "id": 2418, "name": "HK1 User Vorverlegung", "type": "minutes",
+                "bus": 1, "modultyp": 6, "request_group": 3,
+                "page": "hk_user", "no_value": 32768,
+            },
+            {
+                "id": 19, "name": "HK1 User Normal WW Soll", "type": "temperature",
+                "bus": 1, "modultyp": 6, "request_group": 3, "page": "hk_user",
+            },
+        ]
+        response = json_response(
+            [[6, 1, 1, 2418, 0, 0, 0, 128], [6, 1, 1, 19, 0, 0, 244, 1]]
+        )
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(api_module.requests, "post", return_value=response),
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        self.assertNotIn("HK1 User Vorverlegung", data)
+        self.assertEqual(data["HK1 User Normal WW Soll"], 50.0)
+
     def test_server_busy_write_raises(self) -> None:
         response = Mock()
         response.text = "<HTML>Sorry, the server is busy.</HTML>"

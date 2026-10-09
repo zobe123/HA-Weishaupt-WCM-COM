@@ -67,6 +67,11 @@ def _remove_obsolete_entities(hass: HomeAssistant, data: dict) -> None:
         slug = parameter["name"].lower().replace(" ", "_")
         unique_ids_by_platform["sensor"].add(f"weishaupt_{slug}")
         unique_ids_by_platform["number"].add(f"weishaupt_{slug}_number")
+        if parameter["name"].endswith("Expert Raumthermostat"):
+            hk = 1 if parameter["name"].startswith("HK1") else 2
+            unique_ids_by_platform["select"].add(
+                f"weishaupt_hk{hk}_expert_room_thermostat_select"
+            )
 
     for platform, unique_ids in unique_ids_by_platform.items():
         for unique_id in unique_ids:

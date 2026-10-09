@@ -167,6 +167,22 @@ class ProtocolTest(unittest.TestCase):
             for parameter_id in (19, 650, 2418, 306, 2414, 2588):
                 self.assertIn((parameter_id, circuit), identities)
 
+    def test_live_no_value_markers_are_parameter_specific(self) -> None:
+        parameters = {item["name"]: item for item in load_parameters()}
+        for circuit in (1, 2):
+            self.assertEqual(
+                parameters[f"HK{circuit} User Vorverlegung"]["no_value"],
+                32768,
+            )
+            self.assertEqual(
+                parameters[f"HK{circuit} Expert Raumthermostat"]["no_value"],
+                10,
+            )
+            self.assertEqual(
+                parameters[f"HK{circuit} Expert Max Charge Time WW"]["no_value"],
+                0,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
