@@ -22,7 +22,10 @@
           "password": "Passwort",
           "scan_interval": "Abfrageintervall (Sekunden)",
           "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)",
-          "advanced_logging": "Erweitertes Logging aktivieren (zusätzliche Debug-Ausgaben zur Fehlersuche)"
+          "advanced_logging": "Erweitertes Logging aktivieren (zusätzliche Debug-Ausgaben zur Fehlersuche)",
+          "show_time_program_panel": "Zeitprogramme in der Seitenleiste anzeigen",
+          "expose_time_program_calendars": "Aktive Zeitprogramme dem Home-Assistant-Kalender hinzufügen",
+          "external_gas_meter_entity": "Externer Gaszähler (optional)"
         }
       }
     }

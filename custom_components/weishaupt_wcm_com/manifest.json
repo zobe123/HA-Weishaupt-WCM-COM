@@ -3,9 +3,9 @@
   "name": "Weishaupt WCM-COM",
   "codeowners": ["@zobe123"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["http", "panel_custom", "websocket_api"],
   "documentation": "https://github.com/zobe123/HA-Weishaupt-WCM-COM",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues",
-  "version": "1.2.15"
+  "version": "1.2.16b2"
 }

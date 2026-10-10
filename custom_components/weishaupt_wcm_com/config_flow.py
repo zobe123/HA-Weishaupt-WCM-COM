@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
@@ -13,6 +14,12 @@ from .const import (
     DEFAULT_ALLOW_WRITE,
     CONF_ADVANCED_LOGGING,
     DEFAULT_ADVANCED_LOGGING,
+    CONF_SHOW_TIME_PROGRAM_PANEL,
+    DEFAULT_SHOW_TIME_PROGRAM_PANEL,
+    CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
+    DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
+    CONF_EXTERNAL_GAS_METER_ENTITY,
+    DEFAULT_EXTERNAL_GAS_METER_ENTITY,
 )
 from .weishaupt_api import WeishauptAPI
 
@@ -99,6 +106,15 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
                         CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE],
                         CONF_ADVANCED_LOGGING: user_input[CONF_ADVANCED_LOGGING],
+                        CONF_SHOW_TIME_PROGRAM_PANEL: user_input[
+                            CONF_SHOW_TIME_PROGRAM_PANEL
+                        ],
+                        CONF_EXPOSE_TIME_PROGRAM_CALENDARS: user_input[
+                            CONF_EXPOSE_TIME_PROGRAM_CALENDARS
+                        ],
+                        CONF_EXTERNAL_GAS_METER_ENTITY: user_input.get(
+                            CONF_EXTERNAL_GAS_METER_ENTITY, ""
+                        ),
                     }
                     return self.async_create_entry(title="", data=options_data)
             except Exception as err:  # pylint: disable=broad-except
@@ -123,6 +139,25 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_ADVANCED_LOGGING,
             DEFAULT_ADVANCED_LOGGING,
         )
+        show_time_program_panel = source.get(
+            CONF_SHOW_TIME_PROGRAM_PANEL,
+            DEFAULT_SHOW_TIME_PROGRAM_PANEL,
+        )
+        expose_time_program_calendars = source.get(
+            CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
+            DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
+        )
+        external_gas_meter_entity = source.get(
+            CONF_EXTERNAL_GAS_METER_ENTITY,
+            DEFAULT_EXTERNAL_GAS_METER_ENTITY,
+        )
+
+        gas_meter_key = vol.Optional(CONF_EXTERNAL_GAS_METER_ENTITY)
+        if external_gas_meter_entity:
+            gas_meter_key = vol.Optional(
+                CONF_EXTERNAL_GAS_METER_ENTITY,
+                description={"suggested_value": external_gas_meter_entity},
+            )
 
         data_schema = vol.Schema(
             {
@@ -141,6 +176,17 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_ADVANCED_LOGGING,
                     default=advanced_logging,
                 ): bool,
+                vol.Required(
+                    CONF_SHOW_TIME_PROGRAM_PANEL,
+                    default=show_time_program_panel,
+                ): bool,
+                vol.Required(
+                    CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
+                    default=expose_time_program_calendars,
+                ): bool,
+                gas_meter_key: selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain="sensor")
+                ),
             }
         )
 

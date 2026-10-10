@@ -4,6 +4,28 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [Unreleased]
+
+### New
+
+- Added an integration-provided weekly time-program panel with program/day
+  selection, copy helpers and staged apply/discard controls.
+- Added the same editor as a Lovelace card so it can sit beside the heating
+  program selectors.
+- Added options for the sidebar panel, Home Assistant calendar entities and an
+  optional existing gas-meter entity.
+
+### Improved
+
+- Replaced the ten raw program calendars with active HK1/HK2 heating calendars
+  and one global hot-water calendar.
+- Circulation remains editable as an optional program but is exposed as a
+  calendar only when the controller reports a usable circulation signal.
+- The panel loads only the selected program to avoid parallel request bursts
+  against the WCM-COM web server.
+- A narrowly scoped retry handles a time-program value omitted once by the
+  controller during the initial request burst.
+
 ## [1.2.15]
 
 ### New

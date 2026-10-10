@@ -6,7 +6,7 @@ import asyncio
 from time import monotonic
 
 from .time_program import encode_day
-from .weishaupt_api import WeishauptAPI
+from .weishaupt_api import WeishauptAPI, WeishauptCommunicationError
 
 
 class TimeProgramManager:
@@ -31,9 +31,21 @@ class TimeProgramManager:
             cached = self._cache.get(key)
             if cached and monotonic() - cached[0] < self._cache_seconds:
                 return cached[1]
-            schedule = await self._hass.async_add_executor_job(
-                self._api.read_time_program, key[0], key[1]
-            )
+            try:
+                schedule = await self._hass.async_add_executor_job(
+                    self._api.read_time_program, key[0], key[1]
+                )
+            except WeishauptCommunicationError as err:
+                # The small WCM-COM web server occasionally omits one value
+                # during the first burst after startup. Retry this narrow,
+                # read-only failure once; other communication errors remain
+                # visible immediately.
+                if "omitted time-program parameter" not in str(err):
+                    raise
+                await asyncio.sleep(0.25)
+                schedule = await self._hass.async_add_executor_job(
+                    self._api.read_time_program, key[0], key[1]
+                )
             self._cache[key] = (monotonic(), schedule)
             return schedule
 

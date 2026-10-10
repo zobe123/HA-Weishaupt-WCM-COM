@@ -19,6 +19,17 @@ DEFAULT_ALLOW_WRITE = False
 CONF_ADVANCED_LOGGING = "advanced_logging"
 DEFAULT_ADVANCED_LOGGING = False
 
+# Time-program presentation options
+CONF_SHOW_TIME_PROGRAM_PANEL = "show_time_program_panel"
+DEFAULT_SHOW_TIME_PROGRAM_PANEL = True
+CONF_EXPOSE_TIME_PROGRAM_CALENDARS = "expose_time_program_calendars"
+DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS = True
+
+# Optional reference to an existing Home Assistant gas meter entity.  The
+# integration deliberately does not create a duplicate consumption sensor.
+CONF_EXTERNAL_GAS_METER_ENTITY = "external_gas_meter_entity"
+DEFAULT_EXTERNAL_GAS_METER_ENTITY = ""
+
 
 # Sensor Keys
 OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"

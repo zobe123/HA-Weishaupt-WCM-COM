@@ -22,7 +22,10 @@
           "password": "Password",
           "scan_interval": "Scan interval (seconds)",
           "allow_write": "Allow writes to WCM-COM (expert mode)",
-          "advanced_logging": "Enable advanced logging (extra debug output for troubleshooting)"
+          "advanced_logging": "Enable advanced logging (extra debug output for troubleshooting)",
+          "show_time_program_panel": "Show time programs in the sidebar",
+          "expose_time_program_calendars": "Add active time programs to the Home Assistant calendar",
+          "external_gas_meter_entity": "External gas meter (optional)"
         }
       }
     }

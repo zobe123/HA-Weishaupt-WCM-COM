@@ -80,6 +80,40 @@ class TimeProgramTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid WCM"):
             time_program.decode_interval((100 << 8) | 101)
 
+    def test_active_heating_program_mapping(self) -> None:
+        self.assertEqual(
+            time_program.active_heating_program(
+                {"HK1 User Betriebsart": 12}, 1
+            ),
+            "heating_2",
+        )
+        self.assertEqual(
+            time_program.active_heating_program(
+                {"HK2 User Betriebsart": "Programm 3"}, 2
+            ),
+            "heating_3",
+        )
+        self.assertIsNone(
+            time_program.active_heating_program(
+                {"HK2 User Betriebsart": 15}, 2
+            )
+        )
+
+    def test_circulation_requires_a_real_measurement(self) -> None:
+        self.assertFalse(
+            time_program.circulation_supported(
+                {
+                    "HK1 Zirkulationstemperatur": None,
+                    "HK2 Zirkulationstemperatur": None,
+                }
+            )
+        )
+        self.assertTrue(
+            time_program.circulation_supported(
+                {"HK2 Zirkulationstemperatur": 42.0}
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

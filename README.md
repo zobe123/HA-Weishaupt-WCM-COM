@@ -74,9 +74,19 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `Status` – error/warning code with mapped description
 - `HK1/HK2 …` – heating circuit 1/2 process values
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
-- Ten calendar entities expose the three heating, hot-water and circulation
-  weekly programs for HK1 and HK2. Schedules are loaded on demand and cached so
-  they do not increase the normal one-minute polling load.
+- Active-program calendars expose the effective HK1/HK2 heating schedules plus
+  one global hot-water schedule. Circulation is added only when the controller
+  reports a usable circulation signal.
+- The integration adds a **Weishaupt Time Programs** panel for editing all three
+  stored heating programs, hot water and optional circulation in a compact
+  weekly view. Schedules are loaded one at a time and cached so they do not
+  increase the normal one-minute polling load.
+- Integration options control whether that editor is shown in the sidebar and
+  whether active programs appear as Home Assistant calendar entities. The same
+  editor is available as `custom:weishaupt-time-program-card` for dashboards.
+- An existing gas-meter sensor can optionally be selected. Its current reading
+  is displayed in the time-program editor; no duplicate or derived consumption
+  entity is created yet.
 
 Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
 

@@ -23,14 +23,28 @@ from .const import (
     DEFAULT_ALLOW_WRITE,
     CONF_ADVANCED_LOGGING,
     DEFAULT_ADVANCED_LOGGING,
+    CONF_SHOW_TIME_PROGRAM_PANEL,
+    DEFAULT_SHOW_TIME_PROGRAM_PANEL,
+    CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
+    DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
+    CONF_EXTERNAL_GAS_METER_ENTITY,
+    DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     PARAMETERS,
 )
 from .weishaupt_api import WeishauptAPI
 from .time_program_manager import TimeProgramManager
+from .frontend import async_register_frontend, async_unregister_frontend
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[str] = ["sensor", "select", "number", "calendar"]
+BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
+
+OPTIONAL_CALENDAR_UNIQUE_IDS = {
+    "weishaupt_hk1_active_heating_program",
+    "weishaupt_hk2_active_heating_program",
+    "weishaupt_hot_water_time_program",
+    "weishaupt_circulation_time_program",
+}
 
 OBSOLETE_ENTITY_UNIQUE_IDS = {
     "sensor": {
@@ -51,10 +65,26 @@ OBSOLETE_ENTITY_UNIQUE_IDS = {
         "weishaupt_hk2_user_op_mode_hk_select",
         "weishaupt_hk2_user_op_mode_ww_select",
     },
+    "calendar": {
+        f"weishaupt_hk{heating_circuit}_{program}_time_program"
+        for heating_circuit in (1, 2)
+        for program in (
+            "heating_1",
+            "heating_2",
+            "heating_3",
+            "hot_water",
+            "circulation",
+        )
+    },
 }
 
 
-def _remove_obsolete_entities(hass: HomeAssistant, data: dict) -> None:
+def _remove_obsolete_entities(
+    hass: HomeAssistant,
+    data: dict,
+    *,
+    remove_optional_calendars: bool = False,
+) -> None:
     """Remove invalid and unsupported conditional registry entries."""
 
     registry = er.async_get(hass)
@@ -62,6 +92,8 @@ def _remove_obsolete_entities(hass: HomeAssistant, data: dict) -> None:
         platform: set(unique_ids)
         for platform, unique_ids in OBSOLETE_ENTITY_UNIQUE_IDS.items()
     }
+    if remove_optional_calendars:
+        unique_ids_by_platform["calendar"].update(OPTIONAL_CALENDAR_UNIQUE_IDS)
     for parameter in PARAMETERS:
         if not parameter.get("conditional") or parameter["name"] in data:
             continue
@@ -94,6 +126,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
     advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
+    show_time_program_panel: bool = entry.options.get(
+        CONF_SHOW_TIME_PROGRAM_PANEL, DEFAULT_SHOW_TIME_PROGRAM_PANEL
+    )
+    expose_time_program_calendars: bool = entry.options.get(
+        CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
+        DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
+    )
+    external_gas_meter_entity: str = entry.options.get(
+        CONF_EXTERNAL_GAS_METER_ENTITY,
+        DEFAULT_EXTERNAL_GAS_METER_ENTITY,
+    )
+    platforms = [*BASE_PLATFORMS]
+    if expose_time_program_calendars:
+        platforms.append("calendar")
 
     api = WeishauptAPI(host, username, password, advanced_logging=advanced_logging)
 
@@ -122,7 +168,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # First refresh before entities are created
     await coordinator.async_config_entry_first_refresh()
-    _remove_obsolete_entities(hass, coordinator.data or {})
+    _remove_obsolete_entities(
+        hass,
+        coordinator.data or {},
+        remove_optional_calendars=not expose_time_program_calendars,
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
@@ -131,6 +181,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "time_program_manager": TimeProgramManager(hass, api),
         "allow_write": allow_write,
         "advanced_logging": advanced_logging,
+        "show_time_program_panel": show_time_program_panel,
+        "expose_time_program_calendars": expose_time_program_calendars,
+        "external_gas_meter_entity": external_gas_meter_entity,
+        "platforms": platforms,
     }
 
     # Register services only once per integration domain
@@ -139,7 +193,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await async_register_frontend(
+        hass,
+        entry.entry_id,
+        show_panel=show_time_program_panel,
+    )
 
     return True
 
@@ -359,9 +418,12 @@ def _register_services(hass: HomeAssistant) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok and entry.entry_id in hass.data.get(DOMAIN, {}):
-        hass.data[DOMAIN].pop(entry.entry_id)
+    entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
+    platforms = entry_data.get("platforms", [*BASE_PLATFORMS, "calendar"])
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
+    if unload_ok:
+        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        async_unregister_frontend(hass, entry.entry_id)
     return unload_ok
 
 

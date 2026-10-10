@@ -37,8 +37,38 @@ PROGRAM_NAMES = {
     "circulation": "Zirkulation",
 }
 
+ACTIVE_HEATING_PROGRAMS = {
+    11: "heating_1",
+    12: "heating_2",
+    13: "heating_3",
+    "Programm 1": "heating_1",
+    "Programm 2": "heating_2",
+    "Programm 3": "heating_3",
+}
+
 DISABLED_QUARTER = 128
 DISABLED_INTERVAL = (DISABLED_QUARTER << 8) | DISABLED_QUARTER
+
+
+def active_heating_program(data: dict, heating_circuit: int) -> str | None:
+    """Return the selected weekly heating program, if one is active."""
+
+    value = data.get(f"HK{int(heating_circuit)} User Betriebsart")
+    return ACTIVE_HEATING_PROGRAMS.get(value)
+
+
+def circulation_supported(data: dict) -> bool:
+    """Return whether the controller exposes a usable circulation signal.
+
+    WCM devices retain a factory circulation schedule even when no circulation
+    pump is configured. A real circulation measurement is therefore a safer
+    capability signal than the mere presence of the time-program parameters.
+    """
+
+    return any(
+        data.get(f"HK{heating_circuit} Zirkulationstemperatur") is not None
+        for heating_circuit in (1, 2)
+    )
 
 
 def validate_program(program: str) -> str:
