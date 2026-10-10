@@ -44,6 +44,13 @@ class CalendarEntity:
     hass = None
     entity_id = None
 
+    @property
+    def name(self):
+        return getattr(self, "_attr_translation_key", None)
+
+    def async_write_ha_state(self):
+        return None
+
 
 @dataclass
 class CalendarEvent:
@@ -114,11 +121,11 @@ class CalendarPlatformTest(unittest.TestCase):
         self.assertEqual(len(added), 3)
         self.assertEqual(len({entity._attr_unique_id for entity in added}), 3)
         self.assertEqual(
-            [entity._attr_name for entity in added],
+            [entity._attr_translation_key for entity in added],
             [
-                "HK1 aktives Heizprogramm",
-                "HK2 aktives Heizprogramm",
-                "Warmwasser",
+                "hc1_active_heating_program",
+                "hc2_active_heating_program",
+                "hot_water_program",
             ],
         )
 
@@ -143,7 +150,7 @@ class CalendarPlatformTest(unittest.TestCase):
         )
 
         self.assertEqual(len(added), 4)
-        self.assertEqual(added[-1]._attr_name, "Zirkulation")
+        self.assertEqual(added[-1]._attr_translation_key, "circulation_program")
 
     def test_calendar_expands_weekly_intervals(self) -> None:
         manager = Mock()
@@ -164,7 +171,7 @@ class CalendarPlatformTest(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0].start.isoformat(), "2026-10-05T06:00:00+02:00")
         self.assertEqual(events[0].end.isoformat(), "2026-10-05T08:00:00+02:00")
-        self.assertEqual(events[0].summary, "HK1 Heizprogramm 1")
+        self.assertEqual(events[0].summary, "hc1_heating_1")
 
     def test_active_calendar_follows_selected_program(self) -> None:
         manager = Mock()

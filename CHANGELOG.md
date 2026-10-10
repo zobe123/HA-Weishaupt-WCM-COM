@@ -4,6 +4,29 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.3.0b1]
+
+### New
+
+- Added complete German and English translations for setup, options, entities,
+  entity states, calendars, actions, errors and the weekly-program editor.
+- Added language-neutral internal entity and select-option keys so more
+  languages can be added without changing Python code.
+
+### Improved
+
+- Existing entity unique IDs remain unchanged, preserving entity registry,
+  history, dashboards and automations during the language migration.
+- Entity and enum labels now follow each Home Assistant user's selected
+  language instead of being hard-coded in German.
+- Direct action calls using the previous German select labels remain accepted
+  for backward compatibility.
+
+### Quality
+
+- Added localization-contract tests for complete and structurally identical
+  German and English catalogs.
+
 ## [1.2.16b2]
 
 ### New

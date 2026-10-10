@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from .base_entity import WeishauptBaseEntity
 from .const import DOMAIN, PARAMETERS
 from .protocol import encode_value, write_scale
+from .localization import parameter_translation_key
 
 
 async def async_setup_entry(
@@ -540,8 +541,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._conditional = bool(parameter.get("conditional"))
 
         slug = self._sensor_name.lower().replace(" ", "_")
-        self._attr_translation_key = slug
-        self._attr_name = self._sensor_name
+        self._attr_translation_key = parameter_translation_key(parameter)
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"weishaupt_{slug}_number"
 
         self._attr_native_min_value = float(min_value)
@@ -604,13 +605,13 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
-            dev_name = "Weishaupt Heizkreis 1"
+            dev_name = "Weishaupt WCM-COM · HK1"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
-            dev_name = "Weishaupt Heizkreis 2"
+            dev_name = "Weishaupt WCM-COM · HK2"
         else:
             ident = "weishaupt_kessel"
-            dev_name = "Weishaupt Kessel"
+            dev_name = "Weishaupt WCM-COM · WTC"
 
         return {
             "identifiers": {(DOMAIN, ident)},
@@ -643,7 +644,10 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
         if not self._allow_write:
             from homeassistant.exceptions import HomeAssistantError
-            raise HomeAssistantError("Weishaupt WCM-COM integration is in read-only mode.")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="read_only",
+            )
 
         # Clamp to allowed range just in case
         value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))

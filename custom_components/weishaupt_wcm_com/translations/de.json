@@ -6,7 +6,12 @@
     "step": {
       "user": {
         "title": "Weishaupt WCM-COM",
-        "description": "Verbindung zu einem Weishaupt WCM-COM Heizungsregler herstellen"
+        "description": "Verbindung zu einem Weishaupt WCM-COM Heizungsregler herstellen",
+        "data": {
+          "host": "Host",
+          "username": "Benutzername",
+          "password": "Passwort"
+        }
       }
     }
   },
@@ -54,56 +59,1214 @@
   },
   "entity": {
     "sensor": {
-      "status": { "name": "Status" },
-      "aussentemperatur": { "name": "Außentemperatur" },
-      "warmwassertemperatur": { "name": "Warmwassertemperatur" },
-      "raumtemperatur": { "name": "Raumtemperatur" },
-      "flamme": { "name": "Flamme" },
-      "heizung": { "name": "Heizung" },
-      "warmwasser": { "name": "Warmwasser" },
-      "kesseltemperatur": { "name": "Kesseltemperatur" },
-      "betriebsphase": { "name": "Betriebsphase" },
-      "pumpe": { "name": "Pumpe" },
-      "vorlauftemperatur_zone": { "name": "Vorlauftemperatur Zone" },
-      "waermeanforderung": { "name": "Wärmeanforderung" },
-      "vorlauftemperatur": { "name": "Vorlauftemperatur" },
-      "puffer_oben": { "name": "Puffer oben" },
-      "laststellung": { "name": "Laststellung" },
-      "gasventil_1": { "name": "Gasventil 1" },
-      "gasventil_2": { "name": "Gasventil 2" },
-      "gedaempfte_aussentemperatur": { "name": "Gedämpfte Außentemperatur" },
-      "schaltspielzahl_brenner": { "name": "Schaltspielzahl Brenner" },
-      "betriebsstunden_brenner": { "name": "Betriebsstunden Brenner" },
-      "zeit_seit_letzter_wartung": { "name": "Zeit seit letzter Wartung" },
-      "hk1_gemischte_aussentemperatur": { "name": "Heizkreis 1 gemischte Außentemperatur" },
-      "hk1_zirkulationstemperatur":    { "name": "Heizkreis 1 Zirkulationstemperatur" },
-      "hk1_solltemperatur":            { "name": "Heizkreis 1 Solltemperatur" },
-      "hk1_solltemperatur_system":     { "name": "Heizkreis 1 Solltemperatur System" },
-      "hk2_gemischte_aussentemperatur": { "name": "Heizkreis 2 gemischte Außentemperatur" },
-      "hk2_zirkulationstemperatur":    { "name": "Heizkreis 2 Zirkulationstemperatur" },
-      "hk2_solltemperatur":            { "name": "Heizkreis 2 Solltemperatur" },
-      "hk2_solltemperatur_system":     { "name": "Heizkreis 2 Solltemperatur System" },
-
-      "expert_device_conf":             { "name": "Gerätekonfiguration (P10)" },
-      "expert_boiler_address":          { "name": "Kesseladresse (P12)" },
-      "expert_spec_level_heating_mode": { "name": "Sonderniveau Heizbetrieb (P18)" },
-      "expert_corr_outside_sensor":     { "name": "Außenfühler-Korrektur (P20)" },
-      "expert_facility_frost_cont":     { "name": "Anlagenschutz Frost (P23)" },
-      "expert_min_vl_target":           { "name": "Min. VL-Soll (P30)" },
-      "expert_max_vl_target":           { "name": "Max. VL-Soll (P31)" },
-      "expert_switch_diff_vl":          { "name": "Schaltdifferenz VL (P32)" },
-      "expert_burner_pulse_lock":       { "name": "Brenner-Taktsperre (P34)" },
-      "expert_max_power_heating":       { "name": "Max. Leistung Heizung (P37)" },
-      "expert_max_power_ww":            { "name": "Max. Leistung WW (P38)" },
-      "expert_max_charge_time_ww":      { "name": "Max. WW-Ladezeit (P52)" },
-
-      "system_date":                    { "name": "Systemdatum" },
-      "system_time":                    { "name": "Systemzeit" },
-      "hk1_holiday_start":              { "name": "HK1 Urlaubsbeginn" },
-      "hk1_holiday_end":                { "name": "HK1 Urlaubsende" },
-      "hk1_urlaubstemperaturniveau":    { "name": "HK1 Urlaubstemperaturniveau" },
-      "dst_start":                      { "name": "Sommerzeitbeginn" },
-      "dst_end":                        { "name": "Sommerzeitende" }
+      "parameter_b0_m10_p1": {
+        "name": "Status",
+        "state": {
+          "normal": "normal",
+          "code_11": "F11: Temperatur am Vorlauffühler > 105 °C",
+          "code_12": "W12: Temperatur am Vorlauffühler > 95 °C",
+          "code_13": "F13: Abgastemperatur zu hoch",
+          "code_14": "W14: Vorlauftemperatur steigt zu schnell an",
+          "code_15": "F15/W15: Differenz Vorlauf- und Abgastemperatur zu groß - (Nach 30 Warnungen verriegelt die Anlage mit F15)",
+          "code_16": "W16: Abgastemperatur zu hoch",
+          "code_21": "F21: Keine Flammenbildung beim Brennerstart",
+          "code_22": "W22: Flammenausfall während des Betriebs",
+          "code_23": "F23: Flammenvortäuschung",
+          "code_24": "F24: Eingang H2 ist geschlossen, Parameter 17 = 3",
+          "code_30": "F30: Vorlauffühler defekt",
+          "code_31": "F31: Abgasfühler defekt",
+          "code_33": "W33: Außenfühler defekt",
+          "code_34": "W34: Warmwasserfühler defekt",
+          "code_37": "W37: Wasserströmungssensor defekt",
+          "code_38": "F38: Pufferfühler defekt",
+          "code_39": "F39: Pufferfühler/Weichenfühler defekt",
+          "code_41": "F41: Relaiskontrolle Gasventile",
+          "code_42": "W42: Kein Steuersignal Umwälzpumpe",
+          "code_43": "F43: Gebläsedrehzahl wird nicht erreicht",
+          "code_44": "F44: Gebläsestillstand fehlerhaft",
+          "code_51": "F51: Datensatz-Fehler Kessel",
+          "code_52": "F52: Datensatz-Fehler Brenner",
+          "code_53": "F53: Spannungsversorgung außerhalb Toleranz",
+          "code_54": "F54: Elektronikfehler",
+          "code_55": "F55: Netzfrequenz außerhalb Toleranz",
+          "code_56": "F56: Ionisationsmessung fehlerhaft",
+          "code_61": "F61: Ionisationssignal weicht vom Sollwert ab",
+          "code_62": "F62: Stellsignal des Gasstellglieds außerhalb Toleranz",
+          "code_64": "F64: SCOT®-Basiswert außerhalb vorgegebener Grenzen",
+          "code_65": "F65: SCOT®-Basiswert weicht zu stark vom Vorgängerwert ab",
+          "code_66": "F66: Kalibrierung konnte nicht durchgeführt werden",
+          "code_67": "F67: SCOT®-Basiswert fehlerhaft gespeichert",
+          "code_80": "W80: Kommunikation zum Kaskadenmanager fehlerhaft",
+          "code_81": "W81: Kommunikation zur WCM-FS#1 fehlerhaft",
+          "code_82": "W82: Kommunikation zu EM#2 oder WCM-FS#2 fehlerhaft",
+          "code_83": "W83: Kommunikation zu EM#3 oder WCM-FS#3 fehlerhaft",
+          "code_84": "W84: Kommunikation zu EM#4 oder WCM-FS#4 fehlerhaft",
+          "code_85": "W85: Kommunikation zu EM#5 oder WCM-FS#5 fehlerhaft",
+          "code_86": "W86: Kommunikation zu EM#6 oder WCM-FS#6 fehlerhaft",
+          "code_87": "W87: Kommunikation zu EM#7 oder WCM-FS#7 fehlerhaft",
+          "code_88": "W88: Kommunikation zu EM#8 oder WCM-FS#8 fehlerhaft"
+        }
+      },
+      "parameter_b0_m10_p12": {
+        "name": "Außentemperatur"
+      },
+      "parameter_b0_m10_p14": {
+        "name": "Warmwassertemperatur"
+      },
+      "parameter_b0_m10_p81": {
+        "name": "Flamme",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p82": {
+        "name": "Heizung",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p83": {
+        "name": "Warmwasser",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p325": {
+        "name": "Kesseltemperatur"
+      },
+      "parameter_b0_m10_p373": {
+        "name": "Betriebsphase",
+        "state": {
+          "phase_0": "Brenner aus",
+          "phase_1": "Ruhestandskontrolle Gebläse",
+          "phase_2": "Vorspüldrehzahl erreichen",
+          "phase_3": "Countdown der Vorspülzeit",
+          "phase_4": "Zünddrehzahl erreichen",
+          "phase_5": "Flammenbildungszeit",
+          "phase_6": "Brenner in Betrieb, Regelung aktiv",
+          "phase_7": "Gasventilkontrolle V1",
+          "phase_8": "Gasventilkontrolle V2",
+          "phase_9": "Nachspüldrehzahl erreichen und Nachspülen",
+          "pre_purge_remaining_10": "Vorspülzeit – noch 10 s",
+          "pre_purge_remaining_11": "Vorspülzeit – noch 11 s",
+          "pre_purge_remaining_12": "Vorspülzeit – noch 12 s",
+          "pre_purge_remaining_13": "Vorspülzeit – noch 13 s",
+          "pre_purge_remaining_14": "Vorspülzeit – noch 14 s",
+          "pre_purge_remaining_15": "Vorspülzeit – noch 15 s",
+          "pre_purge_remaining_16": "Vorspülzeit – noch 16 s",
+          "pre_purge_remaining_17": "Vorspülzeit – noch 17 s",
+          "pre_purge_remaining_18": "Vorspülzeit – noch 18 s",
+          "pre_purge_remaining_19": "Vorspülzeit – noch 19 s",
+          "pre_purge_remaining_20": "Vorspülzeit – noch 20 s",
+          "pre_purge_remaining_21": "Vorspülzeit – noch 21 s",
+          "pre_purge_remaining_22": "Vorspülzeit – noch 22 s",
+          "pre_purge_remaining_23": "Vorspülzeit – noch 23 s",
+          "pre_purge_remaining_24": "Vorspülzeit – noch 24 s",
+          "pre_purge_remaining_25": "Vorspülzeit – noch 25 s",
+          "pre_purge_remaining_26": "Vorspülzeit – noch 26 s",
+          "pre_purge_remaining_27": "Vorspülzeit – noch 27 s",
+          "pre_purge_remaining_28": "Vorspülzeit – noch 28 s",
+          "pre_purge_remaining_29": "Vorspülzeit – noch 29 s",
+          "pre_purge_remaining_30": "Vorspülzeit – noch 30 s",
+          "pre_purge_remaining_31": "Vorspülzeit – noch 31 s",
+          "pre_purge_remaining_32": "Vorspülzeit – noch 32 s",
+          "pre_purge_remaining_33": "Vorspülzeit – noch 33 s",
+          "pre_purge_remaining_34": "Vorspülzeit – noch 34 s",
+          "pre_purge_remaining_35": "Vorspülzeit – noch 35 s",
+          "pre_purge_remaining_36": "Vorspülzeit – noch 36 s",
+          "pre_purge_remaining_37": "Vorspülzeit – noch 37 s",
+          "pre_purge_remaining_38": "Vorspülzeit – noch 38 s",
+          "pre_purge_remaining_39": "Vorspülzeit – noch 39 s",
+          "pre_purge_remaining_40": "Vorspülzeit – noch 40 s",
+          "pre_purge_remaining_41": "Vorspülzeit – noch 41 s",
+          "pre_purge_remaining_42": "Vorspülzeit – noch 42 s",
+          "pre_purge_remaining_43": "Vorspülzeit – noch 43 s",
+          "pre_purge_remaining_44": "Vorspülzeit – noch 44 s",
+          "pre_purge_remaining_45": "Vorspülzeit – noch 45 s",
+          "pre_purge_remaining_46": "Vorspülzeit – noch 46 s",
+          "pre_purge_remaining_47": "Vorspülzeit – noch 47 s",
+          "pre_purge_remaining_48": "Vorspülzeit – noch 48 s",
+          "pre_purge_remaining_49": "Vorspülzeit – noch 49 s",
+          "pre_purge_remaining_50": "Vorspülzeit – noch 50 s",
+          "pre_purge_remaining_51": "Vorspülzeit – noch 51 s",
+          "pre_purge_remaining_52": "Vorspülzeit – noch 52 s",
+          "pre_purge_remaining_53": "Vorspülzeit – noch 53 s",
+          "pre_purge_remaining_54": "Vorspülzeit – noch 54 s",
+          "pre_purge_remaining_55": "Vorspülzeit – noch 55 s",
+          "pre_purge_remaining_56": "Vorspülzeit – noch 56 s",
+          "pre_purge_remaining_57": "Vorspülzeit – noch 57 s",
+          "pre_purge_remaining_58": "Vorspülzeit – noch 58 s",
+          "pre_purge_remaining_59": "Vorspülzeit – noch 59 s",
+          "pre_purge_remaining_60": "Vorspülzeit – noch 60 s",
+          "flame_formation_10": "Flammenbildungszeit 1.0 s",
+          "flame_formation_11": "Flammenbildungszeit 1.1 s",
+          "flame_formation_12": "Flammenbildungszeit 1.2 s",
+          "flame_formation_13": "Flammenbildungszeit 1.3 s",
+          "flame_formation_14": "Flammenbildungszeit 1.4 s",
+          "flame_formation_15": "Flammenbildungszeit 1.5 s",
+          "flame_formation_16": "Flammenbildungszeit 1.6 s",
+          "flame_formation_17": "Flammenbildungszeit 1.7 s",
+          "flame_formation_18": "Flammenbildungszeit 1.8 s",
+          "flame_formation_19": "Flammenbildungszeit 1.9 s",
+          "flame_formation_20": "Flammenbildungszeit 2.0 s",
+          "flame_formation_21": "Flammenbildungszeit 2.1 s",
+          "flame_formation_22": "Flammenbildungszeit 2.2 s",
+          "flame_formation_23": "Flammenbildungszeit 2.3 s",
+          "flame_formation_24": "Flammenbildungszeit 2.4 s",
+          "flame_formation_25": "Flammenbildungszeit 2.5 s",
+          "flame_formation_26": "Flammenbildungszeit 2.6 s",
+          "flame_formation_27": "Flammenbildungszeit 2.7 s",
+          "flame_formation_28": "Flammenbildungszeit 2.8 s",
+          "flame_formation_29": "Flammenbildungszeit 2.9 s",
+          "flame_formation_30": "Flammenbildungszeit 3.0 s",
+          "flame_formation_31": "Flammenbildungszeit 3.1 s",
+          "flame_formation_32": "Flammenbildungszeit 3.2 s",
+          "flame_formation_33": "Flammenbildungszeit 3.3 s",
+          "flame_formation_34": "Flammenbildungszeit 3.4 s",
+          "flame_formation_35": "Flammenbildungszeit 3.5 s",
+          "flame_formation_36": "Flammenbildungszeit 3.6 s",
+          "flame_formation_37": "Flammenbildungszeit 3.7 s",
+          "flame_formation_38": "Flammenbildungszeit 3.8 s",
+          "flame_formation_39": "Flammenbildungszeit 3.9 s",
+          "flame_formation_40": "Flammenbildungszeit 4.0 s",
+          "flame_formation_41": "Flammenbildungszeit 4.1 s",
+          "flame_formation_42": "Flammenbildungszeit 4.2 s",
+          "flame_formation_43": "Flammenbildungszeit 4.3 s",
+          "flame_formation_44": "Flammenbildungszeit 4.4 s",
+          "flame_formation_45": "Flammenbildungszeit 4.5 s",
+          "flame_formation_46": "Flammenbildungszeit 4.6 s",
+          "flame_formation_47": "Flammenbildungszeit 4.7 s",
+          "flame_formation_48": "Flammenbildungszeit 4.8 s",
+          "flame_formation_49": "Flammenbildungszeit 4.9 s",
+          "flame_formation_50": "Flammenbildungszeit 5.0 s",
+          "flame_formation_51": "Flammenbildungszeit 5.1 s",
+          "flame_formation_52": "Flammenbildungszeit 5.2 s",
+          "flame_formation_53": "Flammenbildungszeit 5.3 s",
+          "flame_formation_54": "Flammenbildungszeit 5.4 s",
+          "flame_formation_55": "Flammenbildungszeit 5.5 s",
+          "flame_formation_56": "Flammenbildungszeit 5.6 s",
+          "flame_formation_57": "Flammenbildungszeit 5.7 s",
+          "flame_formation_58": "Flammenbildungszeit 5.8 s",
+          "flame_formation_59": "Flammenbildungszeit 5.9 s",
+          "flame_formation_60": "Flammenbildungszeit 6.0 s"
+        }
+      },
+      "parameter_b0_m10_p466": {
+        "name": "Pumpe",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p3101": {
+        "name": "Vorlauftemperatur Zone"
+      },
+      "parameter_b0_m10_p2": {
+        "name": "Wärmeanforderung"
+      },
+      "parameter_b0_m10_p13": {
+        "name": "Vorlauftemperatur"
+      },
+      "parameter_b0_m10_p118": {
+        "name": "Puffer oben"
+      },
+      "parameter_b0_m10_p138": {
+        "name": "Laststellung"
+      },
+      "parameter_b0_m10_p1497": {
+        "name": "Gasventil 1",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p1498": {
+        "name": "Gasventil 2",
+        "state": {
+          "off": "Aus",
+          "on": "Ein"
+        }
+      },
+      "parameter_b0_m10_p2572": {
+        "name": "Gedämpfte Außentemperatur"
+      },
+      "parameter_b0_m10_p3158": {
+        "name": "Schaltspielzahl Brenner"
+      },
+      "parameter_b0_m10_p3159": {
+        "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p700": {
+        "name": "Zeit seit letzter Wartung"
+      },
+      "parameter_b0_m10_p3794": {
+        "name": "Gerätekonfiguration (P10)"
+      },
+      "parameter_b0_m10_p376": {
+        "name": "Kesseladresse (P12)"
+      },
+      "parameter_b0_m10_p3102": {
+        "name": "Sonderniveau Heizbetrieb (P18)"
+      },
+      "parameter_b0_m10_p3103": {
+        "name": "Außenfühler-Korrektur (P20)"
+      },
+      "parameter_b0_m10_p2560": {
+        "name": "Anlagenschutz Frost (P23)"
+      },
+      "parameter_b0_m10_p31": {
+        "name": "Min. VL-Soll (P30)"
+      },
+      "parameter_b0_m10_p39": {
+        "name": "Max. VL-Soll (P31)"
+      },
+      "parameter_b0_m10_p34": {
+        "name": "Schaltdifferenz VL (P32)"
+      },
+      "parameter_b0_m10_p323": {
+        "name": "Brenner-Taktsperre (P34)"
+      },
+      "parameter_b0_m10_p319": {
+        "name": "Max. Leistung Heizung (P37)"
+      },
+      "parameter_b0_m10_p345": {
+        "name": "Max. Leistung WW (P38)"
+      },
+      "parameter_b0_m10_p384": {
+        "name": "Max. WW-Ladezeit (P52)"
+      },
+      "parameter_b1_m12_p857": {
+        "name": "HK1 Pumpenkonfiguration",
+        "state": {
+          "stepped": "Stufig"
+        }
+      },
+      "parameter_b1_m12_p65019": {
+        "name": "HK1 Pumpenausgang",
+        "state": {
+          "manual_off": "Manuell aus",
+          "manual_on": "Manuell ein",
+          "automatic_off": "Automatik aus",
+          "automatic_on": "Automatik ein"
+        }
+      },
+      "parameter_b1_m6_p16": {
+        "name": "HK1 Heizkreistyp",
+        "state": {
+          "not_available": "Nicht verfügbar",
+          "external_room_sensor": "Externer Raumfühler",
+          "internal_room_sensor": "Interner Raumfühler",
+          "inside_boiler": "Im Kessel"
+        }
+      },
+      "parameter_b1_m6_p2419": {
+        "name": "HK1 Regelvariante",
+        "state": {
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
+        }
+      },
+      "parameter_b1_m6_p321": {
+        "name": "HK1 Externer Raumfühler",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "parameter_b2_m12_p857": {
+        "name": "HK2 Pumpenkonfiguration",
+        "state": {
+          "stepped": "Stufig"
+        }
+      },
+      "parameter_b2_m12_p65019": {
+        "name": "HK2 Pumpenausgang",
+        "state": {
+          "manual_off": "Manuell aus",
+          "manual_on": "Manuell ein",
+          "automatic_off": "Automatik aus",
+          "automatic_on": "Automatik ein"
+        }
+      },
+      "parameter_b2_m6_p16": {
+        "name": "HK2 Heizkreistyp",
+        "state": {
+          "not_available": "Nicht verfügbar",
+          "external_room_sensor": "Externer Raumfühler",
+          "internal_room_sensor": "Interner Raumfühler",
+          "inside_boiler": "Im Kessel"
+        }
+      },
+      "parameter_b2_m6_p2419": {
+        "name": "HK2 Regelvariante",
+        "state": {
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
+        }
+      },
+      "parameter_b2_m6_p321": {
+        "name": "HK2 Externer Raumfühler",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "parameter_b1_m6_p274": {
+        "name": "HK1 Betriebsart",
+        "state": {
+          "program_1": "Programm 1",
+          "program_2": "Programm 2",
+          "program_3": "Programm 3",
+          "hot_water_program": "Warmwasserprogramm",
+          "standby": "Standby",
+          "summer": "Sommer",
+          "reduced": "Absenk",
+          "normal": "Normal",
+          "control_center": "Wie Leitstelle"
+        }
+      },
+      "parameter_b2_m6_p274": {
+        "name": "HK2 Betriebsart",
+        "state": {
+          "program_1": "Programm 1",
+          "program_2": "Programm 2",
+          "program_3": "Programm 3",
+          "hot_water_program": "Warmwasserprogramm",
+          "standby": "Standby",
+          "summer": "Sommer",
+          "reduced": "Absenk",
+          "normal": "Normal",
+          "control_center": "Wie Leitstelle"
+        }
+      },
+      "boiler_firmware_fs": {
+        "name": "WTC Firmware FS"
+      },
+      "hc1_firmware_fs": {
+        "name": "HK1 Firmware FS"
+      },
+      "hc2_firmware_fs": {
+        "name": "HK2 Firmware FS"
+      },
+      "hc1_firmware_em": {
+        "name": "HK1 Firmware EM"
+      },
+      "hc2_firmware_em": {
+        "name": "HK2 Firmware EM"
+      },
+      "parameter_b1_m6_p2586": {
+        "name": "HK1 Gemischte Außentemperatur"
+      },
+      "parameter_b1_m6_p17": {
+        "name": "HK1 Raumtemperatur"
+      },
+      "parameter_b1_m12_p15": {
+        "name": "HK1 Vorlauftemperatur"
+      },
+      "parameter_b1_m6_p14": {
+        "name": "HK1 Warmwassertemperatur"
+      },
+      "parameter_b1_m12_p1257": {
+        "name": "HK1 Zirkulationstemperatur"
+      },
+      "parameter_b1_m6_p4": {
+        "name": "HK1 Solltemperatur"
+      },
+      "parameter_b1_m6_p2": {
+        "name": "HK1 System-Solltemperatur"
+      },
+      "parameter_b2_m6_p2586": {
+        "name": "HK2 Gemischte Außentemperatur"
+      },
+      "parameter_b2_m6_p17": {
+        "name": "HK2 Raumtemperatur"
+      },
+      "parameter_b2_m12_p15": {
+        "name": "HK2 Vorlauftemperatur"
+      },
+      "parameter_b2_m6_p14": {
+        "name": "HK2 Warmwassertemperatur"
+      },
+      "parameter_b2_m12_p1257": {
+        "name": "HK2 Zirkulationstemperatur"
+      },
+      "parameter_b2_m6_p4": {
+        "name": "HK2 Solltemperatur"
+      },
+      "parameter_b2_m6_p2": {
+        "name": "HK2 System-Solltemperatur"
+      },
+      "parameter_b1_m6_p5": {
+        "name": "HK1 Raumtemperatur normal"
+      },
+      "parameter_b1_m6_p8": {
+        "name": "HK1 Raumtemperatur abgesenkt"
+      },
+      "parameter_b1_m6_p297": {
+        "name": "HK1 Vorlauf-Soll normal"
+      },
+      "parameter_b1_m6_p298": {
+        "name": "HK1 Vorlauf-Soll abgesenkt"
+      },
+      "parameter_b1_m6_p270": {
+        "name": "HK1 Heizkurvensteilheit"
+      },
+      "parameter_b1_m6_p2580": {
+        "name": "HK1 Raumfrosttemperatur"
+      },
+      "parameter_b1_m6_p278": {
+        "name": "HK1 Sommer-/Winter-Umschaltung"
+      },
+      "parameter_b1_m6_p19": {
+        "name": "HK1 Warmwasser-Soll normal"
+      },
+      "parameter_b1_m6_p650": {
+        "name": "HK1 Warmwasser-Soll abgesenkt"
+      },
+      "parameter_b1_m6_p2418": {
+        "name": "HK1 Vorverlegung"
+      },
+      "parameter_b2_m6_p5": {
+        "name": "HK2 Raumtemperatur normal"
+      },
+      "parameter_b2_m6_p8": {
+        "name": "HK2 Raumtemperatur abgesenkt"
+      },
+      "parameter_b2_m6_p297": {
+        "name": "HK2 Vorlauf-Soll normal"
+      },
+      "parameter_b2_m6_p298": {
+        "name": "HK2 Vorlauf-Soll abgesenkt"
+      },
+      "parameter_b2_m6_p270": {
+        "name": "HK2 Heizkurvensteilheit"
+      },
+      "parameter_b2_m6_p2580": {
+        "name": "HK2 Raumfrosttemperatur"
+      },
+      "parameter_b2_m6_p278": {
+        "name": "HK2 Sommer-/Winter-Umschaltung"
+      },
+      "parameter_b2_m6_p19": {
+        "name": "HK2 Warmwasser-Soll normal"
+      },
+      "parameter_b2_m6_p650": {
+        "name": "HK2 Warmwasser-Soll abgesenkt"
+      },
+      "parameter_b2_m6_p2418": {
+        "name": "HK2 Vorverlegung"
+      },
+      "parameter_b1_m6_p306": {
+        "name": "HK1 Reduziertbetrieb",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_operation": "Absenkbetrieb"
+        }
+      },
+      "parameter_b1_m6_p702": {
+        "name": "HK1 Frostheizgrenze"
+      },
+      "parameter_b1_m6_p272": {
+        "name": "HK1 Einschaltoptimierung Maximum"
+      },
+      "parameter_b1_m6_p2414": {
+        "name": "HK1 Einschaltoptimierung aktuell"
+      },
+      "parameter_b1_m6_p2588": {
+        "name": "HK1 Raumthermostatfunktion",
+        "state": {
+          "off": "Aus",
+          "day_on": "Tag ein",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "parameter_b1_m12_p384": {
+        "name": "HK1 Max. Warmwasser-Ladezeit"
+      },
+      "parameter_b2_m6_p306": {
+        "name": "HK2 Reduziertbetrieb",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_operation": "Absenkbetrieb"
+        }
+      },
+      "parameter_b2_m6_p702": {
+        "name": "HK2 Frostheizgrenze"
+      },
+      "parameter_b2_m6_p272": {
+        "name": "HK2 Einschaltoptimierung Maximum"
+      },
+      "parameter_b2_m6_p2414": {
+        "name": "HK2 Einschaltoptimierung aktuell"
+      },
+      "parameter_b2_m6_p2588": {
+        "name": "HK2 Raumthermostatfunktion",
+        "state": {
+          "off": "Aus",
+          "day_on": "Tag ein",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "parameter_b2_m12_p384": {
+        "name": "HK2 Max. Warmwasser-Ladezeit"
+      },
+      "system_date": {
+        "name": "Systemdatum"
+      },
+      "system_time": {
+        "name": "Systemzeit"
+      },
+      "hc1_holiday_start": {
+        "name": "HK1 Urlaubsbeginn"
+      },
+      "hc1_holiday_end": {
+        "name": "HK1 Urlaubsende"
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "HK1 Urlaubstemperaturniveau",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_temperature": "Absenktemperatur"
+        }
+      },
+      "hc2_holiday_start": {
+        "name": "HK2 Urlaubsbeginn"
+      },
+      "hc2_holiday_end": {
+        "name": "HK2 Urlaubsende"
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "HK2 Urlaubstemperaturniveau",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_temperature": "Absenktemperatur"
+        }
+      },
+      "daylight_saving_start": {
+        "name": "Sommerzeitbeginn"
+      },
+      "daylight_saving_end": {
+        "name": "Sommerzeitende"
+      }
+    },
+    "number": {
+      "parameter_b0_m10_p1": {
+        "name": "Status"
+      },
+      "parameter_b0_m10_p12": {
+        "name": "Außentemperatur"
+      },
+      "parameter_b0_m10_p14": {
+        "name": "Warmwassertemperatur"
+      },
+      "parameter_b0_m10_p81": {
+        "name": "Flamme"
+      },
+      "parameter_b0_m10_p82": {
+        "name": "Heizung"
+      },
+      "parameter_b0_m10_p83": {
+        "name": "Warmwasser"
+      },
+      "parameter_b0_m10_p325": {
+        "name": "Kesseltemperatur"
+      },
+      "parameter_b0_m10_p373": {
+        "name": "Betriebsphase"
+      },
+      "parameter_b0_m10_p466": {
+        "name": "Pumpe"
+      },
+      "parameter_b0_m10_p3101": {
+        "name": "Vorlauftemperatur Zone"
+      },
+      "parameter_b0_m10_p2": {
+        "name": "Wärmeanforderung"
+      },
+      "parameter_b0_m10_p13": {
+        "name": "Vorlauftemperatur"
+      },
+      "parameter_b0_m10_p118": {
+        "name": "Puffer oben"
+      },
+      "parameter_b0_m10_p138": {
+        "name": "Laststellung"
+      },
+      "parameter_b0_m10_p1497": {
+        "name": "Gasventil 1"
+      },
+      "parameter_b0_m10_p1498": {
+        "name": "Gasventil 2"
+      },
+      "parameter_b0_m10_p2572": {
+        "name": "Gedämpfte Außentemperatur"
+      },
+      "parameter_b0_m10_p3158": {
+        "name": "Schaltspielzahl Brenner"
+      },
+      "parameter_b0_m10_p3159": {
+        "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p700": {
+        "name": "Zeit seit letzter Wartung"
+      },
+      "parameter_b0_m10_p3794": {
+        "name": "Gerätekonfiguration (P10)"
+      },
+      "parameter_b0_m10_p376": {
+        "name": "Kesseladresse (P12)"
+      },
+      "parameter_b0_m10_p3102": {
+        "name": "Sonderniveau Heizbetrieb (P18)"
+      },
+      "parameter_b0_m10_p3103": {
+        "name": "Außenfühler-Korrektur (P20)"
+      },
+      "parameter_b0_m10_p2560": {
+        "name": "Anlagenschutz Frost (P23)"
+      },
+      "parameter_b0_m10_p31": {
+        "name": "Min. VL-Soll (P30)"
+      },
+      "parameter_b0_m10_p39": {
+        "name": "Max. VL-Soll (P31)"
+      },
+      "parameter_b0_m10_p34": {
+        "name": "Schaltdifferenz VL (P32)"
+      },
+      "parameter_b0_m10_p323": {
+        "name": "Brenner-Taktsperre (P34)"
+      },
+      "parameter_b0_m10_p319": {
+        "name": "Max. Leistung Heizung (P37)"
+      },
+      "parameter_b0_m10_p345": {
+        "name": "Max. Leistung WW (P38)"
+      },
+      "parameter_b0_m10_p384": {
+        "name": "Max. WW-Ladezeit (P52)"
+      },
+      "parameter_b1_m12_p857": {
+        "name": "HK1 Pumpenkonfiguration"
+      },
+      "parameter_b1_m12_p65019": {
+        "name": "HK1 Pumpenausgang"
+      },
+      "parameter_b1_m6_p16": {
+        "name": "HK1 Heizkreistyp"
+      },
+      "parameter_b1_m6_p2419": {
+        "name": "HK1 Regelvariante"
+      },
+      "parameter_b1_m6_p321": {
+        "name": "HK1 Externer Raumfühler"
+      },
+      "parameter_b2_m12_p857": {
+        "name": "HK2 Pumpenkonfiguration"
+      },
+      "parameter_b2_m12_p65019": {
+        "name": "HK2 Pumpenausgang"
+      },
+      "parameter_b2_m6_p16": {
+        "name": "HK2 Heizkreistyp"
+      },
+      "parameter_b2_m6_p2419": {
+        "name": "HK2 Regelvariante"
+      },
+      "parameter_b2_m6_p321": {
+        "name": "HK2 Externer Raumfühler"
+      },
+      "parameter_b1_m6_p274": {
+        "name": "HK1 Betriebsart"
+      },
+      "parameter_b2_m6_p274": {
+        "name": "HK2 Betriebsart"
+      },
+      "boiler_firmware_fs": {
+        "name": "WTC Firmware FS"
+      },
+      "hc1_firmware_fs": {
+        "name": "HK1 Firmware FS"
+      },
+      "hc2_firmware_fs": {
+        "name": "HK2 Firmware FS"
+      },
+      "hc1_firmware_em": {
+        "name": "HK1 Firmware EM"
+      },
+      "hc2_firmware_em": {
+        "name": "HK2 Firmware EM"
+      },
+      "parameter_b1_m6_p2586": {
+        "name": "HK1 Gemischte Außentemperatur"
+      },
+      "parameter_b1_m6_p17": {
+        "name": "HK1 Raumtemperatur"
+      },
+      "parameter_b1_m12_p15": {
+        "name": "HK1 Vorlauftemperatur"
+      },
+      "parameter_b1_m6_p14": {
+        "name": "HK1 Warmwassertemperatur"
+      },
+      "parameter_b1_m12_p1257": {
+        "name": "HK1 Zirkulationstemperatur"
+      },
+      "parameter_b1_m6_p4": {
+        "name": "HK1 Solltemperatur"
+      },
+      "parameter_b1_m6_p2": {
+        "name": "HK1 System-Solltemperatur"
+      },
+      "parameter_b2_m6_p2586": {
+        "name": "HK2 Gemischte Außentemperatur"
+      },
+      "parameter_b2_m6_p17": {
+        "name": "HK2 Raumtemperatur"
+      },
+      "parameter_b2_m12_p15": {
+        "name": "HK2 Vorlauftemperatur"
+      },
+      "parameter_b2_m6_p14": {
+        "name": "HK2 Warmwassertemperatur"
+      },
+      "parameter_b2_m12_p1257": {
+        "name": "HK2 Zirkulationstemperatur"
+      },
+      "parameter_b2_m6_p4": {
+        "name": "HK2 Solltemperatur"
+      },
+      "parameter_b2_m6_p2": {
+        "name": "HK2 System-Solltemperatur"
+      },
+      "parameter_b1_m6_p5": {
+        "name": "HK1 Raumtemperatur normal"
+      },
+      "parameter_b1_m6_p8": {
+        "name": "HK1 Raumtemperatur abgesenkt"
+      },
+      "parameter_b1_m6_p297": {
+        "name": "HK1 Vorlauf-Soll normal"
+      },
+      "parameter_b1_m6_p298": {
+        "name": "HK1 Vorlauf-Soll abgesenkt"
+      },
+      "parameter_b1_m6_p270": {
+        "name": "HK1 Heizkurvensteilheit"
+      },
+      "parameter_b1_m6_p2580": {
+        "name": "HK1 Raumfrosttemperatur"
+      },
+      "parameter_b1_m6_p278": {
+        "name": "HK1 Sommer-/Winter-Umschaltung"
+      },
+      "parameter_b1_m6_p19": {
+        "name": "HK1 Warmwasser-Soll normal"
+      },
+      "parameter_b1_m6_p650": {
+        "name": "HK1 Warmwasser-Soll abgesenkt"
+      },
+      "parameter_b1_m6_p2418": {
+        "name": "HK1 Vorverlegung"
+      },
+      "parameter_b2_m6_p5": {
+        "name": "HK2 Raumtemperatur normal"
+      },
+      "parameter_b2_m6_p8": {
+        "name": "HK2 Raumtemperatur abgesenkt"
+      },
+      "parameter_b2_m6_p297": {
+        "name": "HK2 Vorlauf-Soll normal"
+      },
+      "parameter_b2_m6_p298": {
+        "name": "HK2 Vorlauf-Soll abgesenkt"
+      },
+      "parameter_b2_m6_p270": {
+        "name": "HK2 Heizkurvensteilheit"
+      },
+      "parameter_b2_m6_p2580": {
+        "name": "HK2 Raumfrosttemperatur"
+      },
+      "parameter_b2_m6_p278": {
+        "name": "HK2 Sommer-/Winter-Umschaltung"
+      },
+      "parameter_b2_m6_p19": {
+        "name": "HK2 Warmwasser-Soll normal"
+      },
+      "parameter_b2_m6_p650": {
+        "name": "HK2 Warmwasser-Soll abgesenkt"
+      },
+      "parameter_b2_m6_p2418": {
+        "name": "HK2 Vorverlegung"
+      },
+      "parameter_b1_m6_p306": {
+        "name": "HK1 Reduziertbetrieb"
+      },
+      "parameter_b1_m6_p702": {
+        "name": "HK1 Frostheizgrenze"
+      },
+      "parameter_b1_m6_p272": {
+        "name": "HK1 Einschaltoptimierung Maximum"
+      },
+      "parameter_b1_m6_p2414": {
+        "name": "HK1 Einschaltoptimierung aktuell"
+      },
+      "parameter_b1_m6_p2588": {
+        "name": "HK1 Raumthermostatfunktion"
+      },
+      "parameter_b1_m12_p384": {
+        "name": "HK1 Max. Warmwasser-Ladezeit"
+      },
+      "parameter_b2_m6_p306": {
+        "name": "HK2 Reduziertbetrieb"
+      },
+      "parameter_b2_m6_p702": {
+        "name": "HK2 Frostheizgrenze"
+      },
+      "parameter_b2_m6_p272": {
+        "name": "HK2 Einschaltoptimierung Maximum"
+      },
+      "parameter_b2_m6_p2414": {
+        "name": "HK2 Einschaltoptimierung aktuell"
+      },
+      "parameter_b2_m6_p2588": {
+        "name": "HK2 Raumthermostatfunktion"
+      },
+      "parameter_b2_m12_p384": {
+        "name": "HK2 Max. Warmwasser-Ladezeit"
+      },
+      "system_date": {
+        "name": "Systemdatum"
+      },
+      "system_time": {
+        "name": "Systemzeit"
+      },
+      "hc1_holiday_start": {
+        "name": "HK1 Urlaubsbeginn"
+      },
+      "hc1_holiday_end": {
+        "name": "HK1 Urlaubsende"
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "HK1 Urlaubstemperaturniveau"
+      },
+      "hc2_holiday_start": {
+        "name": "HK2 Urlaubsbeginn"
+      },
+      "hc2_holiday_end": {
+        "name": "HK2 Urlaubsende"
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "HK2 Urlaubstemperaturniveau"
+      },
+      "daylight_saving_start": {
+        "name": "Sommerzeitbeginn"
+      },
+      "daylight_saving_end": {
+        "name": "Sommerzeitende"
+      }
+    },
+    "select": {
+      "hc1_type": {
+        "name": "HK1 Heizkreistyp",
+        "state": {
+          "not_available": "Nicht verfügbar",
+          "external_room_sensor": "Externer Raumfühler",
+          "internal_room_sensor": "Interner Raumfühler",
+          "inside_boiler": "Im Kessel"
+        }
+      },
+      "hc2_type": {
+        "name": "HK2 Heizkreistyp",
+        "state": {
+          "not_available": "Nicht verfügbar",
+          "external_room_sensor": "Externer Raumfühler",
+          "internal_room_sensor": "Interner Raumfühler",
+          "inside_boiler": "Im Kessel"
+        }
+      },
+      "hc1_control_variant": {
+        "name": "HK1 Regelvariante",
+        "state": {
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
+        }
+      },
+      "hc2_control_variant": {
+        "name": "HK2 Regelvariante",
+        "state": {
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
+        }
+      },
+      "hc1_external_room_sensor": {
+        "name": "HK1 Externer Raumfühler",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "hc2_external_room_sensor": {
+        "name": "HK2 Externer Raumfühler",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "hc1_operating_mode": {
+        "name": "HK1 Betriebsart",
+        "state": {
+          "program_1": "Programm 1",
+          "program_2": "Programm 2",
+          "program_3": "Programm 3",
+          "hot_water_program": "Warmwasserprogramm",
+          "standby": "Standby",
+          "summer": "Sommer",
+          "reduced": "Absenk",
+          "normal": "Normal",
+          "control_center": "Wie Leitstelle"
+        }
+      },
+      "hc2_operating_mode": {
+        "name": "HK2 Betriebsart",
+        "state": {
+          "program_1": "Programm 1",
+          "program_2": "Programm 2",
+          "program_3": "Programm 3",
+          "hot_water_program": "Warmwasserprogramm",
+          "standby": "Standby",
+          "summer": "Sommer",
+          "reduced": "Absenk",
+          "normal": "Normal",
+          "control_center": "Wie Leitstelle"
+        }
+      },
+      "hc1_reduced_mode": {
+        "name": "HK1 Reduziertbetrieb",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_operation": "Absenkbetrieb"
+        }
+      },
+      "hc2_reduced_mode": {
+        "name": "HK2 Reduziertbetrieb",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_operation": "Absenkbetrieb"
+        }
+      },
+      "hc1_room_thermostat": {
+        "name": "HK1 Raumthermostat",
+        "state": {
+          "off": "Aus",
+          "day_on": "Tag ein",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "hc2_room_thermostat": {
+        "name": "HK2 Raumthermostat",
+        "state": {
+          "off": "Aus",
+          "day_on": "Tag ein",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "HK1 Urlaubstemperaturniveau",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_temperature": "Absenktemperatur"
+        }
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "HK2 Urlaubstemperaturniveau",
+        "state": {
+          "frost_protection": "Frostschutz",
+          "reduced_temperature": "Absenktemperatur"
+        }
+      }
+    },
+    "calendar": {
+      "hc1_active_heating_program": {
+        "name": "HK1 aktives Heizprogramm"
+      },
+      "hc2_active_heating_program": {
+        "name": "HK2 aktives Heizprogramm"
+      },
+      "hot_water_program": {
+        "name": "Warmwasser"
+      },
+      "circulation_program": {
+        "name": "Zirkulation"
+      }
+    }
+  },
+  "exceptions": {
+    "read_only": {
+      "message": "Die WCM-COM-Integration befindet sich im Nur-Lese-Modus."
+    },
+    "invalid_heating_circuit": {
+      "message": "Ungültiger Heizkreis {value}; erwartet wird 1 oder 2."
+    },
+    "invalid_holiday_target": {
+      "message": "Ungültiges Urlaubsziel {value}; erwartet wird start oder end."
+    },
+    "no_loaded_entry": {
+      "message": "Kein geladener WCM-COM-Konfigurationseintrag gefunden."
+    },
+    "unknown_entry": {
+      "message": "Unbekannter oder nicht geladener Konfigurationseintrag: {entry_id}."
+    },
+    "entry_required": {
+      "message": "Bei mehreren WCM-COM-Geräten muss config_entry_id angegeben werden."
+    },
+    "invalid_date": {
+      "message": "Ungültiges Datum „{value}“; erwartet wird JJJJ-MM-TT."
+    },
+    "year_out_of_range": {
+      "message": "Das Jahr {value} liegt außerhalb des unterstützten Bereichs 2000–2099."
+    },
+    "incomplete_time_window": {
+      "message": "Zeitfenster {slot} benötigt Start und Ende."
+    },
+    "invalid_time_program": {
+      "message": "Ungültiges Zeitprogramm: {reason}"
+    }
+  },
+  "services": {
+    "set_holiday_date": {
+      "name": "Urlaubsdatum setzen",
+      "description": "Urlaubsbeginn oder -ende für HK1/HK2 setzen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "WCM-COM-Gerät"
+        },
+        "heating_circuit": {
+          "name": "Heizkreis"
+        },
+        "target": {
+          "name": "Ziel"
+        },
+        "date": {
+          "name": "Datum"
+        }
+      }
+    },
+    "set_time_program_day": {
+      "name": "Zeitprogrammtag setzen",
+      "description": "Alle Zeitfenster eines Programmtags ersetzen und prüfen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "WCM-COM-Gerät"
+        },
+        "heating_circuit": {
+          "name": "Heizkreis"
+        },
+        "program": {
+          "name": "Programm"
+        },
+        "day": {
+          "name": "Wochentag"
+        },
+        "start_1": {
+          "name": "Fenster 1 Start"
+        },
+        "end_1": {
+          "name": "Fenster 1 Ende"
+        },
+        "start_2": {
+          "name": "Fenster 2 Start"
+        },
+        "end_2": {
+          "name": "Fenster 2 Ende"
+        },
+        "start_3": {
+          "name": "Fenster 3 Start"
+        },
+        "end_3": {
+          "name": "Fenster 3 Ende"
+        }
+      }
+    },
+    "copy_time_program_day": {
+      "name": "Zeitprogrammtag kopieren",
+      "description": "Einen Quelltag auf Zieltage kopieren.",
+      "fields": {
+        "config_entry_id": {
+          "name": "WCM-COM-Gerät"
+        },
+        "source_heating_circuit": {
+          "name": "Quell-Heizkreis"
+        },
+        "source_program": {
+          "name": "Quellprogramm"
+        },
+        "source_day": {
+          "name": "Quell-Wochentag"
+        },
+        "target_heating_circuit": {
+          "name": "Ziel-Heizkreis"
+        },
+        "target_program": {
+          "name": "Zielprogramm"
+        },
+        "target_days": {
+          "name": "Ziel-Wochentage"
+        }
+      }
+    },
+    "clear_time_program_days": {
+      "name": "Zeitprogrammtage leeren",
+      "description": "Alle Zeitfenster der ausgewählten Tage deaktivieren.",
+      "fields": {
+        "config_entry_id": {
+          "name": "WCM-COM-Gerät"
+        },
+        "heating_circuit": {
+          "name": "Heizkreis"
+        },
+        "program": {
+          "name": "Programm"
+        },
+        "days": {
+          "name": "Wochentage"
+        }
+      }
     }
   }
 }

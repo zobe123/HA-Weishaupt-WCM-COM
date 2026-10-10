@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers import entity_registry as er
 
@@ -206,6 +206,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _register_services(hass: HomeAssistant) -> None:
     """Register integration-level services (called once)."""
 
+    def validation_error(key: str, **placeholders: object) -> ServiceValidationError:
+        return ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=key,
+            translation_placeholders={
+                name: str(value) for name, value in placeholders.items()
+            },
+        )
+
+    def integration_error(key: str, **placeholders: object) -> HomeAssistantError:
+        return HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=key,
+            translation_placeholders={
+                name: str(value) for name, value in placeholders.items()
+            },
+        )
+
     async def async_set_holiday_date(call: ServiceCall) -> None:
         """Set HK1/HK2 holiday start/end date via raw Day/Month/Year parameters.
 
@@ -222,13 +240,9 @@ def _register_services(hass: HomeAssistant) -> None:
         date_str = call.data.get("date")
 
         if heating_circuit not in (1, 2):
-            raise HomeAssistantError(
-                f"Invalid heating_circuit={heating_circuit}; expected 1 or 2"
-            )
+            raise validation_error("invalid_heating_circuit", value=heating_circuit)
         if target not in ("start", "end"):
-            raise HomeAssistantError(
-                f"Invalid target={target}; expected 'start' or 'end'"
-            )
+            raise validation_error("invalid_holiday_target", value=target)
 
         # Determine parameter IDs for the selected HK/target
         if target == "start":
@@ -246,26 +260,20 @@ def _register_services(hass: HomeAssistant) -> None:
         # Resolve the requested config entry. Never guess when multiple devices exist.
         domain_data = hass.data.get(DOMAIN, {})
         if not domain_data:
-            raise HomeAssistantError(f"No loaded {DOMAIN} config entry found")
+            raise integration_error("no_loaded_entry")
 
         config_entry_id = call.data.get("config_entry_id")
         if config_entry_id:
             entry_data = domain_data.get(config_entry_id)
             if entry_data is None:
-                raise HomeAssistantError(
-                    f"Unknown or unloaded config_entry_id: {config_entry_id}"
-                )
+                raise validation_error("unknown_entry", entry_id=config_entry_id)
         elif len(domain_data) == 1:
             entry_data = next(iter(domain_data.values()))
         else:
-            raise HomeAssistantError(
-                "config_entry_id is required when multiple WCM-COM entries are loaded"
-            )
+            raise validation_error("entry_required")
 
         if not entry_data.get("allow_write", False):
-            raise HomeAssistantError(
-                "Weishaupt WCM-COM integration is in read-only mode."
-            )
+            raise integration_error("read_only")
 
         api: WeishauptAPI = entry_data["api"]
         coordinator: DataUpdateCoordinator = entry_data["coordinator"]
@@ -282,17 +290,13 @@ def _register_services(hass: HomeAssistant) -> None:
             try:
                 dt = datetime.strptime(date_str, "%Y-%m-%d")
             except (ValueError, TypeError):
-                raise HomeAssistantError(
-                    f"Invalid date '{date_str}'; expected YYYY-MM-DD"
-                ) from None
+                raise validation_error("invalid_date", value=date_str) from None
 
             day = dt.day
             month = dt.month
             year_raw = dt.year - 2000
             if year_raw < 0 or year_raw > 99:
-                raise HomeAssistantError(
-                    f"Year {dt.year} is outside the supported range 2000-2099"
-                )
+                raise validation_error("year_out_of_range", value=dt.year)
 
         _LOGGER.debug(
             "set_holiday_date: HK%s %s -> %s (Day=%s, Month=%s, YearRaw=%s)",
@@ -321,24 +325,18 @@ def _register_services(hass: HomeAssistant) -> None:
 
         domain_data = hass.data.get(DOMAIN, {})
         if not domain_data:
-            raise HomeAssistantError(f"No loaded {DOMAIN} config entry found")
+            raise integration_error("no_loaded_entry")
         config_entry_id = call.data.get("config_entry_id")
         if config_entry_id:
             entry_data = domain_data.get(config_entry_id)
             if entry_data is None:
-                raise HomeAssistantError(
-                    f"Unknown or unloaded config_entry_id: {config_entry_id}"
-                )
+                raise validation_error("unknown_entry", entry_id=config_entry_id)
         elif len(domain_data) == 1:
             entry_data = next(iter(domain_data.values()))
         else:
-            raise HomeAssistantError(
-                "config_entry_id is required when multiple WCM-COM entries are loaded"
-            )
+            raise validation_error("entry_required")
         if not entry_data.get("allow_write", False):
-            raise HomeAssistantError(
-                "Weishaupt WCM-COM integration is in read-only mode."
-            )
+            raise integration_error("read_only")
         return entry_data
 
     async def async_set_time_program_day(call: ServiceCall) -> None:
@@ -350,9 +348,7 @@ def _register_services(hass: HomeAssistant) -> None:
             start = call.data.get(f"start_{slot}")
             end = call.data.get(f"end_{slot}")
             if bool(start) != bool(end):
-                raise HomeAssistantError(
-                    f"Time window {slot} requires both start and end"
-                )
+                raise validation_error("incomplete_time_window", slot=slot)
             if start and end:
                 intervals.append((start, end))
 
@@ -364,7 +360,7 @@ def _register_services(hass: HomeAssistant) -> None:
                 intervals,
             )
         except (ValueError, KeyError) as err:
-            raise HomeAssistantError(str(err)) from err
+            raise validation_error("invalid_time_program", reason=err) from err
 
     async def async_copy_time_program_day(call: ServiceCall) -> None:
         """Copy one source day to one or more target days."""
@@ -383,7 +379,7 @@ def _register_services(hass: HomeAssistant) -> None:
                 list(target_days),
             )
         except (ValueError, KeyError) as err:
-            raise HomeAssistantError(str(err)) from err
+            raise validation_error("invalid_time_program", reason=err) from err
 
     async def async_clear_time_program_days(call: ServiceCall) -> None:
         """Disable all intervals on one or more program days."""
@@ -401,7 +397,7 @@ def _register_services(hass: HomeAssistant) -> None:
                     [],
                 )
         except (ValueError, KeyError) as err:
-            raise HomeAssistantError(str(err)) from err
+            raise validation_error("invalid_time_program", reason=err) from err
 
     hass.services.async_register(DOMAIN, "set_holiday_date", async_set_holiday_date)
     hass.services.async_register(

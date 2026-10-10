@@ -147,7 +147,7 @@ class SelectPlatformTest(unittest.TestCase):
             allow_write=True,
         )
 
-        self.assertEqual(entity.current_option, "Absenktemperatur")
+        self.assertEqual(entity.current_option, "reduced_temperature")
 
     def test_select_write_uses_generic_api_call(self) -> None:
         coordinator = Mock()
@@ -171,10 +171,35 @@ class SelectPlatformTest(unittest.TestCase):
 
         entity.hass = Mock()
         entity.hass.async_add_executor_job = run_executor
-        asyncio.run(entity.async_select_option("Absenktemperatur"))
+        asyncio.run(entity.async_select_option("reduced_temperature"))
 
         api.write_parameter.assert_called_once_with(317, 1, 6, 1)
         coordinator.async_request_refresh.assert_awaited_once()
+
+    def test_pre_1_3_german_option_remains_accepted_for_direct_calls(self) -> None:
+        coordinator = Mock(data={"HK1 Holiday Temp Level": 0})
+        coordinator.async_request_refresh = AsyncMock()
+        api = Mock()
+        entity = select_module.WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "HK1 Urlaubstemperaturniveau",
+            "hk1_urlaubstemperaturniveau",
+            {0: "Frostschutz", 1: "Absenktemperatur"},
+            parameter_id=317,
+            bus=1,
+            modultyp=6,
+            allow_write=True,
+        )
+
+        async def run_executor(function, *args):
+            return function(*args)
+
+        entity.hass = Mock()
+        entity.hass.async_add_executor_job = run_executor
+        asyncio.run(entity.async_select_option("Absenktemperatur"))
+
+        api.write_parameter.assert_called_once_with(317, 1, 6, 1)
 
 
 if __name__ == "__main__":

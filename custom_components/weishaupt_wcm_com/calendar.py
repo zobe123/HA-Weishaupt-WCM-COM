@@ -12,7 +12,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .time_program import (
-    PROGRAM_NAMES,
     WEEKDAYS,
     active_heating_program,
     circulation_supported,
@@ -38,7 +37,7 @@ async def async_setup_entry(
             manager,
             1,
             "hot_water",
-            name="Warmwasser",
+            translation_key="hot_water_program",
             unique_id="weishaupt_hot_water_time_program",
         )
     )
@@ -48,7 +47,7 @@ async def async_setup_entry(
                 manager,
                 1,
                 "circulation",
-                name="Zirkulation",
+                translation_key="circulation_program",
                 unique_id="weishaupt_circulation_time_program",
             )
         )
@@ -67,13 +66,16 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
         heating_circuit: int,
         program: str,
         *,
-        name: str | None = None,
+        translation_key: str | None = None,
         unique_id: str | None = None,
     ) -> None:
         self._manager = manager
         self._heating_circuit = heating_circuit
         self._program = program
-        self._attr_name = name or f"HK{heating_circuit} {PROGRAM_NAMES[program]}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = translation_key or (
+            f"hc{heating_circuit}_{program}"
+        )
         self._attr_unique_id = unique_id or (
             f"weishaupt_hk{heating_circuit}_{program}_time_program"
         )
@@ -151,8 +153,7 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
                     CalendarEvent(
                         start=event_start,
                         end=event_end,
-                        summary=self._attr_name,
-                        description=f"Zeitfenster {slot} · {weekday}",
+                        summary=self.name or self._attr_translation_key,
                         uid=(
                             f"wcm-{self._heating_circuit}-{program}-"
                             f"{weekday}-{slot}"
@@ -171,7 +172,7 @@ class WeishauptActiveHeatingCalendar(WeishauptTimeProgramCalendar):
             manager,
             heating_circuit,
             "heating_1",
-            name=f"HK{heating_circuit} aktives Heizprogramm",
+            translation_key=f"hc{heating_circuit}_active_heating_program",
             unique_id=f"weishaupt_hk{heating_circuit}_active_heating_program",
         )
         self._coordinator = coordinator

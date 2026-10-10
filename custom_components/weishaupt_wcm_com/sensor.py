@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
@@ -23,36 +23,20 @@ from .const import (
     NAME_PREFIX,
     PARAMETERS,
     ERROR_CODE_KEY,
-    OPERATION_MODE_MAP,
-    HK_CONFIG_PUMP_MAP,
-    HK_CONFIG_VOLTAGE_MAP,
-    HK_CONFIG_HK_TYPE_MAP,
-    HK_CONFIG_REGELVARIANTE_MAP,
-    HK_CONFIG_EXT_ROOM_SENSOR_MAP,
-    HK_USER_OPERATION_MODE_MAP,
-    WW_USER_OPERATION_MODE_MAP,
+    ERROR_CODE_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
-    HOLIDAY_TEMP_LEVEL_MAP,
-    HK_REDUCED_MODE_MAP,
-    HK_ROOM_THERMOSTAT_MAP,
 )
-from .operation_phase import format_operation_phase
 from .base_entity import WeishauptBaseEntity
+from .localization import (
+    BINARY_SENSOR_NAMES,
+    SENSOR_ENUM_MAPS,
+    SELECT_OPTION_KEYS,
+    error_code_key,
+    operation_phase_key,
+    parameter_translation_key,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _translation_slug(name: str) -> str:
-    """Return a Home Assistant compatible translation key."""
-
-    return (
-        name.lower()
-        .replace(" ", "_")
-        .replace("ä", "ae")
-        .replace("ö", "oe")
-        .replace("ü", "ue")
-        .replace("ß", "ss")
-    )
 
 
 async def async_setup_entry(
@@ -91,7 +75,7 @@ async def async_setup_entry(
         elif p_type == "minutes":
             unit = UnitOfTime.MINUTES
 
-        sensors.append(WeishauptSensor(coordinator, api, sensor_name, unit))
+        sensors.append(WeishauptSensor(coordinator, api, param, unit))
 
     async_add_entities(sensors)
 
@@ -103,7 +87,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         api,
-        sensor_name: str,
+        parameter: dict,
         unit,
     ) -> None:
         """Initialize the sensor."""
@@ -111,19 +95,51 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         CoordinatorEntity.__init__(self, coordinator)
         WeishauptBaseEntity.__init__(self, api)
 
-        self._sensor_name = sensor_name
+        self._parameter = parameter
+        self._sensor_name = str(parameter["name"])
         # Slug für Übersetzungs-Key und eindeutige IDs
         slug = self._sensor_name.lower().replace(" ", "_")
 
         # Use a translation_key derived from the parameter name so that
         # translations/en.json and translations/de.json define the visible
         # label. Home Assistant translation keys must be ASCII-only.
-        self._attr_translation_key = _translation_slug(self._sensor_name)
-        # Sichtbarer Name der Entität in HA (z.B. "Außentemperatur",
-        # "Heizkreis 1 Solltemperatur"). Wir setzen ihn explizit, damit
-        # nicht der Gerätename (z.B. "Weishaupt Kessel") angezeigt wird.
-        self._attr_name = self._sensor_name
+        self._attr_translation_key = parameter_translation_key(parameter)
+        self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = unit
+
+        enum_options: list[str] | None = None
+        if self._sensor_name == ERROR_CODE_KEY:
+            enum_options = ["normal", *(f"code_{code}" for code in ERROR_CODE_MAP if code)]
+        elif self._sensor_name == "Betriebsphase":
+            enum_options = [
+                *(f"phase_{value}" for value in range(10)),
+                *(f"pre_purge_remaining_{value}" for value in range(10, 61)),
+                *(f"flame_formation_{value}" for value in range(10, 61)),
+            ]
+        elif self._sensor_name in ("HK1 User Betriebsart", "HK2 User Betriebsart"):
+            enum_options = list(
+                dict.fromkeys(
+                    [
+                        *SELECT_OPTION_KEYS["heating_operating_mode"].values(),
+                        *SELECT_OPTION_KEYS["hot_water_operating_mode"].values(),
+                    ]
+                )
+            )
+        elif self._sensor_name in (
+            "HK1 Urlaubstemperaturniveau",
+            "HK2 Urlaubstemperaturniveau",
+        ):
+            enum_options = list(
+                SELECT_OPTION_KEYS["holiday_temperature_level"].values()
+            )
+        elif self._sensor_name in SENSOR_ENUM_MAPS:
+            enum_options = list(dict.fromkeys(SENSOR_ENUM_MAPS[self._sensor_name].values()))
+        elif self._sensor_name in BINARY_SENSOR_NAMES:
+            enum_options = ["off", "on"]
+
+        if enum_options is not None:
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_options = enum_options
 
         # Nutze ein konsistentes Unique-ID-Schema, das deinem Wunschpattern
         # entspricht: weishaupt_<slug>
@@ -231,7 +247,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # - HK1/HK2: FS-Version des jeweiligen Heizkreises
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
-            name = "Weishaupt Heizkreis 1"
+            name = "Weishaupt WCM-COM · HK1"
             fs = data.get("HK1 Config Version FS")
             em = data.get("HK1 Config Version EM")
             if fs and em:
@@ -242,7 +258,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 sw_version = f"EM {em}"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
-            name = "Weishaupt Heizkreis 2"
+            name = "Weishaupt WCM-COM · HK2"
             fs = data.get("HK2 Config Version FS")
             em = data.get("HK2 Config Version EM")
             if fs and em:
@@ -254,7 +270,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         else:
             # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
             ident = "weishaupt_kessel"
-            name = "Weishaupt Kessel"
+            name = "Weishaupt WCM-COM · WTC"
             fs = data.get("Kessel Config Version FS")
             em = None  # Bus 0 EM ist bei dir N/V
             if fs and em:
@@ -376,7 +392,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     self._attr_available = False
                     return None
                 self._attr_available = True
-                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+                return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
+                    level, f"unknown_{level}"
+                )
 
             if self._sensor_name == "HK2 Holiday Start":
                 day = data.get("HK2 Holiday Start Day")
@@ -420,7 +438,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     self._attr_available = False
                     return None
                 self._attr_available = True
-                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+                return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
+                    level, f"unknown_{level}"
+                )
 
             if self._sensor_name == "DST Start":
                 day = data.get("DST Start Day")
@@ -460,17 +480,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
 
             # Special handling for certain sensors
             if self._sensor_name == ERROR_CODE_KEY:
-                # Map error codes to human readable text
-                return self.api.process_codes(value)
-
-            if self._sensor_name == "Betriebsmodus":
-                return OPERATION_MODE_MAP.get(
-                    value,
-                    f"Unbekannter Modus ({value})",
-                )
+                return error_code_key(value)
 
             if self._sensor_name == "Betriebsphase":
-                return format_operation_phase(
+                return operation_phase_key(
                     value,
                     flame_on=bool(data.get("Flamme")),
                 )
@@ -479,17 +492,21 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             if self._sensor_name in ("HK1 User Betriebsart", "HK2 User Betriebsart"):
                 hk = 1 if self._sensor_name.startswith("HK1") else 2
                 mapping = (
-                    WW_USER_OPERATION_MODE_MAP
+                    SELECT_OPTION_KEYS["hot_water_operating_mode"]
                     if data.get(f"HK{hk} User Mode Kind") == "ww"
-                    else HK_USER_OPERATION_MODE_MAP
+                    else SELECT_OPTION_KEYS["heating_operating_mode"]
                 )
-                return mapping.get(value, f"Code {value}")
+                return mapping.get(value, f"code_{value}")
 
             if self._sensor_name in ("HK1 Expert Reduziertbetrieb", "HK2 Expert Reduziertbetrieb"):
-                return HK_REDUCED_MODE_MAP.get(value, f"Code {value}")
+                return SELECT_OPTION_KEYS["reduced_mode"].get(
+                    value, f"code_{value}"
+                )
 
             if self._sensor_name in ("HK1 Expert Raumthermostat", "HK2 Expert Raumthermostat"):
-                return HK_ROOM_THERMOSTAT_MAP.get(value, f"Code {value}")
+                return SELECT_OPTION_KEYS["room_thermostat"].get(
+                    value, f"code_{value}"
+                )
 
             # Virtuelle, human readable Sensoren (Date/Time/Holiday/DST)
             if self._sensor_name == "System Date":
@@ -548,7 +565,9 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 level = data.get("HK1 Holiday Temp Level")
                 if level is None:
                     return None
-                return HOLIDAY_TEMP_LEVEL_MAP.get(level, f"Unknown ({level})")
+                return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
+                    level, f"unknown_{level}"
+                )
 
             if self._sensor_name == "DST Start":
                 day = data.get("DST Start Day")
@@ -572,24 +591,17 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     return "--"
 
             # HK-Konfigurations-Sensoren: Codes auf lesbare Texte abbilden
-            if self._sensor_name in ("HK1 Config Pump", "HK2 Config Pump"):
-                return HK_CONFIG_PUMP_MAP.get(value, f"Pumpe (Code {value})")
+            if self._sensor_name in SENSOR_ENUM_MAPS:
+                return SENSOR_ENUM_MAPS[self._sensor_name].get(
+                    value, f"code_{value}"
+                )
 
-            if self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
-                return HK_CONFIG_VOLTAGE_MAP.get(value, f"Spannung (Code {value})")
-
-            if self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
-                return HK_CONFIG_HK_TYPE_MAP.get(value, f"HK-Typ (Code {value})")
-
-            if self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
-                return HK_CONFIG_REGELVARIANTE_MAP.get(value, f"Regelvariante (Code {value})")
-
-            if self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
-                return HK_CONFIG_EXT_ROOM_SENSOR_MAP.get(value, f"Externer Raumfühler (Code {value})")
+            if self._sensor_name in BINARY_SENSOR_NAMES:
+                return "on" if bool(value) else "off"
 
             # Fachmann-Adresse (P12 / ID 376) als 1/A/B/C/D/E darstellen
             if self._sensor_name == "Expert Boiler Address":
-                return EXPERT_BOILER_ADDRESS_MAP.get(value, f"Adresse (Code {value})")
+                return EXPERT_BOILER_ADDRESS_MAP.get(value, f"code_{value}")
 
             # Fachmann-Prozentwerte übernehmen wir 1:1 (0-100 %)
             if self._sensor_name in (
@@ -615,7 +627,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             )
 
             if param_type == "binary":
-                return "Ein" if value else "Aus"
+                return "on" if value else "off"
 
             if param_type in ("value", "temperature", "integer_temperature", "ratio_tenths", "days", "percent", "minutes") or param_type is None:
                 return value

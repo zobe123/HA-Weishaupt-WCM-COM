@@ -33,6 +33,7 @@ from .const import (
 )
 from .base_entity import WeishauptBaseEntity
 from .protocol import resolve_parameter_metadata
+from .localization import SELECT_TRANSLATION_KEYS, select_option_map
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +151,7 @@ async def async_setup_entry(
                     HK_USER_OPERATION_MODE_MAP if mode_kind == "hk" else WW_USER_OPERATION_MODE_MAP,
                     parameter_id=274, bus=hk, modultyp=6,
                     allow_write=allow_write,
-                    display_name=(f"HK{hk} Betriebsart Heizung" if mode_kind == "hk" else f"HK{hk} Betriebsart Warmwasser"),
+                    hot_water_mode=mode_kind == "ww",
                 )
             )
 
@@ -216,7 +217,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         bus: int,
         modultyp: int,
         allow_write: bool = False,
-        display_name: str | None = None,
+        hot_water_mode: bool = False,
     ) -> None:
         """Initialize the select entity."""
 
@@ -230,6 +231,12 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._bus = bus
         self._modultyp = modultyp
         self._allow_write = allow_write
+        self._attr_has_entity_name = True
+        self._attr_translation_key = SELECT_TRANSLATION_KEYS[slug]
+        self._option_map = select_option_map(
+            self._attr_translation_key,
+            hot_water=hot_water_mode,
+        )
 
         parameter = resolve_parameter_metadata(
             PARAMETERS,
@@ -242,38 +249,29 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name == "HK1 Config HK Type":
-            self._attr_name = "HK1 HK-Typ"
             self._attr_icon = "mdi:radiator"
         elif sensor_name == "HK1 Config Regelvariante":
-            self._attr_name = "HK1 Regelvariante"
             self._attr_icon = "mdi:chart-bell-curve"
         elif sensor_name == "HK1 Config Ext Room Sensor":
-            self._attr_name = "HK1 Externer Raumfühler"
             self._attr_icon = "mdi:home-thermometer-outline"
         elif sensor_name == "HK2 Config HK Type":
-            self._attr_name = "HK2 HK-Typ"
             self._attr_icon = "mdi:radiator"
         elif sensor_name == "HK2 Config Regelvariante":
-            self._attr_name = "HK2 Regelvariante"
             self._attr_icon = "mdi:chart-bell-curve"
         elif sensor_name == "HK2 Config Ext Room Sensor":
-            self._attr_name = "HK2 Externer Raumfühler"
             self._attr_icon = "mdi:home-thermometer-outline"
         elif sensor_name.endswith("User Betriebsart"):
-            self._attr_name = display_name or sensor_name
-            self._attr_icon = "mdi:home-thermometer" if "Heizung" in self._attr_name else "mdi:water-thermometer"
+            self._attr_icon = (
+                "mdi:water-thermometer"
+                if hot_water_mode
+                else "mdi:home-thermometer"
+            )
         elif sensor_name == "HK1 Urlaubstemperaturniveau":
-            self._attr_name = "HK1 Urlaubstemperaturniveau"
             self._attr_icon = "mdi:snowflake"
         elif sensor_name == "HK2 Urlaubstemperaturniveau":
-            self._attr_name = "HK2 Urlaubstemperaturniveau"
             self._attr_icon = "mdi:snowflake"
-        else:
-            self._attr_name = sensor_name
 
-        # Optionen: nur der rechte Teil nach dem Doppelpunkt, z.B.
-        # "Externer Raumfühler: Witterungsführung" -> "Witterungsführung"
-        self._attr_options = [self._extract_option_label(v) for v in value_map.values()]
+        self._attr_options = list(dict.fromkeys(self._option_map.values()))
 
     @property
     def device_info(self):
@@ -283,13 +281,13 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
         if slug.startswith("hk1_"):
             ident = "weishaupt_hk1"
-            name = "Weishaupt Heizkreis 1"
+            name = "Weishaupt WCM-COM · HK1"
         elif slug.startswith("hk2_"):
             ident = "weishaupt_hk2"
-            name = "Weishaupt Heizkreis 2"
+            name = "Weishaupt WCM-COM · HK2"
         else:
             ident = "weishaupt_kessel"
-            name = "Weishaupt Kessel"
+            name = "Weishaupt WCM-COM · WTC"
 
         return {
             "identifiers": {(DOMAIN, ident)},
@@ -316,17 +314,15 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         if value is None:
             return None
 
-        # Für HK-Konfig-Sensoren liefert der Sensor bereits einen
-        # gemappten String wie "HK-Typ: int. Raumfühler" – wir mappen
-        # das auf den rechten Teil nach dem Doppelpunkt.
         if isinstance(value, str):
-            label = self._extract_option_label(value)
-            return label if label in self._attr_options else None
+            for code, legacy_label in self._value_map.items():
+                if value in (legacy_label, self._extract_option_label(legacy_label)):
+                    return self._option_map.get(code)
+            return value if value in self._attr_options else None
 
         # Fallback: roher Code → Mapping benutzen
         if isinstance(value, int):
-            mapped = self._value_map.get(value)
-            return self._extract_option_label(mapped) if mapped else None
+            return self._option_map.get(value)
 
         return None
 
@@ -335,14 +331,26 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
         if not self._allow_write:
             from homeassistant.exceptions import HomeAssistantError
-            raise HomeAssistantError("Weishaupt WCM-COM integration is in read-only mode.")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="read_only",
+            )
 
         # Finde den passenden Roh-Code für das gewählte Label
-        code = None
-        for k, v in self._value_map.items():
-            if self._extract_option_label(v) == option:
-                code = k
-                break
+        code = next(
+            (raw for raw, key in self._option_map.items() if key == option),
+            None,
+        )
+        # Keep direct calls using the pre-1.3 option labels working.
+        if code is None:
+            code = next(
+                (
+                    raw
+                    for raw, text in self._value_map.items()
+                    if option in (text, self._extract_option_label(text))
+                ),
+                None,
+            )
 
         if code is None:
             _LOGGER.warning("Unknown option '%s' for %s", option, self._sensor_name)

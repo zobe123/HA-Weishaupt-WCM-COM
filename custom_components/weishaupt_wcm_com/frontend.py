@@ -10,7 +10,8 @@ from homeassistant.components import frontend, panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, HK_USER_OPERATION_MODE_MAP
+from .const import DOMAIN
+from .localization import SELECT_OPTION_KEYS
 from .time_program import (
     PROGRAM_NAMES,
     active_heating_program,
@@ -81,7 +82,9 @@ async def websocket_time_program_info(
     for circuit in (1, 2):
         raw_mode = data.get(f"HK{circuit} User Betriebsart")
         circuits[str(circuit)] = {
-            "mode": HK_USER_OPERATION_MODE_MAP.get(raw_mode, str(raw_mode or "Unbekannt")),
+            "mode": SELECT_OPTION_KEYS["heating_operating_mode"].get(
+                raw_mode, f"code_{raw_mode}"
+            ),
             "active_program": active_heating_program(data, circuit),
         }
 

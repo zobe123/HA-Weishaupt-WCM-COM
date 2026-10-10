@@ -1,13 +1,47 @@
 const DOMAIN = "weishaupt_wcm_com";
-const DAYS = [
-  ["monday", "Montag"],
-  ["tuesday", "Dienstag"],
-  ["wednesday", "Mittwoch"],
-  ["thursday", "Donnerstag"],
-  ["friday", "Freitag"],
-  ["saturday", "Samstag"],
-  ["sunday", "Sonntag"],
-];
+const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+const STRINGS = {
+  en: {
+    title: "Weishaupt time programs", loading_info: "Loading weekly programs", querying: "Querying WCM-COM …",
+    load_failed: "Loading failed: {error}", schedule_failed: "The time program could not be loaded: {error}",
+    heating_program: "HC{circuit} · Heating program {number}{active}", active: " · active", hot_water: "Hot water",
+    circulation: "Circulation", circulation_missing: "Circulation · not detected", time_program: "Time program",
+    read_only_title: "Read only:", read_only: "Enable writes in the integration options to apply changes.",
+    optional: "Optional", show_circulation: "Show circulation", loading_schedule: "Loading weekly program …",
+    no_schedule: "No weekly program available.", remove_window: "Remove time window", no_window: "No enabled time window",
+    template: "Template", copy_weekdays: "to Mon–Fri", copy_weekend: "to Sat–Sun", copy_all: "to all days",
+    discard: "Discard", apply: "Apply", apply_days: "Apply {count} day(s)", discard_confirm: "Discard unapplied changes?",
+    pending: "Unapplied changes", copied: "{day} was copied", max_windows: "{day}: no more than three time windows",
+    end_after_start: "{day}: the end must be after the start", overlap: "{day}: time windows must not overlap",
+    writing: "Writing and verifying changes …", write_success: "Time program applied and verified",
+    write_failed: "Applying changes failed: {error}", card_description: "View and edit WCM-COM weekly programs",
+    monday: "Monday", tuesday: "Tuesday", wednesday: "Wednesday", thursday: "Thursday", friday: "Friday",
+    saturday: "Saturday", sunday: "Sunday",
+    mode_program_1: "Program 1", mode_program_2: "Program 2", mode_program_3: "Program 3", mode_standby: "Standby",
+    mode_summer: "Summer", mode_reduced: "Reduced", mode_normal: "Normal", mode_control_center: "Control center",
+    mode_hot_water_program: "Hot-water program",
+  },
+  de: {
+    title: "Weishaupt Zeitprogramme", loading_info: "Wochenprogramme werden geladen", querying: "WCM-COM wird abgefragt …",
+    load_failed: "Laden fehlgeschlagen: {error}", schedule_failed: "Zeitprogramm konnte nicht geladen werden: {error}",
+    heating_program: "HK{circuit} · Heizprogramm {number}{active}", active: " · aktiv", hot_water: "Warmwasser",
+    circulation: "Zirkulation", circulation_missing: "Zirkulation · nicht erkannt", time_program: "Zeitprogramm",
+    read_only_title: "Nur Lesen:", read_only: "Zum Übernehmen muss in den Integrationsoptionen „Schreibzugriffe erlauben“ aktiviert sein.",
+    optional: "Optional", show_circulation: "Zirkulation anzeigen", loading_schedule: "Lade Wochenplan …",
+    no_schedule: "Kein Wochenplan verfügbar.", remove_window: "Zeitfenster entfernen", no_window: "Keine Freigabezeit",
+    template: "Vorlage", copy_weekdays: "auf Mo–Fr", copy_weekend: "auf Sa–So", copy_all: "auf alle Tage",
+    discard: "Verwerfen", apply: "Übernehmen", apply_days: "{count} Tag(e) übernehmen", discard_confirm: "Nicht übernommene Änderungen verwerfen?",
+    pending: "Nicht übernommene Änderungen", copied: "{day} wurde kopiert", max_windows: "{day}: maximal drei Zeitfenster",
+    end_after_start: "{day}: Ende muss nach Beginn liegen", overlap: "{day}: Zeitfenster überschneiden sich",
+    writing: "Änderungen werden geschrieben und geprüft …", write_success: "Zeitprogramm erfolgreich übernommen und geprüft",
+    write_failed: "Übernehmen fehlgeschlagen: {error}", card_description: "WCM-COM-Wochenprogramme anzeigen und bearbeiten",
+    monday: "Montag", tuesday: "Dienstag", wednesday: "Mittwoch", thursday: "Donnerstag", friday: "Freitag",
+    saturday: "Samstag", sunday: "Sonntag",
+    mode_program_1: "Programm 1", mode_program_2: "Programm 2", mode_program_3: "Programm 3", mode_standby: "Standby",
+    mode_summer: "Sommer", mode_reduced: "Absenk", mode_normal: "Normal", mode_control_center: "Wie Leitstelle",
+    mode_hot_water_program: "Warmwasserprogramm",
+  },
+};
 
 class WeishauptTimeProgramPanel extends HTMLElement {
   constructor() {
@@ -20,6 +54,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     this._showOptional = false;
     this._busy = false;
     this._status = "";
+    this._statusIsError = false;
   }
 
   set hass(value) {
@@ -40,6 +75,13 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     return 9;
   }
 
+  _t(key, values = {}) {
+    const language = (this._hass?.language || "en").split("-")[0];
+    let text = (STRINGS[language] || STRINGS.en)[key] || STRINGS.en[key] || key;
+    for (const [name, value] of Object.entries(values)) text = text.replaceAll(`{${name}}`, value);
+    return text;
+  }
+
   connectedCallback() {
     this._render();
   }
@@ -58,7 +100,8 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       this._target = { circuit: 1, program: active };
       await this._loadSchedule();
     } catch (error) {
-      this._status = `Laden fehlgeschlagen: ${error.message || error}`;
+      this._status = this._t("load_failed", { error: error.message || error });
+      this._statusIsError = true;
     } finally {
       this._busy = false;
       this._render();
@@ -79,9 +122,11 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       this._schedule = structuredClone(response.schedule);
       this._dirty.clear();
       this._status = "";
+      this._statusIsError = false;
     } catch (error) {
       this._schedule = null;
-      this._status = `Zeitprogramm konnte nicht geladen werden: ${error.message || error}`;
+      this._status = this._t("schedule_failed", { error: error.message || error });
+      this._statusIsError = true;
     } finally {
       this._busy = false;
       this._render();
@@ -98,18 +143,22 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         targets.push({
           circuit,
           program,
-          label: `HK${circuit} · Heizprogramm ${number}${active ? " · aktiv" : ""}`,
+          label: this._t("heating_program", {
+            circuit,
+            number,
+            active: active ? this._t("active") : "",
+          }),
         });
       }
     }
-    targets.push({ circuit: 1, program: "hot_water", label: "Warmwasser" });
+    targets.push({ circuit: 1, program: "hot_water", label: this._t("hot_water") });
     if (this._info.circulation_supported || this._showOptional) {
       targets.push({
         circuit: 1,
         program: "circulation",
         label: this._info.circulation_supported
-          ? "Zirkulation"
-          : "Zirkulation · nicht erkannt",
+          ? this._t("circulation")
+          : this._t("circulation_missing"),
       });
     }
     return targets;
@@ -122,13 +171,16 @@ class WeishauptTimeProgramPanel extends HTMLElement {
   _currentLabel() {
     return this._targets().find(
       (target) => this._targetKey(target) === this._targetKey(this._target),
-    )?.label || "Zeitprogramm";
+    )?.label || this._t("time_program");
   }
 
   _modeSummary() {
     if (!this._info) return "";
     return [1, 2]
-      .map((circuit) => `HK${circuit}: ${this._info.circuits[String(circuit)].mode}`)
+      .map((circuit) => {
+        const mode = this._info.circuits[String(circuit)].mode;
+        return `HK${circuit}: ${this._t(`mode_${mode}`)}`;
+      })
       .join(" · ");
   }
 
@@ -157,7 +209,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     const selectedKey = this._target ? this._targetKey(this._target) : "";
     const writable = Boolean(this._info?.allow_write);
     const cardMode = this.localName === "weishaupt-time-program-card";
-    const title = this._config?.title || "Weishaupt Zeitprogramme";
+    const title = this._config?.title || this._t("title");
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -208,22 +260,22 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         <div class="header">
           <div>
             <h1>${title}</h1>
-            <div class="subtle">${this._info ? this._modeSummary() : "Wochenprogramme werden geladen"}</div>
+            <div class="subtle">${this._info ? this._modeSummary() : this._t("loading_info")}</div>
           </div>
-          <div class="subtle">${this._busy ? "WCM-COM wird abgefragt …" : this._gasMeterSummary()}</div>
+          <div class="subtle">${this._busy ? this._t("querying") : this._gasMeterSummary()}</div>
         </div>
         <div class="card">
-          ${!writable && this._info ? `<div class="warning"><b>Nur Lesen:</b> Zum Übernehmen muss in den Integrationsoptionen „Schreibzugriffe erlauben“ aktiviert sein.</div>` : ""}
+          ${!writable && this._info ? `<div class="warning"><b>${this._t("read_only_title")}</b> ${this._t("read_only")}</div>` : ""}
           <div class="toolbar">
-            <label>Zeitprogramm
+            <label>${this._t("time_program")}
               <select id="target" ${this._busy ? "disabled" : ""}>
                 ${targets.map((target) => `<option value="${this._targetKey(target)}" ${this._targetKey(target) === selectedKey ? "selected" : ""}>${target.label}</option>`).join("")}
               </select>
             </label>
-            ${!this._info?.circulation_supported ? `<label><span>Optional</span><span><input id="optional" type="checkbox" ${this._showOptional ? "checked" : ""}> Zirkulation anzeigen</span></label>` : ""}
+            ${!this._info?.circulation_supported ? `<label><span>${this._t("optional")}</span><span><input id="optional" type="checkbox" ${this._showOptional ? "checked" : ""}> ${this._t("show_circulation")}</span></label>` : ""}
           </div>
-          ${this._schedule ? this._renderSchedule() : `<div class="spinner">${this._busy ? "Lade Wochenplan …" : "Kein Wochenplan verfügbar."}</div>`}
-          <div class="status ${this._status.includes("fehl") || this._status.includes("nicht") ? "error" : ""}">${this._status}</div>
+          ${this._schedule ? this._renderSchedule() : `<div class="spinner">${this._busy ? this._t("loading_schedule") : this._t("no_schedule")}</div>`}
+          <div class="status ${this._statusIsError ? "error" : ""}">${this._status}</div>
         </div>
       </div>`;
     this._bindEvents();
@@ -232,41 +284,41 @@ class WeishauptTimeProgramPanel extends HTMLElement {
   _renderSchedule() {
     return `
       <div class="grid">
-        ${DAYS.map(([day, label]) => {
+        ${DAYS.map((day) => {
           const intervals = this._schedule[day] || [];
           return `<div class="row" data-day="${day}">
-            <div class="day">${label}</div>
+            <div class="day">${this._t(day)}</div>
             <div class="windows">
               ${intervals.map((interval, slot) => `<div class="window">
                 <select class="time-input" data-day="${day}" data-slot="${slot}" data-kind="start">${this._timeOptions(interval[0], false)}</select>
                 <span>–</span>
                 <select class="time-input" data-day="${day}" data-slot="${slot}" data-kind="end">${this._timeOptions(interval[1], true)}</select>
-                <button class="icon danger remove" data-day="${day}" data-slot="${slot}" title="Zeitfenster entfernen">×</button>
+                <button class="icon danger remove" data-day="${day}" data-slot="${slot}" title="${this._t("remove_window")}">×</button>
               </div>`).join("")}
-              ${intervals.length === 0 ? `<span class="subtle">Keine Freigabezeit</span>` : ""}
+              ${intervals.length === 0 ? `<span class="subtle">${this._t("no_window")}</span>` : ""}
             </div>
             <div class="actions"><button class="icon add" data-day="${day}" ${intervals.length >= 3 ? "disabled" : ""}>＋</button></div>
           </div>`;
         }).join("")}
       </div>
       <div class="copybar">
-        <label>Vorlage
-          <select id="copy-source">${DAYS.map(([day, label]) => `<option value="${day}">${label}</option>`).join("")}</select>
+        <label>${this._t("template")}
+          <select id="copy-source">${DAYS.map((day) => `<option value="${day}">${this._t(day)}</option>`).join("")}</select>
         </label>
-        <button class="copy" data-group="weekdays">auf Mo–Fr</button>
-        <button class="copy" data-group="weekend">auf Sa–So</button>
-        <button class="copy" data-group="all">auf alle Tage</button>
+        <button class="copy" data-group="weekdays">${this._t("copy_weekdays")}</button>
+        <button class="copy" data-group="weekend">${this._t("copy_weekend")}</button>
+        <button class="copy" data-group="all">${this._t("copy_all")}</button>
       </div>
       <div class="footer">
-        <button id="discard" ${this._dirty.size === 0 || this._busy ? "disabled" : ""}>Verwerfen</button>
-        <button id="apply" class="primary" ${this._dirty.size === 0 || this._busy || !this._info.allow_write ? "disabled" : ""}>${this._dirty.size ? `${this._dirty.size} Tag${this._dirty.size === 1 ? "" : "e"} übernehmen` : "Übernehmen"}</button>
+        <button id="discard" ${this._dirty.size === 0 || this._busy ? "disabled" : ""}>${this._t("discard")}</button>
+        <button id="apply" class="primary" ${this._dirty.size === 0 || this._busy || !this._info.allow_write ? "disabled" : ""}>${this._dirty.size ? this._t("apply_days", { count: this._dirty.size }) : this._t("apply")}</button>
       </div>`;
   }
 
   _bindEvents() {
     const root = this.shadowRoot;
     root.querySelector("#target")?.addEventListener("change", async (event) => {
-      if (this._dirty.size && !confirm("Nicht übernommene Änderungen verwerfen?")) {
+      if (this._dirty.size && !confirm(this._t("discard_confirm"))) {
         event.target.value = this._targetKey(this._target);
         return;
       }
@@ -311,14 +363,15 @@ class WeishauptTimeProgramPanel extends HTMLElement {
 
   _markDirty(day, rerender = false) {
     this._dirty.add(day);
-    this._status = "Nicht übernommene Änderungen";
+    this._status = this._t("pending");
+    this._statusIsError = false;
     if (rerender) this._render();
     else {
       const apply = this.shadowRoot.querySelector("#apply");
       const discard = this.shadowRoot.querySelector("#discard");
       if (apply) {
         apply.disabled = !this._info.allow_write;
-        apply.textContent = `${this._dirty.size} Tag${this._dirty.size === 1 ? "" : "e"} übernehmen`;
+        apply.textContent = this._t("apply_days", { count: this._dirty.size });
       }
       if (discard) discard.disabled = false;
       const status = this.shadowRoot.querySelector(".status");
@@ -333,12 +386,13 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       : group === "weekend"
         ? DAYS.slice(5)
         : DAYS;
-    for (const [day] of targets) {
+    for (const day of targets) {
       if (day === source) continue;
       this._schedule[day] = structuredClone(this._schedule[source]);
       this._dirty.add(day);
     }
-    this._status = `${DAYS.find(([day]) => day === source)[1]} wurde kopiert`;
+    this._status = this._t("copied", { day: this._t(source) });
+    this._statusIsError = false;
     this._render();
   }
 
@@ -346,12 +400,12 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     const intervals = structuredClone(this._schedule[day] || [])
       .filter(([start, end]) => start && end)
       .sort((a, b) => a[0].localeCompare(b[0]));
-    if (intervals.length > 3) throw new Error(`${day}: maximal drei Zeitfenster`);
+    if (intervals.length > 3) throw new Error(this._t("max_windows", { day: this._t(day) }));
     for (let index = 0; index < intervals.length; index += 1) {
       const [start, end] = intervals[index];
-      if (start >= end) throw new Error(`${day}: Ende muss nach Beginn liegen`);
+      if (start >= end) throw new Error(this._t("end_after_start", { day: this._t(day) }));
       if (index && intervals[index - 1][1] > start) {
-        throw new Error(`${day}: Zeitfenster überschneiden sich`);
+        throw new Error(this._t("overlap", { day: this._t(day) }));
       }
     }
     return intervals;
@@ -360,10 +414,11 @@ class WeishauptTimeProgramPanel extends HTMLElement {
   async _apply() {
     if (!this._info.allow_write || !this._dirty.size) return;
     this._busy = true;
-    this._status = "Änderungen werden geschrieben und geprüft …";
+    this._status = this._t("writing");
+    this._statusIsError = false;
     this._render();
     try {
-      for (const [day] of DAYS) {
+      for (const day of DAYS) {
         if (!this._dirty.has(day)) continue;
         const intervals = this._validatedIntervals(day);
         const data = {
@@ -378,10 +433,11 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         });
         await this._hass.callService(DOMAIN, "set_time_program_day", data);
       }
-      this._status = "Zeitprogramm erfolgreich übernommen und geprüft";
+      this._status = this._t("write_success");
       await this._loadSchedule();
     } catch (error) {
-      this._status = `Übernehmen fehlgeschlagen: ${error.message || error}`;
+      this._status = this._t("write_failed", { error: error.message || error });
+      this._statusIsError = true;
       this._busy = false;
       this._render();
     }
@@ -402,7 +458,7 @@ window.customCards = window.customCards || [];
 if (!window.customCards.some((card) => card.type === "weishaupt-time-program-card")) {
   window.customCards.push({
     type: "weishaupt-time-program-card",
-    name: "Weishaupt Zeitprogramme",
-    description: "WCM-COM Wochenprogramme anzeigen und bearbeiten",
+    name: "Weishaupt time programs / Zeitprogramme",
+    description: "View and edit WCM-COM weekly programs",
   });
 }
