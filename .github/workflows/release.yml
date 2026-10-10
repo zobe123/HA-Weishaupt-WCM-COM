@@ -3,7 +3,7 @@ name: Create release
 on:
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+*"
 
 permissions:
   contents: write
@@ -34,7 +34,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          prerelease_args=()
+          if [[ "$GITHUB_REF_NAME" =~ [A-Za-z] ]]; then
+            prerelease_args+=(--prerelease)
+          fi
+
           gh release create "$GITHUB_REF_NAME" \
             --repo "$GITHUB_REPOSITORY" \
             --title "Version $GITHUB_REF_NAME" \
-            --notes-file release-notes.md
+            --notes-file release-notes.md \
+            "${prerelease_args[@]}"
