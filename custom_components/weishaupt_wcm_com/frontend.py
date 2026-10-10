@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .localization import SELECT_OPTION_KEYS
 from .time_program import (
-    PROGRAM_NAMES,
     active_heating_program,
     circulation_supported,
     validate_program,
@@ -96,7 +95,6 @@ async def websocket_time_program_info(
             "circulation_supported": circulation_supported(data),
             "external_gas_meter": gas_meter,
             "circuits": circuits,
-            "program_names": PROGRAM_NAMES,
         },
     )
 
@@ -186,7 +184,7 @@ async def async_register_frontend(
             frontend_url_path=PANEL_URL_PATH,
             webcomponent_name=PANEL_ELEMENT,
             module_url=module_url,
-            sidebar_title="Weishaupt Zeitprogramme",
+            sidebar_title="WCM-COM",
             sidebar_icon="mdi:calendar-clock",
             require_admin=True,
             embed_iframe=False,

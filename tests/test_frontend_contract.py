@@ -32,6 +32,8 @@ class FrontendContractTest(unittest.TestCase):
         )
         self.assertIn("frontend.add_extra_js_url", backend)
         self.assertIn("frontend.remove_extra_js_url", backend)
+        self.assertIn('sidebar_title="WCM-COM"', backend)
+        self.assertNotIn('sidebar_title="Weishaupt Zeitprogramme"', backend)
 
     def test_time_program_options_are_translated(self) -> None:
         for language in ("de", "en"):

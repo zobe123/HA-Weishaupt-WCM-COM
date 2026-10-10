@@ -29,14 +29,6 @@ PROGRAM_OFFSETS = {
     "circulation": 1536,
 }
 
-PROGRAM_NAMES = {
-    "heating_1": "Heizprogramm 1",
-    "heating_2": "Heizprogramm 2",
-    "heating_3": "Heizprogramm 3",
-    "hot_water": "Warmwasser",
-    "circulation": "Zirkulation",
-}
-
 ACTIVE_HEATING_PROGRAMS = {
     11: "heating_1",
     12: "heating_2",
