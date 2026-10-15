@@ -474,13 +474,20 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 )
 
             # HK/WW user operation modes (Form_Heizung_Benutzer): Codes → Texte
-            if self._sensor_name in ("HK1 User Betriebsart", "HK2 User Betriebsart"):
-                hk = 1 if self._sensor_name.startswith("HK1") else 2
-                mapping = (
-                    SELECT_OPTION_KEYS["hot_water_operating_mode"]
-                    if data.get(f"HK{hk} User Mode Kind") == "ww"
-                    else SELECT_OPTION_KEYS["heating_operating_mode"]
-                )
+            if self._sensor_name in (
+                "WTC HK1 User Betriebsart",
+                "HK1 User Betriebsart",
+                "HK2 User Betriebsart",
+            ):
+                if self._sensor_name.startswith("WTC HK1"):
+                    mapping = SELECT_OPTION_KEYS["heating_operating_mode"]
+                else:
+                    hk = 1 if self._sensor_name.startswith("HK1") else 2
+                    mapping = (
+                        SELECT_OPTION_KEYS["hot_water_operating_mode"]
+                        if data.get(f"HK{hk} User Mode Kind") == "ww"
+                        else SELECT_OPTION_KEYS["heating_operating_mode"]
+                    )
                 return mapping.get(value, f"code_{value}")
 
             if self._sensor_name in ("HK1 Expert Reduziertbetrieb", "HK2 Expert Reduziertbetrieb"):

@@ -105,6 +105,11 @@ class LocalizationContractTest(unittest.TestCase):
         self.assertIn('"2": "EM-HK3 / underfloor heating"', source)
         self.assertNotIn("password", source.lower())
 
+    def test_wtc_hc1_sensor_has_explicit_heating_mode_readback(self) -> None:
+        source = (COMPONENT / "sensor.py").read_text(encoding="utf-8")
+        self.assertIn('self._sensor_name.startswith("WTC HK1")', source)
+        self.assertIn('SELECT_OPTION_KEYS["heating_operating_mode"]', source)
+
     def test_user_visible_surfaces_exist_in_both_languages(self) -> None:
         for language, catalog in self.catalogs.items():
             with self.subTest(language=language):
