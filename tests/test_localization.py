@@ -62,6 +62,23 @@ class LocalizationContractTest(unittest.TestCase):
             leaf_paths(self.catalogs["en"]),
         )
 
+    def test_device_entity_names_do_not_repeat_device_context(self) -> None:
+        prefixes = {
+            "de": ("WTC-HK1 ", "HK2 Radiatoren ", "HK3 FBH "),
+            "en": ("WTC-HC1 ", "HC2 radiators ", "HC3 underfloor heating "),
+        }
+        for language, catalog in self.catalogs.items():
+            for platform in ("sensor", "number", "select"):
+                for translation_key, definition in catalog["entity"][platform].items():
+                    with self.subTest(
+                        language=language,
+                        platform=platform,
+                        translation_key=translation_key,
+                    ):
+                        self.assertFalse(
+                            definition["name"].startswith(prefixes[language])
+                        )
+
     def test_every_public_parameter_has_sensor_and_number_name(self) -> None:
         for parameter in const.PARAMETERS:
             if parameter.get("internal"):

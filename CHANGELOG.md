@@ -14,6 +14,8 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   sends parameter 274 exclusively to bus 0 / FS module 6.
 - Separated WTC/boiler process values from the integrated WTC heating circuit
   in Home Assistant's device view.
+- Removed repeated circuit names from entities shown inside a circuit device;
+  the device supplies the context while entity rows stay short and readable.
 
 ### Compatibility
 

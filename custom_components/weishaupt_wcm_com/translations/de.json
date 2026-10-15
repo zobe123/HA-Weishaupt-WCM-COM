@@ -339,13 +339,13 @@
         "name": "Max. WW-Ladezeit (P52)"
       },
       "parameter_b1_m12_p857": {
-        "name": "HK2 Radiatoren Pumpenkonfiguration",
+        "name": "Pumpenkonfiguration",
         "state": {
           "stepped": "Stufig"
         }
       },
       "parameter_b1_m12_p65019": {
-        "name": "HK2 Radiatoren Pumpenausgang",
+        "name": "Pumpenausgang",
         "state": {
           "manual_off": "Manuell aus",
           "manual_on": "Manuell ein",
@@ -354,7 +354,7 @@
         }
       },
       "parameter_b1_m6_p16": {
-        "name": "HK2 Radiatoren Heizkreistyp",
+        "name": "Heizkreistyp",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -363,7 +363,7 @@
         }
       },
       "parameter_b1_m6_p2419": {
-        "name": "HK2 Radiatoren Regelvariante",
+        "name": "Regelvariante",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -374,7 +374,7 @@
         }
       },
       "parameter_b1_m6_p321": {
-        "name": "HK2 Radiatoren Externer Raumfühler",
+        "name": "Externer Raumfühler",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -383,13 +383,13 @@
         }
       },
       "parameter_b2_m12_p857": {
-        "name": "HK3 FBH Pumpenkonfiguration",
+        "name": "Pumpenkonfiguration",
         "state": {
           "stepped": "Stufig"
         }
       },
       "parameter_b2_m12_p65019": {
-        "name": "HK3 FBH Pumpenausgang",
+        "name": "Pumpenausgang",
         "state": {
           "manual_off": "Manuell aus",
           "manual_on": "Manuell ein",
@@ -398,7 +398,7 @@
         }
       },
       "parameter_b2_m6_p16": {
-        "name": "HK3 FBH Heizkreistyp",
+        "name": "Heizkreistyp",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -407,7 +407,7 @@
         }
       },
       "parameter_b2_m6_p2419": {
-        "name": "HK3 FBH Regelvariante",
+        "name": "Regelvariante",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -418,7 +418,7 @@
         }
       },
       "parameter_b2_m6_p321": {
-        "name": "HK3 FBH Externer Raumfühler",
+        "name": "Externer Raumfühler",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -427,7 +427,7 @@
         }
       },
       "parameter_b0_m6_p274": {
-        "name": "WTC-HK1 Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -440,7 +440,7 @@
         }
       },
       "parameter_b1_m6_p274": {
-        "name": "HK2 Radiatoren Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -454,7 +454,7 @@
         }
       },
       "parameter_b2_m6_p274": {
-        "name": "HK3 FBH Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -468,140 +468,140 @@
         }
       },
       "boiler_firmware_fs": {
-        "name": "WTC-HK1 Firmware FS"
+        "name": "Firmware FS"
       },
       "hc1_firmware_fs": {
-        "name": "HK2 Radiatoren Firmware FS"
+        "name": "Firmware FS"
       },
       "hc2_firmware_fs": {
-        "name": "HK3 FBH Firmware FS"
+        "name": "Firmware FS"
       },
       "hc1_firmware_em": {
-        "name": "HK2 Radiatoren Firmware EM"
+        "name": "Firmware EM"
       },
       "hc2_firmware_em": {
-        "name": "HK3 FBH Firmware EM"
+        "name": "Firmware EM"
       },
       "parameter_b1_m6_p2586": {
-        "name": "HK2 Radiatoren Gemischte Außentemperatur"
+        "name": "Gemischte Außentemperatur"
       },
       "parameter_b1_m6_p17": {
-        "name": "HK2 Radiatoren Raumtemperatur"
+        "name": "Raumtemperatur"
       },
       "parameter_b1_m12_p15": {
-        "name": "HK2 Radiatoren Vorlauftemperatur"
+        "name": "Vorlauftemperatur"
       },
       "parameter_b1_m6_p14": {
-        "name": "HK2 Radiatoren Warmwassertemperatur"
+        "name": "Warmwassertemperatur"
       },
       "parameter_b1_m12_p1257": {
-        "name": "HK2 Radiatoren Zirkulationstemperatur"
+        "name": "Zirkulationstemperatur"
       },
       "parameter_b1_m6_p4": {
-        "name": "HK2 Radiatoren Solltemperatur"
+        "name": "Solltemperatur"
       },
       "parameter_b1_m6_p2": {
-        "name": "HK2 Radiatoren System-Solltemperatur"
+        "name": "System-Solltemperatur"
       },
       "parameter_b2_m6_p2586": {
-        "name": "HK3 FBH Gemischte Außentemperatur"
+        "name": "Gemischte Außentemperatur"
       },
       "parameter_b2_m6_p17": {
-        "name": "HK3 FBH Raumtemperatur"
+        "name": "Raumtemperatur"
       },
       "parameter_b2_m12_p15": {
-        "name": "HK3 FBH Vorlauftemperatur"
+        "name": "Vorlauftemperatur"
       },
       "parameter_b2_m6_p14": {
-        "name": "HK3 FBH Warmwassertemperatur"
+        "name": "Warmwassertemperatur"
       },
       "parameter_b2_m12_p1257": {
-        "name": "HK3 FBH Zirkulationstemperatur"
+        "name": "Zirkulationstemperatur"
       },
       "parameter_b2_m6_p4": {
-        "name": "HK3 FBH Solltemperatur"
+        "name": "Solltemperatur"
       },
       "parameter_b2_m6_p2": {
-        "name": "HK3 FBH System-Solltemperatur"
+        "name": "System-Solltemperatur"
       },
       "parameter_b1_m6_p5": {
-        "name": "HK2 Radiatoren Raumtemperatur normal"
+        "name": "Raumtemperatur normal"
       },
       "parameter_b1_m6_p8": {
-        "name": "HK2 Radiatoren Raumtemperatur abgesenkt"
+        "name": "Raumtemperatur abgesenkt"
       },
       "parameter_b1_m6_p297": {
-        "name": "HK2 Radiatoren Vorlauf-Soll normal"
+        "name": "Vorlauf-Soll normal"
       },
       "parameter_b1_m6_p298": {
-        "name": "HK2 Radiatoren Vorlauf-Soll abgesenkt"
+        "name": "Vorlauf-Soll abgesenkt"
       },
       "parameter_b1_m6_p270": {
-        "name": "HK2 Radiatoren Heizkurvensteilheit"
+        "name": "Heizkurvensteilheit"
       },
       "parameter_b1_m6_p2580": {
-        "name": "HK2 Radiatoren Raumfrosttemperatur"
+        "name": "Raumfrosttemperatur"
       },
       "parameter_b1_m6_p278": {
-        "name": "HK2 Radiatoren Sommer-/Winter-Umschaltung"
+        "name": "Sommer-/Winter-Umschaltung"
       },
       "parameter_b1_m6_p19": {
-        "name": "HK2 Radiatoren Warmwasser-Soll normal"
+        "name": "Warmwasser-Soll normal"
       },
       "parameter_b1_m6_p650": {
-        "name": "HK2 Radiatoren Warmwasser-Soll abgesenkt"
+        "name": "Warmwasser-Soll abgesenkt"
       },
       "parameter_b1_m6_p2418": {
-        "name": "HK2 Radiatoren Vorverlegung"
+        "name": "Vorverlegung"
       },
       "parameter_b2_m6_p5": {
-        "name": "HK3 FBH Raumtemperatur normal"
+        "name": "Raumtemperatur normal"
       },
       "parameter_b2_m6_p8": {
-        "name": "HK3 FBH Raumtemperatur abgesenkt"
+        "name": "Raumtemperatur abgesenkt"
       },
       "parameter_b2_m6_p297": {
-        "name": "HK3 FBH Vorlauf-Soll normal"
+        "name": "Vorlauf-Soll normal"
       },
       "parameter_b2_m6_p298": {
-        "name": "HK3 FBH Vorlauf-Soll abgesenkt"
+        "name": "Vorlauf-Soll abgesenkt"
       },
       "parameter_b2_m6_p270": {
-        "name": "HK3 FBH Heizkurvensteilheit"
+        "name": "Heizkurvensteilheit"
       },
       "parameter_b2_m6_p2580": {
-        "name": "HK3 FBH Raumfrosttemperatur"
+        "name": "Raumfrosttemperatur"
       },
       "parameter_b2_m6_p278": {
-        "name": "HK3 FBH Sommer-/Winter-Umschaltung"
+        "name": "Sommer-/Winter-Umschaltung"
       },
       "parameter_b2_m6_p19": {
-        "name": "HK3 FBH Warmwasser-Soll normal"
+        "name": "Warmwasser-Soll normal"
       },
       "parameter_b2_m6_p650": {
-        "name": "HK3 FBH Warmwasser-Soll abgesenkt"
+        "name": "Warmwasser-Soll abgesenkt"
       },
       "parameter_b2_m6_p2418": {
-        "name": "HK3 FBH Vorverlegung"
+        "name": "Vorverlegung"
       },
       "parameter_b1_m6_p306": {
-        "name": "HK2 Radiatoren Reduziertbetrieb",
+        "name": "Reduziertbetrieb",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_operation": "Absenkbetrieb"
         }
       },
       "parameter_b1_m6_p702": {
-        "name": "HK2 Radiatoren Frostheizgrenze"
+        "name": "Frostheizgrenze"
       },
       "parameter_b1_m6_p272": {
-        "name": "HK2 Radiatoren Einschaltoptimierung Maximum"
+        "name": "Einschaltoptimierung Maximum"
       },
       "parameter_b1_m6_p2414": {
-        "name": "HK2 Radiatoren Einschaltoptimierung aktuell"
+        "name": "Einschaltoptimierung aktuell"
       },
       "parameter_b1_m6_p2588": {
-        "name": "HK2 Radiatoren Raumthermostatfunktion",
+        "name": "Raumthermostatfunktion",
         "state": {
           "off": "Aus",
           "day_on": "Tag ein",
@@ -611,26 +611,26 @@
         }
       },
       "parameter_b1_m12_p384": {
-        "name": "HK2 Radiatoren Max. Warmwasser-Ladezeit"
+        "name": "Max. Warmwasser-Ladezeit"
       },
       "parameter_b2_m6_p306": {
-        "name": "HK3 FBH Reduziertbetrieb",
+        "name": "Reduziertbetrieb",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_operation": "Absenkbetrieb"
         }
       },
       "parameter_b2_m6_p702": {
-        "name": "HK3 FBH Frostheizgrenze"
+        "name": "Frostheizgrenze"
       },
       "parameter_b2_m6_p272": {
-        "name": "HK3 FBH Einschaltoptimierung Maximum"
+        "name": "Einschaltoptimierung Maximum"
       },
       "parameter_b2_m6_p2414": {
-        "name": "HK3 FBH Einschaltoptimierung aktuell"
+        "name": "Einschaltoptimierung aktuell"
       },
       "parameter_b2_m6_p2588": {
-        "name": "HK3 FBH Raumthermostatfunktion",
+        "name": "Raumthermostatfunktion",
         "state": {
           "off": "Aus",
           "day_on": "Tag ein",
@@ -640,7 +640,7 @@
         }
       },
       "parameter_b2_m12_p384": {
-        "name": "HK3 FBH Max. Warmwasser-Ladezeit"
+        "name": "Max. Warmwasser-Ladezeit"
       },
       "system_date": {
         "name": "Systemdatum"
@@ -649,26 +649,26 @@
         "name": "Systemzeit"
       },
       "hc1_holiday_start": {
-        "name": "HK2 Radiatoren Urlaubsbeginn"
+        "name": "Urlaubsbeginn"
       },
       "hc1_holiday_end": {
-        "name": "HK2 Radiatoren Urlaubsende"
+        "name": "Urlaubsende"
       },
       "hc1_holiday_temperature_level": {
-        "name": "HK2 Radiatoren Urlaubstemperaturniveau",
+        "name": "Urlaubstemperaturniveau",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_temperature": "Absenktemperatur"
         }
       },
       "hc2_holiday_start": {
-        "name": "HK3 FBH Urlaubsbeginn"
+        "name": "Urlaubsbeginn"
       },
       "hc2_holiday_end": {
-        "name": "HK3 FBH Urlaubsende"
+        "name": "Urlaubsende"
       },
       "hc2_holiday_temperature_level": {
-        "name": "HK3 FBH Urlaubstemperaturniveau",
+        "name": "Urlaubstemperaturniveau",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_temperature": "Absenktemperatur"
@@ -779,196 +779,196 @@
         "name": "Max. WW-Ladezeit (P52)"
       },
       "parameter_b1_m12_p857": {
-        "name": "HK2 Radiatoren Pumpenkonfiguration"
+        "name": "Pumpenkonfiguration"
       },
       "parameter_b1_m12_p65019": {
-        "name": "HK2 Radiatoren Pumpenausgang"
+        "name": "Pumpenausgang"
       },
       "parameter_b1_m6_p16": {
-        "name": "HK2 Radiatoren Heizkreistyp"
+        "name": "Heizkreistyp"
       },
       "parameter_b1_m6_p2419": {
-        "name": "HK2 Radiatoren Regelvariante"
+        "name": "Regelvariante"
       },
       "parameter_b1_m6_p321": {
-        "name": "HK2 Radiatoren Externer Raumfühler"
+        "name": "Externer Raumfühler"
       },
       "parameter_b2_m12_p857": {
-        "name": "HK3 FBH Pumpenkonfiguration"
+        "name": "Pumpenkonfiguration"
       },
       "parameter_b2_m12_p65019": {
-        "name": "HK3 FBH Pumpenausgang"
+        "name": "Pumpenausgang"
       },
       "parameter_b2_m6_p16": {
-        "name": "HK3 FBH Heizkreistyp"
+        "name": "Heizkreistyp"
       },
       "parameter_b2_m6_p2419": {
-        "name": "HK3 FBH Regelvariante"
+        "name": "Regelvariante"
       },
       "parameter_b2_m6_p321": {
-        "name": "HK3 FBH Externer Raumfühler"
+        "name": "Externer Raumfühler"
       },
       "parameter_b0_m6_p274": {
-        "name": "WTC-HK1 Betriebsart"
+        "name": "Betriebsart"
       },
       "parameter_b1_m6_p274": {
-        "name": "HK2 Radiatoren Betriebsart"
+        "name": "Betriebsart"
       },
       "parameter_b2_m6_p274": {
-        "name": "HK3 FBH Betriebsart"
+        "name": "Betriebsart"
       },
       "boiler_firmware_fs": {
-        "name": "WTC-HK1 Firmware FS"
+        "name": "Firmware FS"
       },
       "hc1_firmware_fs": {
-        "name": "HK2 Radiatoren Firmware FS"
+        "name": "Firmware FS"
       },
       "hc2_firmware_fs": {
-        "name": "HK3 FBH Firmware FS"
+        "name": "Firmware FS"
       },
       "hc1_firmware_em": {
-        "name": "HK2 Radiatoren Firmware EM"
+        "name": "Firmware EM"
       },
       "hc2_firmware_em": {
-        "name": "HK3 FBH Firmware EM"
+        "name": "Firmware EM"
       },
       "parameter_b1_m6_p2586": {
-        "name": "HK2 Radiatoren Gemischte Außentemperatur"
+        "name": "Gemischte Außentemperatur"
       },
       "parameter_b1_m6_p17": {
-        "name": "HK2 Radiatoren Raumtemperatur"
+        "name": "Raumtemperatur"
       },
       "parameter_b1_m12_p15": {
-        "name": "HK2 Radiatoren Vorlauftemperatur"
+        "name": "Vorlauftemperatur"
       },
       "parameter_b1_m6_p14": {
-        "name": "HK2 Radiatoren Warmwassertemperatur"
+        "name": "Warmwassertemperatur"
       },
       "parameter_b1_m12_p1257": {
-        "name": "HK2 Radiatoren Zirkulationstemperatur"
+        "name": "Zirkulationstemperatur"
       },
       "parameter_b1_m6_p4": {
-        "name": "HK2 Radiatoren Solltemperatur"
+        "name": "Solltemperatur"
       },
       "parameter_b1_m6_p2": {
-        "name": "HK2 Radiatoren System-Solltemperatur"
+        "name": "System-Solltemperatur"
       },
       "parameter_b2_m6_p2586": {
-        "name": "HK3 FBH Gemischte Außentemperatur"
+        "name": "Gemischte Außentemperatur"
       },
       "parameter_b2_m6_p17": {
-        "name": "HK3 FBH Raumtemperatur"
+        "name": "Raumtemperatur"
       },
       "parameter_b2_m12_p15": {
-        "name": "HK3 FBH Vorlauftemperatur"
+        "name": "Vorlauftemperatur"
       },
       "parameter_b2_m6_p14": {
-        "name": "HK3 FBH Warmwassertemperatur"
+        "name": "Warmwassertemperatur"
       },
       "parameter_b2_m12_p1257": {
-        "name": "HK3 FBH Zirkulationstemperatur"
+        "name": "Zirkulationstemperatur"
       },
       "parameter_b2_m6_p4": {
-        "name": "HK3 FBH Solltemperatur"
+        "name": "Solltemperatur"
       },
       "parameter_b2_m6_p2": {
-        "name": "HK3 FBH System-Solltemperatur"
+        "name": "System-Solltemperatur"
       },
       "parameter_b1_m6_p5": {
-        "name": "HK2 Radiatoren Raumtemperatur normal"
+        "name": "Raumtemperatur normal"
       },
       "parameter_b1_m6_p8": {
-        "name": "HK2 Radiatoren Raumtemperatur abgesenkt"
+        "name": "Raumtemperatur abgesenkt"
       },
       "parameter_b1_m6_p297": {
-        "name": "HK2 Radiatoren Vorlauf-Soll normal"
+        "name": "Vorlauf-Soll normal"
       },
       "parameter_b1_m6_p298": {
-        "name": "HK2 Radiatoren Vorlauf-Soll abgesenkt"
+        "name": "Vorlauf-Soll abgesenkt"
       },
       "parameter_b1_m6_p270": {
-        "name": "HK2 Radiatoren Heizkurvensteilheit"
+        "name": "Heizkurvensteilheit"
       },
       "parameter_b1_m6_p2580": {
-        "name": "HK2 Radiatoren Raumfrosttemperatur"
+        "name": "Raumfrosttemperatur"
       },
       "parameter_b1_m6_p278": {
-        "name": "HK2 Radiatoren Sommer-/Winter-Umschaltung"
+        "name": "Sommer-/Winter-Umschaltung"
       },
       "parameter_b1_m6_p19": {
-        "name": "HK2 Radiatoren Warmwasser-Soll normal"
+        "name": "Warmwasser-Soll normal"
       },
       "parameter_b1_m6_p650": {
-        "name": "HK2 Radiatoren Warmwasser-Soll abgesenkt"
+        "name": "Warmwasser-Soll abgesenkt"
       },
       "parameter_b1_m6_p2418": {
-        "name": "HK2 Radiatoren Vorverlegung"
+        "name": "Vorverlegung"
       },
       "parameter_b2_m6_p5": {
-        "name": "HK3 FBH Raumtemperatur normal"
+        "name": "Raumtemperatur normal"
       },
       "parameter_b2_m6_p8": {
-        "name": "HK3 FBH Raumtemperatur abgesenkt"
+        "name": "Raumtemperatur abgesenkt"
       },
       "parameter_b2_m6_p297": {
-        "name": "HK3 FBH Vorlauf-Soll normal"
+        "name": "Vorlauf-Soll normal"
       },
       "parameter_b2_m6_p298": {
-        "name": "HK3 FBH Vorlauf-Soll abgesenkt"
+        "name": "Vorlauf-Soll abgesenkt"
       },
       "parameter_b2_m6_p270": {
-        "name": "HK3 FBH Heizkurvensteilheit"
+        "name": "Heizkurvensteilheit"
       },
       "parameter_b2_m6_p2580": {
-        "name": "HK3 FBH Raumfrosttemperatur"
+        "name": "Raumfrosttemperatur"
       },
       "parameter_b2_m6_p278": {
-        "name": "HK3 FBH Sommer-/Winter-Umschaltung"
+        "name": "Sommer-/Winter-Umschaltung"
       },
       "parameter_b2_m6_p19": {
-        "name": "HK3 FBH Warmwasser-Soll normal"
+        "name": "Warmwasser-Soll normal"
       },
       "parameter_b2_m6_p650": {
-        "name": "HK3 FBH Warmwasser-Soll abgesenkt"
+        "name": "Warmwasser-Soll abgesenkt"
       },
       "parameter_b2_m6_p2418": {
-        "name": "HK3 FBH Vorverlegung"
+        "name": "Vorverlegung"
       },
       "parameter_b1_m6_p306": {
-        "name": "HK2 Radiatoren Reduziertbetrieb"
+        "name": "Reduziertbetrieb"
       },
       "parameter_b1_m6_p702": {
-        "name": "HK2 Radiatoren Frostheizgrenze"
+        "name": "Frostheizgrenze"
       },
       "parameter_b1_m6_p272": {
-        "name": "HK2 Radiatoren Einschaltoptimierung Maximum"
+        "name": "Einschaltoptimierung Maximum"
       },
       "parameter_b1_m6_p2414": {
-        "name": "HK2 Radiatoren Einschaltoptimierung aktuell"
+        "name": "Einschaltoptimierung aktuell"
       },
       "parameter_b1_m6_p2588": {
-        "name": "HK2 Radiatoren Raumthermostatfunktion"
+        "name": "Raumthermostatfunktion"
       },
       "parameter_b1_m12_p384": {
-        "name": "HK2 Radiatoren Max. Warmwasser-Ladezeit"
+        "name": "Max. Warmwasser-Ladezeit"
       },
       "parameter_b2_m6_p306": {
-        "name": "HK3 FBH Reduziertbetrieb"
+        "name": "Reduziertbetrieb"
       },
       "parameter_b2_m6_p702": {
-        "name": "HK3 FBH Frostheizgrenze"
+        "name": "Frostheizgrenze"
       },
       "parameter_b2_m6_p272": {
-        "name": "HK3 FBH Einschaltoptimierung Maximum"
+        "name": "Einschaltoptimierung Maximum"
       },
       "parameter_b2_m6_p2414": {
-        "name": "HK3 FBH Einschaltoptimierung aktuell"
+        "name": "Einschaltoptimierung aktuell"
       },
       "parameter_b2_m6_p2588": {
-        "name": "HK3 FBH Raumthermostatfunktion"
+        "name": "Raumthermostatfunktion"
       },
       "parameter_b2_m12_p384": {
-        "name": "HK3 FBH Max. Warmwasser-Ladezeit"
+        "name": "Max. Warmwasser-Ladezeit"
       },
       "system_date": {
         "name": "Systemdatum"
@@ -977,22 +977,22 @@
         "name": "Systemzeit"
       },
       "hc1_holiday_start": {
-        "name": "HK2 Radiatoren Urlaubsbeginn"
+        "name": "Urlaubsbeginn"
       },
       "hc1_holiday_end": {
-        "name": "HK2 Radiatoren Urlaubsende"
+        "name": "Urlaubsende"
       },
       "hc1_holiday_temperature_level": {
-        "name": "HK2 Radiatoren Urlaubstemperaturniveau"
+        "name": "Urlaubstemperaturniveau"
       },
       "hc2_holiday_start": {
-        "name": "HK3 FBH Urlaubsbeginn"
+        "name": "Urlaubsbeginn"
       },
       "hc2_holiday_end": {
-        "name": "HK3 FBH Urlaubsende"
+        "name": "Urlaubsende"
       },
       "hc2_holiday_temperature_level": {
-        "name": "HK3 FBH Urlaubstemperaturniveau"
+        "name": "Urlaubstemperaturniveau"
       },
       "daylight_saving_start": {
         "name": "Sommerzeitbeginn"
@@ -1003,7 +1003,7 @@
     },
     "select": {
       "hc1_type": {
-        "name": "HK2 Radiatoren Heizkreistyp",
+        "name": "Heizkreistyp",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -1012,7 +1012,7 @@
         }
       },
       "hc2_type": {
-        "name": "HK3 FBH Heizkreistyp",
+        "name": "Heizkreistyp",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -1021,7 +1021,7 @@
         }
       },
       "hc1_control_variant": {
-        "name": "HK2 Radiatoren Regelvariante",
+        "name": "Regelvariante",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -1032,7 +1032,7 @@
         }
       },
       "hc2_control_variant": {
-        "name": "HK3 FBH Regelvariante",
+        "name": "Regelvariante",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -1043,7 +1043,7 @@
         }
       },
       "hc1_external_room_sensor": {
-        "name": "HK2 Radiatoren Externer Raumfühler",
+        "name": "Externer Raumfühler",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -1052,7 +1052,7 @@
         }
       },
       "hc2_external_room_sensor": {
-        "name": "HK3 FBH Externer Raumfühler",
+        "name": "Externer Raumfühler",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -1061,7 +1061,7 @@
         }
       },
       "wtc_hc1_operating_mode": {
-        "name": "WTC-HK1 Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -1074,7 +1074,7 @@
         }
       },
       "hc1_operating_mode": {
-        "name": "HK2 Radiatoren Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -1088,7 +1088,7 @@
         }
       },
       "hc2_operating_mode": {
-        "name": "HK3 FBH Betriebsart",
+        "name": "Betriebsart",
         "state": {
           "program_1": "Programm 1",
           "program_2": "Programm 2",
@@ -1102,21 +1102,21 @@
         }
       },
       "hc1_reduced_mode": {
-        "name": "HK2 Radiatoren Reduziertbetrieb",
+        "name": "Reduziertbetrieb",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_operation": "Absenkbetrieb"
         }
       },
       "hc2_reduced_mode": {
-        "name": "HK3 FBH Reduziertbetrieb",
+        "name": "Reduziertbetrieb",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_operation": "Absenkbetrieb"
         }
       },
       "hc1_room_thermostat": {
-        "name": "HK2 Radiatoren Raumthermostat",
+        "name": "Raumthermostat",
         "state": {
           "off": "Aus",
           "day_on": "Tag ein",
@@ -1126,7 +1126,7 @@
         }
       },
       "hc2_room_thermostat": {
-        "name": "HK3 FBH Raumthermostat",
+        "name": "Raumthermostat",
         "state": {
           "off": "Aus",
           "day_on": "Tag ein",
@@ -1136,14 +1136,14 @@
         }
       },
       "hc1_holiday_temperature_level": {
-        "name": "HK2 Radiatoren Urlaubstemperaturniveau",
+        "name": "Urlaubstemperaturniveau",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_temperature": "Absenktemperatur"
         }
       },
       "hc2_holiday_temperature_level": {
-        "name": "HK3 FBH Urlaubstemperaturniveau",
+        "name": "Urlaubstemperaturniveau",
         "state": {
           "frost_protection": "Frostschutz",
           "reduced_temperature": "Absenktemperatur"
