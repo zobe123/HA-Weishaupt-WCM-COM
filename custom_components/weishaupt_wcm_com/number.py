@@ -20,6 +20,7 @@ from .base_entity import WeishauptBaseEntity
 from .const import DOMAIN, PARAMETERS
 from .protocol import encode_value, write_scale
 from .localization import parameter_translation_key
+from .device_model import device_info
 
 
 async def async_setup_entry(
@@ -598,27 +599,9 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
     @property
     def device_info(self):
-        """Attach numbers to the appropriate device (boiler or HK1/HK2)."""
+        """Attach numbers to the corrected device with stable identifiers."""
 
-        name = self._sensor_name or ""
-        slug = name.lower().replace(" ", "_")
-
-        if slug.startswith("hk1_"):
-            ident = "weishaupt_hk1"
-            dev_name = "Weishaupt WCM-COM · HK1"
-        elif slug.startswith("hk2_"):
-            ident = "weishaupt_hk2"
-            dev_name = "Weishaupt WCM-COM · HK2"
-        else:
-            ident = "weishaupt_kessel"
-            dev_name = "Weishaupt WCM-COM · WTC"
-
-        return {
-            "identifiers": {(DOMAIN, ident)},
-            "name": dev_name,
-            "manufacturer": "Weishaupt",
-            "model": "WCM-COM",
-        }
+        return device_info(self._sensor_name or "")
 
     @property
     def native_value(self) -> float | None:

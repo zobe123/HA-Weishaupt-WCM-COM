@@ -78,7 +78,9 @@ class LocalizationContractTest(unittest.TestCase):
 
     def test_select_states_cover_every_neutral_option(self) -> None:
         for slug, translation_key in localization.SELECT_TRANSLATION_KEYS.items():
-            hot_water = slug.endswith("user_op_mode")
+            # The WTC-integrated bus-0 circuit is always a heating circuit.
+            # Bus 1/2 can be heating or hot-water depending on capabilities.
+            hot_water = slug in ("hk1_user_op_mode", "hk2_user_op_mode")
             for language, catalog in self.catalogs.items():
                 states = catalog["entity"]["select"][translation_key]["state"]
                 possible = set(
@@ -95,6 +97,13 @@ class LocalizationContractTest(unittest.TestCase):
             source = (COMPONENT / filename).read_text(encoding="utf-8")
             with self.subTest(filename=filename):
                 self.assertNotIn("_attr_name =", source)
+
+    def test_diagnostics_documents_correct_physical_bus_mapping(self) -> None:
+        source = (COMPONENT / "diagnostics.py").read_text(encoding="utf-8")
+        self.assertIn('"0": "WTC-HK1 / FS1"', source)
+        self.assertIn('"1": "EM-HK2 / radiators"', source)
+        self.assertIn('"2": "EM-HK3 / underfloor heating"', source)
+        self.assertNotIn("password", source.lower())
 
     def test_user_visible_surfaces_exist_in_both_languages(self) -> None:
         for language, catalog in self.catalogs.items():

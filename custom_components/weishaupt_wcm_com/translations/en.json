@@ -339,13 +339,13 @@
         "name": "Max. DHW charge time (P52)"
       },
       "parameter_b1_m12_p857": {
-        "name": "HC1 Pump configuration",
+        "name": "HC2 radiators Pump configuration",
         "state": {
           "stepped": "Stepped"
         }
       },
       "parameter_b1_m12_p65019": {
-        "name": "HC1 Pump output",
+        "name": "HC2 radiators Pump output",
         "state": {
           "manual_off": "Manual off",
           "manual_on": "Manual on",
@@ -354,7 +354,7 @@
         }
       },
       "parameter_b1_m6_p16": {
-        "name": "HC1 Heating-circuit type",
+        "name": "HC2 radiators Heating-circuit type",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -363,7 +363,7 @@
         }
       },
       "parameter_b1_m6_p2419": {
-        "name": "HC1 Control variant",
+        "name": "HC2 radiators Control variant",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -374,7 +374,7 @@
         }
       },
       "parameter_b1_m6_p321": {
-        "name": "HC1 External room sensor",
+        "name": "HC2 radiators External room sensor",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -383,13 +383,13 @@
         }
       },
       "parameter_b2_m12_p857": {
-        "name": "HC2 Pump configuration",
+        "name": "HC3 underfloor heating Pump configuration",
         "state": {
           "stepped": "Stepped"
         }
       },
       "parameter_b2_m12_p65019": {
-        "name": "HC2 Pump output",
+        "name": "HC3 underfloor heating Pump output",
         "state": {
           "manual_off": "Manual off",
           "manual_on": "Manual on",
@@ -398,7 +398,7 @@
         }
       },
       "parameter_b2_m6_p16": {
-        "name": "HC2 Heating-circuit type",
+        "name": "HC3 underfloor heating Heating-circuit type",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -407,7 +407,7 @@
         }
       },
       "parameter_b2_m6_p2419": {
-        "name": "HC2 Control variant",
+        "name": "HC3 underfloor heating Control variant",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -418,7 +418,7 @@
         }
       },
       "parameter_b2_m6_p321": {
-        "name": "HC2 External room sensor",
+        "name": "HC3 underfloor heating External room sensor",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -426,8 +426,21 @@
           "room_compensated": "Room-compensated"
         }
       },
+      "parameter_b0_m6_p274": {
+        "name": "WTC-HC1 operating mode",
+        "state": {
+          "program_1": "Program 1",
+          "program_2": "Program 2",
+          "program_3": "Program 3",
+          "standby": "Standby",
+          "summer": "Summer",
+          "reduced": "Reduced",
+          "normal": "Normal",
+          "control_center": "Control center"
+        }
+      },
       "parameter_b1_m6_p274": {
-        "name": "HC1 Operating mode",
+        "name": "HC2 radiators Operating mode",
         "state": {
           "program_1": "Program 1",
           "program_2": "Program 2",
@@ -441,7 +454,7 @@
         }
       },
       "parameter_b2_m6_p274": {
-        "name": "HC2 Operating mode",
+        "name": "HC3 underfloor heating Operating mode",
         "state": {
           "program_1": "Program 1",
           "program_2": "Program 2",
@@ -455,140 +468,140 @@
         }
       },
       "boiler_firmware_fs": {
-        "name": "WTC firmware FS"
+        "name": "WTC-HC1 firmware FS"
       },
       "hc1_firmware_fs": {
-        "name": "HC1 firmware FS"
+        "name": "HC2 radiators firmware FS"
       },
       "hc2_firmware_fs": {
-        "name": "HC2 firmware FS"
+        "name": "HC3 underfloor heating firmware FS"
       },
       "hc1_firmware_em": {
-        "name": "HC1 firmware EM"
+        "name": "HC2 radiators firmware EM"
       },
       "hc2_firmware_em": {
-        "name": "HC2 firmware EM"
+        "name": "HC3 underfloor heating firmware EM"
       },
       "parameter_b1_m6_p2586": {
-        "name": "HC1 Mixed outside temperature"
+        "name": "HC2 radiators Mixed outside temperature"
       },
       "parameter_b1_m6_p17": {
-        "name": "HC1 Room temperature"
+        "name": "HC2 radiators Room temperature"
       },
       "parameter_b1_m12_p15": {
-        "name": "HC1 Flow temperature"
+        "name": "HC2 radiators Flow temperature"
       },
       "parameter_b1_m6_p14": {
-        "name": "HC1 Hot-water temperature"
+        "name": "HC2 radiators Hot-water temperature"
       },
       "parameter_b1_m12_p1257": {
-        "name": "HC1 Circulation temperature"
+        "name": "HC2 radiators Circulation temperature"
       },
       "parameter_b1_m6_p4": {
-        "name": "HC1 Setpoint temperature"
+        "name": "HC2 radiators Setpoint temperature"
       },
       "parameter_b1_m6_p2": {
-        "name": "HC1 System setpoint temperature"
+        "name": "HC2 radiators System setpoint temperature"
       },
       "parameter_b2_m6_p2586": {
-        "name": "HC2 Mixed outside temperature"
+        "name": "HC3 underfloor heating Mixed outside temperature"
       },
       "parameter_b2_m6_p17": {
-        "name": "HC2 Room temperature"
+        "name": "HC3 underfloor heating Room temperature"
       },
       "parameter_b2_m12_p15": {
-        "name": "HC2 Flow temperature"
+        "name": "HC3 underfloor heating Flow temperature"
       },
       "parameter_b2_m6_p14": {
-        "name": "HC2 Hot-water temperature"
+        "name": "HC3 underfloor heating Hot-water temperature"
       },
       "parameter_b2_m12_p1257": {
-        "name": "HC2 Circulation temperature"
+        "name": "HC3 underfloor heating Circulation temperature"
       },
       "parameter_b2_m6_p4": {
-        "name": "HC2 Setpoint temperature"
+        "name": "HC3 underfloor heating Setpoint temperature"
       },
       "parameter_b2_m6_p2": {
-        "name": "HC2 System setpoint temperature"
+        "name": "HC3 underfloor heating System setpoint temperature"
       },
       "parameter_b1_m6_p5": {
-        "name": "HC1 Normal room temperature"
+        "name": "HC2 radiators Normal room temperature"
       },
       "parameter_b1_m6_p8": {
-        "name": "HC1 Reduced room temperature"
+        "name": "HC2 radiators Reduced room temperature"
       },
       "parameter_b1_m6_p297": {
-        "name": "HC1 Normal flow setpoint"
+        "name": "HC2 radiators Normal flow setpoint"
       },
       "parameter_b1_m6_p298": {
-        "name": "HC1 Reduced flow setpoint"
+        "name": "HC2 radiators Reduced flow setpoint"
       },
       "parameter_b1_m6_p270": {
-        "name": "HC1 Heating-curve slope"
+        "name": "HC2 radiators Heating-curve slope"
       },
       "parameter_b1_m6_p2580": {
-        "name": "HC1 Room frost temperature"
+        "name": "HC2 radiators Room frost temperature"
       },
       "parameter_b1_m6_p278": {
-        "name": "HC1 Summer/winter changeover"
+        "name": "HC2 radiators Summer/winter changeover"
       },
       "parameter_b1_m6_p19": {
-        "name": "HC1 Normal hot-water setpoint"
+        "name": "HC2 radiators Normal hot-water setpoint"
       },
       "parameter_b1_m6_p650": {
-        "name": "HC1 Reduced hot-water setpoint"
+        "name": "HC2 radiators Reduced hot-water setpoint"
       },
       "parameter_b1_m6_p2418": {
-        "name": "HC1 Advance time"
+        "name": "HC2 radiators Advance time"
       },
       "parameter_b2_m6_p5": {
-        "name": "HC2 Normal room temperature"
+        "name": "HC3 underfloor heating Normal room temperature"
       },
       "parameter_b2_m6_p8": {
-        "name": "HC2 Reduced room temperature"
+        "name": "HC3 underfloor heating Reduced room temperature"
       },
       "parameter_b2_m6_p297": {
-        "name": "HC2 Normal flow setpoint"
+        "name": "HC3 underfloor heating Normal flow setpoint"
       },
       "parameter_b2_m6_p298": {
-        "name": "HC2 Reduced flow setpoint"
+        "name": "HC3 underfloor heating Reduced flow setpoint"
       },
       "parameter_b2_m6_p270": {
-        "name": "HC2 Heating-curve slope"
+        "name": "HC3 underfloor heating Heating-curve slope"
       },
       "parameter_b2_m6_p2580": {
-        "name": "HC2 Room frost temperature"
+        "name": "HC3 underfloor heating Room frost temperature"
       },
       "parameter_b2_m6_p278": {
-        "name": "HC2 Summer/winter changeover"
+        "name": "HC3 underfloor heating Summer/winter changeover"
       },
       "parameter_b2_m6_p19": {
-        "name": "HC2 Normal hot-water setpoint"
+        "name": "HC3 underfloor heating Normal hot-water setpoint"
       },
       "parameter_b2_m6_p650": {
-        "name": "HC2 Reduced hot-water setpoint"
+        "name": "HC3 underfloor heating Reduced hot-water setpoint"
       },
       "parameter_b2_m6_p2418": {
-        "name": "HC2 Advance time"
+        "name": "HC3 underfloor heating Advance time"
       },
       "parameter_b1_m6_p306": {
-        "name": "HC1 Reduced-operation mode",
+        "name": "HC2 radiators Reduced-operation mode",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_operation": "Reduced operation"
         }
       },
       "parameter_b1_m6_p702": {
-        "name": "HC1 Frost heating limit"
+        "name": "HC2 radiators Frost heating limit"
       },
       "parameter_b1_m6_p272": {
-        "name": "HC1 Switch-on optimisation maximum"
+        "name": "HC2 radiators Switch-on optimisation maximum"
       },
       "parameter_b1_m6_p2414": {
-        "name": "HC1 Current switch-on optimisation"
+        "name": "HC2 radiators Current switch-on optimisation"
       },
       "parameter_b1_m6_p2588": {
-        "name": "HC1 Room thermostat function",
+        "name": "HC2 radiators Room thermostat function",
         "state": {
           "off": "Off",
           "day_on": "Day on",
@@ -598,26 +611,26 @@
         }
       },
       "parameter_b1_m12_p384": {
-        "name": "HC1 Max. hot-water charging time"
+        "name": "HC2 radiators Max. hot-water charging time"
       },
       "parameter_b2_m6_p306": {
-        "name": "HC2 Reduced-operation mode",
+        "name": "HC3 underfloor heating Reduced-operation mode",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_operation": "Reduced operation"
         }
       },
       "parameter_b2_m6_p702": {
-        "name": "HC2 Frost heating limit"
+        "name": "HC3 underfloor heating Frost heating limit"
       },
       "parameter_b2_m6_p272": {
-        "name": "HC2 Switch-on optimisation maximum"
+        "name": "HC3 underfloor heating Switch-on optimisation maximum"
       },
       "parameter_b2_m6_p2414": {
-        "name": "HC2 Current switch-on optimisation"
+        "name": "HC3 underfloor heating Current switch-on optimisation"
       },
       "parameter_b2_m6_p2588": {
-        "name": "HC2 Room thermostat function",
+        "name": "HC3 underfloor heating Room thermostat function",
         "state": {
           "off": "Off",
           "day_on": "Day on",
@@ -627,7 +640,7 @@
         }
       },
       "parameter_b2_m12_p384": {
-        "name": "HC2 Max. hot-water charging time"
+        "name": "HC3 underfloor heating Max. hot-water charging time"
       },
       "system_date": {
         "name": "System date"
@@ -636,26 +649,26 @@
         "name": "System time"
       },
       "hc1_holiday_start": {
-        "name": "HC1 Holiday start"
+        "name": "HC2 radiators Holiday start"
       },
       "hc1_holiday_end": {
-        "name": "HC1 Holiday end"
+        "name": "HC2 radiators Holiday end"
       },
       "hc1_holiday_temperature_level": {
-        "name": "HC1 Holiday temperature level",
+        "name": "HC2 radiators Holiday temperature level",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_temperature": "Reduced temperature"
         }
       },
       "hc2_holiday_start": {
-        "name": "HC2 Holiday start"
+        "name": "HC3 underfloor heating Holiday start"
       },
       "hc2_holiday_end": {
-        "name": "HC2 Holiday end"
+        "name": "HC3 underfloor heating Holiday end"
       },
       "hc2_holiday_temperature_level": {
-        "name": "HC2 Holiday temperature level",
+        "name": "HC3 underfloor heating Holiday temperature level",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_temperature": "Reduced temperature"
@@ -766,193 +779,196 @@
         "name": "Max. DHW charge time (P52)"
       },
       "parameter_b1_m12_p857": {
-        "name": "HC1 Pump configuration"
+        "name": "HC2 radiators Pump configuration"
       },
       "parameter_b1_m12_p65019": {
-        "name": "HC1 Pump output"
+        "name": "HC2 radiators Pump output"
       },
       "parameter_b1_m6_p16": {
-        "name": "HC1 Heating-circuit type"
+        "name": "HC2 radiators Heating-circuit type"
       },
       "parameter_b1_m6_p2419": {
-        "name": "HC1 Control variant"
+        "name": "HC2 radiators Control variant"
       },
       "parameter_b1_m6_p321": {
-        "name": "HC1 External room sensor"
+        "name": "HC2 radiators External room sensor"
       },
       "parameter_b2_m12_p857": {
-        "name": "HC2 Pump configuration"
+        "name": "HC3 underfloor heating Pump configuration"
       },
       "parameter_b2_m12_p65019": {
-        "name": "HC2 Pump output"
+        "name": "HC3 underfloor heating Pump output"
       },
       "parameter_b2_m6_p16": {
-        "name": "HC2 Heating-circuit type"
+        "name": "HC3 underfloor heating Heating-circuit type"
       },
       "parameter_b2_m6_p2419": {
-        "name": "HC2 Control variant"
+        "name": "HC3 underfloor heating Control variant"
       },
       "parameter_b2_m6_p321": {
-        "name": "HC2 External room sensor"
+        "name": "HC3 underfloor heating External room sensor"
+      },
+      "parameter_b0_m6_p274": {
+        "name": "WTC-HC1 operating mode"
       },
       "parameter_b1_m6_p274": {
-        "name": "HC1 Operating mode"
+        "name": "HC2 radiators Operating mode"
       },
       "parameter_b2_m6_p274": {
-        "name": "HC2 Operating mode"
+        "name": "HC3 underfloor heating Operating mode"
       },
       "boiler_firmware_fs": {
-        "name": "WTC firmware FS"
+        "name": "WTC-HC1 firmware FS"
       },
       "hc1_firmware_fs": {
-        "name": "HC1 firmware FS"
+        "name": "HC2 radiators firmware FS"
       },
       "hc2_firmware_fs": {
-        "name": "HC2 firmware FS"
+        "name": "HC3 underfloor heating firmware FS"
       },
       "hc1_firmware_em": {
-        "name": "HC1 firmware EM"
+        "name": "HC2 radiators firmware EM"
       },
       "hc2_firmware_em": {
-        "name": "HC2 firmware EM"
+        "name": "HC3 underfloor heating firmware EM"
       },
       "parameter_b1_m6_p2586": {
-        "name": "HC1 Mixed outside temperature"
+        "name": "HC2 radiators Mixed outside temperature"
       },
       "parameter_b1_m6_p17": {
-        "name": "HC1 Room temperature"
+        "name": "HC2 radiators Room temperature"
       },
       "parameter_b1_m12_p15": {
-        "name": "HC1 Flow temperature"
+        "name": "HC2 radiators Flow temperature"
       },
       "parameter_b1_m6_p14": {
-        "name": "HC1 Hot-water temperature"
+        "name": "HC2 radiators Hot-water temperature"
       },
       "parameter_b1_m12_p1257": {
-        "name": "HC1 Circulation temperature"
+        "name": "HC2 radiators Circulation temperature"
       },
       "parameter_b1_m6_p4": {
-        "name": "HC1 Setpoint temperature"
+        "name": "HC2 radiators Setpoint temperature"
       },
       "parameter_b1_m6_p2": {
-        "name": "HC1 System setpoint temperature"
+        "name": "HC2 radiators System setpoint temperature"
       },
       "parameter_b2_m6_p2586": {
-        "name": "HC2 Mixed outside temperature"
+        "name": "HC3 underfloor heating Mixed outside temperature"
       },
       "parameter_b2_m6_p17": {
-        "name": "HC2 Room temperature"
+        "name": "HC3 underfloor heating Room temperature"
       },
       "parameter_b2_m12_p15": {
-        "name": "HC2 Flow temperature"
+        "name": "HC3 underfloor heating Flow temperature"
       },
       "parameter_b2_m6_p14": {
-        "name": "HC2 Hot-water temperature"
+        "name": "HC3 underfloor heating Hot-water temperature"
       },
       "parameter_b2_m12_p1257": {
-        "name": "HC2 Circulation temperature"
+        "name": "HC3 underfloor heating Circulation temperature"
       },
       "parameter_b2_m6_p4": {
-        "name": "HC2 Setpoint temperature"
+        "name": "HC3 underfloor heating Setpoint temperature"
       },
       "parameter_b2_m6_p2": {
-        "name": "HC2 System setpoint temperature"
+        "name": "HC3 underfloor heating System setpoint temperature"
       },
       "parameter_b1_m6_p5": {
-        "name": "HC1 Normal room temperature"
+        "name": "HC2 radiators Normal room temperature"
       },
       "parameter_b1_m6_p8": {
-        "name": "HC1 Reduced room temperature"
+        "name": "HC2 radiators Reduced room temperature"
       },
       "parameter_b1_m6_p297": {
-        "name": "HC1 Normal flow setpoint"
+        "name": "HC2 radiators Normal flow setpoint"
       },
       "parameter_b1_m6_p298": {
-        "name": "HC1 Reduced flow setpoint"
+        "name": "HC2 radiators Reduced flow setpoint"
       },
       "parameter_b1_m6_p270": {
-        "name": "HC1 Heating-curve slope"
+        "name": "HC2 radiators Heating-curve slope"
       },
       "parameter_b1_m6_p2580": {
-        "name": "HC1 Room frost temperature"
+        "name": "HC2 radiators Room frost temperature"
       },
       "parameter_b1_m6_p278": {
-        "name": "HC1 Summer/winter changeover"
+        "name": "HC2 radiators Summer/winter changeover"
       },
       "parameter_b1_m6_p19": {
-        "name": "HC1 Normal hot-water setpoint"
+        "name": "HC2 radiators Normal hot-water setpoint"
       },
       "parameter_b1_m6_p650": {
-        "name": "HC1 Reduced hot-water setpoint"
+        "name": "HC2 radiators Reduced hot-water setpoint"
       },
       "parameter_b1_m6_p2418": {
-        "name": "HC1 Advance time"
+        "name": "HC2 radiators Advance time"
       },
       "parameter_b2_m6_p5": {
-        "name": "HC2 Normal room temperature"
+        "name": "HC3 underfloor heating Normal room temperature"
       },
       "parameter_b2_m6_p8": {
-        "name": "HC2 Reduced room temperature"
+        "name": "HC3 underfloor heating Reduced room temperature"
       },
       "parameter_b2_m6_p297": {
-        "name": "HC2 Normal flow setpoint"
+        "name": "HC3 underfloor heating Normal flow setpoint"
       },
       "parameter_b2_m6_p298": {
-        "name": "HC2 Reduced flow setpoint"
+        "name": "HC3 underfloor heating Reduced flow setpoint"
       },
       "parameter_b2_m6_p270": {
-        "name": "HC2 Heating-curve slope"
+        "name": "HC3 underfloor heating Heating-curve slope"
       },
       "parameter_b2_m6_p2580": {
-        "name": "HC2 Room frost temperature"
+        "name": "HC3 underfloor heating Room frost temperature"
       },
       "parameter_b2_m6_p278": {
-        "name": "HC2 Summer/winter changeover"
+        "name": "HC3 underfloor heating Summer/winter changeover"
       },
       "parameter_b2_m6_p19": {
-        "name": "HC2 Normal hot-water setpoint"
+        "name": "HC3 underfloor heating Normal hot-water setpoint"
       },
       "parameter_b2_m6_p650": {
-        "name": "HC2 Reduced hot-water setpoint"
+        "name": "HC3 underfloor heating Reduced hot-water setpoint"
       },
       "parameter_b2_m6_p2418": {
-        "name": "HC2 Advance time"
+        "name": "HC3 underfloor heating Advance time"
       },
       "parameter_b1_m6_p306": {
-        "name": "HC1 Reduced-operation mode"
+        "name": "HC2 radiators Reduced-operation mode"
       },
       "parameter_b1_m6_p702": {
-        "name": "HC1 Frost heating limit"
+        "name": "HC2 radiators Frost heating limit"
       },
       "parameter_b1_m6_p272": {
-        "name": "HC1 Switch-on optimisation maximum"
+        "name": "HC2 radiators Switch-on optimisation maximum"
       },
       "parameter_b1_m6_p2414": {
-        "name": "HC1 Current switch-on optimisation"
+        "name": "HC2 radiators Current switch-on optimisation"
       },
       "parameter_b1_m6_p2588": {
-        "name": "HC1 Room thermostat function"
+        "name": "HC2 radiators Room thermostat function"
       },
       "parameter_b1_m12_p384": {
-        "name": "HC1 Max. hot-water charging time"
+        "name": "HC2 radiators Max. hot-water charging time"
       },
       "parameter_b2_m6_p306": {
-        "name": "HC2 Reduced-operation mode"
+        "name": "HC3 underfloor heating Reduced-operation mode"
       },
       "parameter_b2_m6_p702": {
-        "name": "HC2 Frost heating limit"
+        "name": "HC3 underfloor heating Frost heating limit"
       },
       "parameter_b2_m6_p272": {
-        "name": "HC2 Switch-on optimisation maximum"
+        "name": "HC3 underfloor heating Switch-on optimisation maximum"
       },
       "parameter_b2_m6_p2414": {
-        "name": "HC2 Current switch-on optimisation"
+        "name": "HC3 underfloor heating Current switch-on optimisation"
       },
       "parameter_b2_m6_p2588": {
-        "name": "HC2 Room thermostat function"
+        "name": "HC3 underfloor heating Room thermostat function"
       },
       "parameter_b2_m12_p384": {
-        "name": "HC2 Max. hot-water charging time"
+        "name": "HC3 underfloor heating Max. hot-water charging time"
       },
       "system_date": {
         "name": "System date"
@@ -961,22 +977,22 @@
         "name": "System time"
       },
       "hc1_holiday_start": {
-        "name": "HC1 Holiday start"
+        "name": "HC2 radiators Holiday start"
       },
       "hc1_holiday_end": {
-        "name": "HC1 Holiday end"
+        "name": "HC2 radiators Holiday end"
       },
       "hc1_holiday_temperature_level": {
-        "name": "HC1 Holiday temperature level"
+        "name": "HC2 radiators Holiday temperature level"
       },
       "hc2_holiday_start": {
-        "name": "HC2 Holiday start"
+        "name": "HC3 underfloor heating Holiday start"
       },
       "hc2_holiday_end": {
-        "name": "HC2 Holiday end"
+        "name": "HC3 underfloor heating Holiday end"
       },
       "hc2_holiday_temperature_level": {
-        "name": "HC2 Holiday temperature level"
+        "name": "HC3 underfloor heating Holiday temperature level"
       },
       "daylight_saving_start": {
         "name": "Daylight-saving start"
@@ -987,7 +1003,7 @@
     },
     "select": {
       "hc1_type": {
-        "name": "HC1 type",
+        "name": "HC2 radiators type",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -996,7 +1012,7 @@
         }
       },
       "hc2_type": {
-        "name": "HC2 type",
+        "name": "HC3 underfloor heating type",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -1005,7 +1021,7 @@
         }
       },
       "hc1_control_variant": {
-        "name": "HC1 control variant",
+        "name": "HC2 radiators control variant",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -1016,7 +1032,7 @@
         }
       },
       "hc2_control_variant": {
-        "name": "HC2 control variant",
+        "name": "HC3 underfloor heating control variant",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -1027,7 +1043,7 @@
         }
       },
       "hc1_external_room_sensor": {
-        "name": "HC1 external room sensor",
+        "name": "HC2 radiators external room sensor",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -1036,7 +1052,7 @@
         }
       },
       "hc2_external_room_sensor": {
-        "name": "HC2 external room sensor",
+        "name": "HC3 underfloor heating external room sensor",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -1044,8 +1060,21 @@
           "room_compensated": "Room-compensated"
         }
       },
+      "wtc_hc1_operating_mode": {
+        "name": "WTC-HC1 operating mode",
+        "state": {
+          "program_1": "Program 1",
+          "program_2": "Program 2",
+          "program_3": "Program 3",
+          "standby": "Standby",
+          "summer": "Summer",
+          "reduced": "Reduced",
+          "normal": "Normal",
+          "control_center": "Control center"
+        }
+      },
       "hc1_operating_mode": {
-        "name": "HC1 operating mode",
+        "name": "HC2 radiators operating mode",
         "state": {
           "program_1": "Program 1",
           "program_2": "Program 2",
@@ -1059,7 +1088,7 @@
         }
       },
       "hc2_operating_mode": {
-        "name": "HC2 operating mode",
+        "name": "HC3 underfloor heating operating mode",
         "state": {
           "program_1": "Program 1",
           "program_2": "Program 2",
@@ -1073,21 +1102,21 @@
         }
       },
       "hc1_reduced_mode": {
-        "name": "HC1 reduced mode",
+        "name": "HC2 radiators reduced mode",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_operation": "Reduced operation"
         }
       },
       "hc2_reduced_mode": {
-        "name": "HC2 reduced mode",
+        "name": "HC3 underfloor heating reduced mode",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_operation": "Reduced operation"
         }
       },
       "hc1_room_thermostat": {
-        "name": "HC1 room thermostat",
+        "name": "HC2 radiators room thermostat",
         "state": {
           "off": "Off",
           "day_on": "Day on",
@@ -1097,7 +1126,7 @@
         }
       },
       "hc2_room_thermostat": {
-        "name": "HC2 room thermostat",
+        "name": "HC3 underfloor heating room thermostat",
         "state": {
           "off": "Off",
           "day_on": "Day on",
@@ -1107,14 +1136,14 @@
         }
       },
       "hc1_holiday_temperature_level": {
-        "name": "HC1 holiday temperature level",
+        "name": "HC2 radiators holiday temperature level",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_temperature": "Reduced temperature"
         }
       },
       "hc2_holiday_temperature_level": {
-        "name": "HC2 holiday temperature level",
+        "name": "HC3 underfloor heating holiday temperature level",
         "state": {
           "frost_protection": "Frost protection",
           "reduced_temperature": "Reduced temperature"
@@ -1123,10 +1152,10 @@
     },
     "calendar": {
       "hc1_active_heating_program": {
-        "name": "HC1 active heating program"
+        "name": "HC2 radiators active heating program"
       },
       "hc2_active_heating_program": {
-        "name": "HC2 active heating program"
+        "name": "HC3 underfloor heating active heating program"
       },
       "hot_water_program": {
         "name": "Hot water"
@@ -1171,7 +1200,7 @@
   "services": {
     "set_holiday_date": {
       "name": "Set holiday date",
-      "description": "Set the holiday start or end date for HC1/HC2.",
+      "description": "Set the holiday start or end date for HC2 radiators/HC3 underfloor heating.",
       "fields": {
         "config_entry_id": {
           "name": "WCM-COM device"

@@ -1,6 +1,6 @@
 set_holiday_date:
   name: Set holiday date
-  description: Set HK1/HK2 holiday start/end via raw Day/Month/Year parameters.
+  description: Set HC2 radiators / HC3 underfloor-heating holiday dates via raw parameters.
   fields:
     config_entry_id:
       name: WCM-COM device
@@ -12,7 +12,7 @@ set_holiday_date:
 
     heating_circuit:
       name: Heating circuit
-      description: 1 = HK1, 2 = HK2
+      description: 1 = HC2 radiators (bus 1), 2 = HC3 underfloor heating (bus 2)
       required: false
       example: 1
       selector:
@@ -59,9 +59,9 @@ set_time_program_day:
       selector:
         select:
           options:
-            - label: HK1
+            - label: HC2 radiators (bus 1)
               value: "1"
-            - label: HK2
+            - label: HC3 underfloor heating (bus 2)
               value: "2"
     program:
       name: Program

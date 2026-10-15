@@ -35,6 +35,7 @@ from .localization import (
     operation_phase_key,
     parameter_translation_key,
 )
+from .device_model import device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +117,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 *(f"pre_purge_remaining_{value}" for value in range(10, 61)),
                 *(f"flame_formation_{value}" for value in range(10, 61)),
             ]
-        elif self._sensor_name in ("HK1 User Betriebsart", "HK2 User Betriebsart"):
+        elif self._sensor_name in (
+            "WTC HK1 User Betriebsart",
+            "HK1 User Betriebsart",
+            "HK2 User Betriebsart",
+        ):
             enum_options = list(
                 dict.fromkeys(
                     [
@@ -237,17 +242,13 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information for grouping sensors (Kessel, HK1, HK2)."""
 
-        slug = self._sensor_name.lower().replace(" ", "_")
-
         data = self.coordinator.data or {}
         sw_version: str | None = None
 
         # FS/EM-Versionen auf die jeweiligen Geräte mappen:
         # - Kessel: EM-Version (falls vorhanden)
         # - HK1/HK2: FS-Version des jeweiligen Heizkreises
-        if slug.startswith("hk1_"):
-            ident = "weishaupt_hk1"
-            name = "Weishaupt WCM-COM · HK1"
+        if self._sensor_name.startswith("HK1 "):
             fs = data.get("HK1 Config Version FS")
             em = data.get("HK1 Config Version EM")
             if fs and em:
@@ -256,9 +257,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 sw_version = f"FS {fs}"
             elif em:
                 sw_version = f"EM {em}"
-        elif slug.startswith("hk2_"):
-            ident = "weishaupt_hk2"
-            name = "Weishaupt WCM-COM · HK2"
+        elif self._sensor_name.startswith("HK2 "):
             fs = data.get("HK2 Config Version FS")
             em = data.get("HK2 Config Version EM")
             if fs and em:
@@ -267,10 +266,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 sw_version = f"FS {fs}"
             elif em:
                 sw_version = f"EM {em}"
-        else:
-            # Kessel + Fachmann-Werte im selben Gerät "Weishaupt Kessel" bündeln
-            ident = "weishaupt_kessel"
-            name = "Weishaupt WCM-COM · WTC"
+        elif self._sensor_name.startswith("WTC HK1 ") or self._sensor_name == "Kessel Config Version FS":
             fs = data.get("Kessel Config Version FS")
             em = None  # Bus 0 EM ist bei dir N/V
             if fs and em:
@@ -278,18 +274,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             elif fs:
                 sw_version = f"FS {fs}"  # z.B. "FS 327.30"
 
-        info_kwargs = {
-            "identifiers": {(DOMAIN, ident)},
-            "name": name,
-            "manufacturer": "Weishaupt",
-            "model": "WCM-COM",
-        }
-
-        # Firmware-Version nur setzen, wenn wir einen String haben
-        if isinstance(sw_version, str) and sw_version:
-            info_kwargs["sw_version"] = sw_version
-
-        return DeviceInfo(**info_kwargs)
+        return DeviceInfo(**device_info(self._sensor_name, sw_version=sw_version))
 
     @property
     def native_value(self):

@@ -36,6 +36,7 @@ def parameter_translation_key(parameter: dict[str, Any]) -> str:
 
 
 SELECT_TRANSLATION_KEYS = {
+    "wtc_hk1_user_op_mode": "wtc_hc1_operating_mode",
     "hk1_config_hk_type": "hc1_type",
     "hk1_config_regelvariante": "hc1_control_variant",
     "hk1_config_ext_room_sensor": "hc1_external_room_sensor",

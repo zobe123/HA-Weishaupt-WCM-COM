@@ -72,9 +72,11 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `Warmwassertemperatur` – hot water temperature
 - `Pumpe`, `Flamme`, `Heizung`, `Warmwasser` – on/off status
 - `Status` – error/warning code with mapped description
-- `HK1/HK2 …` – heating circuit 1/2 process values
+- `WTC-HC1 / FS1` – the heating circuit integrated in the WTC (physical bus 0)
+- `HC2 radiators` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
+- `HC3 underfloor heating` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
-- Active-program calendars expose the effective HK1/HK2 heating schedules plus
+- Active-program calendars expose the effective HC2/HC3 heating schedules plus
   one global hot-water schedule. Circulation is added only when the controller
   reports a usable circulation signal.
 - The integration adds a **Weishaupt Time Programs** panel for editing all three
@@ -102,7 +104,7 @@ Expert sensors are marked as diagnostic entities in Home Assistant and may be `u
 By default the integration runs in a **read-only** mode:
 
 - All process and expert values are read from the WCM-COM and exposed as entities.
-- Configuration entities (expert sliders, HK1/HK2 config selects) are visible but writes are blocked.
+- Configuration entities (expert sliders and heating-circuit selects) are visible but writes are blocked.
 
 If you really want to change configuration parameters from Home Assistant, you must explicitly enable writes in the integration options:
 

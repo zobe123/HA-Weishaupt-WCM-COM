@@ -135,8 +135,7 @@ class WeishauptAPI:
             if ("bus" in p or "modultyp" in p)
             and not p["name"].startswith("HK1 Config")
             and not p["name"].startswith("HK2 Config")
-            and not p["name"].startswith("HK1 User")
-            and not p["name"].startswith("HK2 User")
+            and p.get("page") != "hk_user"
             and not p.get("internal")
             and not p.get("virtual")
         ]
@@ -170,15 +169,14 @@ class WeishauptAPI:
             and p not in hk_process_params
             and p not in hk_version_params
             and p not in date_params
-            and not p["name"].startswith("HK1 User ")
-            and not p["name"].startswith("HK2 User ")
+            and p.get("page") != "hk_user"
         ]
         # HK-Userparameter (Form_Heizung_Benutzer) explizit trennen, damit sie
         # in eigenen, kleinen Requests wie in der Original-WebApp abgefragt werden.
         hk_user_params = [
             p
             for p in PARAMETERS
-            if p["name"].startswith("HK1 User ") or p["name"].startswith("HK2 User ")
+            if p.get("page") == "hk_user"
         ]
 
         url = f"http://{self._host}{ENDPOINT}"
@@ -343,7 +341,15 @@ class WeishauptAPI:
                 if kessel_fs_high is not None and kessel_fs_low is not None and kessel_fs_high != 0:
                     result["Kessel Config Version FS"] = f"{kessel_fs_high}.{kessel_fs_low}"
 
-                # Heizkreise HK1/HK2 – FS/EM-Version pro Kreis
+                # Bus 0 is the WTC-integrated heating circuit (WTC-HK1 / FS1).
+                mode_kind = user_mode_kind(
+                    result.get("WTC HK1 User Capability Flags"), 0
+                )
+                if mode_kind is not None:
+                    result["WTC HK1 User Mode Kind"] = mode_kind
+
+                # Historical HK1/HK2 keys map to physical bus 1/2 and remain
+                # stable for registry compatibility (displayed as HK2/HK3).
                 for hk in (1, 2):
                     mode_kind = user_mode_kind(
                         result.get(f"HK{hk} User Capability Flags"), hk

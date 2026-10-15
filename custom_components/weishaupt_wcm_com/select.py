@@ -34,6 +34,7 @@ from .const import (
 from .base_entity import WeishauptBaseEntity
 from .protocol import resolve_parameter_metadata
 from .localization import SELECT_TRANSLATION_KEYS, select_option_map
+from .device_model import device_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,24 @@ async def async_setup_entry(
     allow_write: bool = entry_data.get("allow_write", False)
 
     selects: list[WeishauptHK1ConfigSelect] = []
+
+    # WTC-integrated heating circuit: physical bus 0, logical WTC-HK1 / FS1.
+    # The dedicated slug creates a new entity without colliding with the
+    # historical bus-1 ``hk1`` unique ID.
+    if (coordinator.data or {}).get("WTC HK1 User Mode Kind") == "hk":
+        selects.append(
+            WeishauptHKConfigSelect(
+                coordinator,
+                api,
+                "WTC HK1 User Betriebsart",
+                "wtc_hk1_user_op_mode",
+                HK_USER_OPERATION_MODE_MAP,
+                parameter_id=274,
+                bus=0,
+                modultyp=6,
+                allow_write=allow_write,
+            )
+        )
 
     # HK1 uses bus=1 in PARAMETERS; we use the sensor names as keys
     # HK1
@@ -231,6 +250,11 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._bus = bus
         self._modultyp = modultyp
         self._allow_write = allow_write
+        self._attr_extra_state_attributes = {
+            "wcm_bus": bus,
+            "wcm_module": modultyp,
+            "wcm_parameter": parameter_id,
+        }
         self._attr_has_entity_name = True
         self._attr_translation_key = SELECT_TRANSLATION_KEYS[slug]
         self._option_map = select_option_map(
@@ -275,26 +299,9 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
     @property
     def device_info(self):
-        """Attach to the HK1/HK2 device group."""
+        """Attach to the corrected device while preserving legacy IDs."""
 
-        slug = self._sensor_name.lower().replace(" ", "_")
-
-        if slug.startswith("hk1_"):
-            ident = "weishaupt_hk1"
-            name = "Weishaupt WCM-COM · HK1"
-        elif slug.startswith("hk2_"):
-            ident = "weishaupt_hk2"
-            name = "Weishaupt WCM-COM · HK2"
-        else:
-            ident = "weishaupt_kessel"
-            name = "Weishaupt WCM-COM · WTC"
-
-        return {
-            "identifiers": {(DOMAIN, ident)},
-            "name": name,
-            "manufacturer": "Weishaupt",
-            "model": "WCM-COM",
-        }
+        return device_info(self._sensor_name)
 
     @staticmethod
     def _extract_option_label(text: str) -> str:

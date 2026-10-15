@@ -118,6 +118,11 @@ PARAMETERS = [
     # Benutzerseite: Die Zahl nach u16Data im WebUI-Konstruktor ist eine
     # interne Abrufgruppe, kein TEL_PROT. ID 104 entscheidet, ob ID 274 als
     # Heizungs- oder Warmwasser-Betriebsart dargestellt wird.
+    # Bus 0 is the WTC-integrated circuit (WTC-HK1 / FS1).  Its capability
+    # handling in the original WebUI explicitly keeps parameter 274 in heating
+    # mode even when bit 0x40 is set.
+    {"id": 104,  "name": "WTC HK1 User Capability Flags", "type": "value", "bus": 0, "modultyp": 6, "request_group": 0, "page": "hk_user", "internal": True},
+    {"id": 274,  "name": "WTC HK1 User Betriebsart",      "type": "value", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user"},
     {"id": 104,  "name": "HK1 User Capability Flags", "type": "value", "bus": 1, "modultyp": 6, "request_group": 0, "page": "hk_user", "internal": True},
     {"id": 2585, "name": "HK1 User WW Type",          "type": "value", "bus": 1, "modultyp": 6, "request_group": 1, "page": "hk_user", "internal": True},
     {"id": 274,  "name": "HK1 User Betriebsart",      "type": "value", "bus": 1, "modultyp": 6, "request_group": 2, "page": "hk_user"},

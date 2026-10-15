@@ -4,6 +4,24 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [Unreleased 1.4.0b1]
+
+### Fixed
+
+- Corrected the physical bus mapping: bus 0 is WTC-HC1 / FS1, bus 1 is HC2
+  radiators, and bus 2 is HC3 underfloor heating.
+- Added a dedicated readable and writable WTC-HC1 operating-mode entity that
+  sends parameter 274 exclusively to bus 0 / FS module 6.
+- Separated WTC/boiler process values from the integrated WTC heating circuit
+  in Home Assistant's device view.
+
+### Compatibility
+
+- Preserved every existing bus-1/bus-2 unique ID and device identifier; only
+  their displayed physical circuit names change.
+- Added regression coverage for bus-0 readback, all operating-mode options,
+  the bus-0 write target and legacy IDs.
+
 ## [1.3.0]
 
 ### New

@@ -101,6 +101,7 @@ class SelectPlatformTest(unittest.TestCase):
     def test_platform_setup_creates_every_select(self) -> None:
         coordinator = Mock()
         coordinator.data = {
+            "WTC HK1 User Mode Kind": "hk",
             "HK1 User Mode Kind": "hk",
             "HK2 User Mode Kind": "ww",
             "HK1 Expert Reduziertbetrieb": 1,
@@ -130,7 +131,61 @@ class SelectPlatformTest(unittest.TestCase):
             )
         )
 
-        self.assertEqual(len(added), 14)
+        self.assertEqual(len(added), 15)
+        wtc_mode = next(
+            entity
+            for entity in added
+            if entity._sensor_name == "WTC HK1 User Betriebsart"
+        )
+        self.assertEqual(wtc_mode._attr_unique_id, "weishaupt_wtc_hk1_user_op_mode_select")
+        self.assertEqual(wtc_mode._bus, 0)
+        self.assertEqual(wtc_mode._modultyp, 6)
+        self.assertEqual(
+            wtc_mode.device_info["identifiers"],
+            {("weishaupt_wcm_com", "weishaupt_wtc_hk1")},
+        )
+
+    def test_wtc_hk1_summer_write_targets_only_bus_zero(self) -> None:
+        coordinator = Mock(data={"WTC HK1 User Betriebsart": 11})
+        coordinator.async_request_refresh = AsyncMock()
+        api = Mock()
+        entity = select_module.WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "WTC HK1 User Betriebsart",
+            "wtc_hk1_user_op_mode",
+            select_module.HK_USER_OPERATION_MODE_MAP,
+            parameter_id=274,
+            bus=0,
+            modultyp=6,
+            allow_write=True,
+        )
+
+        async def run_executor(function, *args):
+            return function(*args)
+
+        entity.hass = Mock()
+        entity.hass.async_add_executor_job = run_executor
+        asyncio.run(entity.async_select_option("summer"))
+
+        api.write_parameter.assert_called_once_with(274, 0, 6, 5)
+        coordinator.async_request_refresh.assert_awaited_once()
+
+    def test_legacy_bus_one_and_two_unique_ids_are_unchanged(self) -> None:
+        coordinator = Mock(data={})
+        bus_one = select_module.WeishauptHKConfigSelect(
+            coordinator, Mock(), "HK1 User Betriebsart", "hk1_user_op_mode",
+            select_module.HK_USER_OPERATION_MODE_MAP, 274, 1, 6,
+        )
+        bus_two = select_module.WeishauptHKConfigSelect(
+            coordinator, Mock(), "HK2 User Betriebsart", "hk2_user_op_mode",
+            select_module.HK_USER_OPERATION_MODE_MAP, 274, 2, 6,
+        )
+
+        self.assertEqual(bus_one._attr_unique_id, "weishaupt_hk1_user_op_mode_select")
+        self.assertEqual(bus_two._attr_unique_id, "weishaupt_hk2_user_op_mode_select")
+        self.assertIn("HK2 Radiatoren", bus_one.device_info["name"])
+        self.assertIn("HK3 FBH", bus_two.device_info["name"])
 
     def test_holiday_select_uses_raw_data_name(self) -> None:
         coordinator = Mock()

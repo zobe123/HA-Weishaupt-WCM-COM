@@ -4,7 +4,7 @@ const STRINGS = {
   en: {
     title: "Weishaupt time programs", loading_info: "Loading weekly programs", querying: "Querying WCM-COM …",
     load_failed: "Loading failed: {error}", schedule_failed: "The time program could not be loaded: {error}",
-    heating_program: "HC{circuit} · Heating program {number}{active}", active: " · active", hot_water: "Hot water",
+    heating_program: "{circuit} · Heating program {number}{active}", circuit_1: "HC2 radiators", circuit_2: "HC3 underfloor heating", active: " · active", hot_water: "Hot water",
     circulation: "Circulation", circulation_missing: "Circulation · not detected", time_program: "Time program",
     read_only_title: "Read only:", read_only: "Enable writes in the integration options to apply changes.",
     optional: "Optional", show_circulation: "Show circulation", loading_schedule: "Loading weekly program …",
@@ -24,7 +24,7 @@ const STRINGS = {
   de: {
     title: "Weishaupt Zeitprogramme", loading_info: "Wochenprogramme werden geladen", querying: "WCM-COM wird abgefragt …",
     load_failed: "Laden fehlgeschlagen: {error}", schedule_failed: "Zeitprogramm konnte nicht geladen werden: {error}",
-    heating_program: "HK{circuit} · Heizprogramm {number}{active}", active: " · aktiv", hot_water: "Warmwasser",
+    heating_program: "{circuit} · Heizprogramm {number}{active}", circuit_1: "HK2 Radiatoren", circuit_2: "HK3 FBH", active: " · aktiv", hot_water: "Warmwasser",
     circulation: "Zirkulation", circulation_missing: "Zirkulation · nicht erkannt", time_program: "Zeitprogramm",
     read_only_title: "Nur Lesen:", read_only: "Zum Übernehmen muss in den Integrationsoptionen „Schreibzugriffe erlauben“ aktiviert sein.",
     optional: "Optional", show_circulation: "Zirkulation anzeigen", loading_schedule: "Lade Wochenplan …",
@@ -144,7 +144,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
           circuit,
           program,
           label: this._t("heating_program", {
-            circuit,
+            circuit: this._t(`circuit_${circuit}`),
             number,
             active: active ? this._t("active") : "",
           }),
@@ -179,7 +179,8 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     return [1, 2]
       .map((circuit) => {
         const mode = this._info.circuits[String(circuit)].mode;
-        return `HK${circuit}: ${this._t(`mode_${mode}`)}`;
+        const label = this._t(`circuit_${circuit}`);
+        return `${label}: ${this._t(`mode_${mode}`)}`;
       })
       .join(" · ");
   }

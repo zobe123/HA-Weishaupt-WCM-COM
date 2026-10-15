@@ -72,6 +72,49 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(data["HK1 User Betriebsart"], 11)
         self.assertIn('[[6, 1, 1, 274, 0, 0, 0, 0]]', post.call_args.kwargs["data"])
 
+    def test_wtc_hk1_readback_uses_bus_zero_and_heating_mode(self) -> None:
+        parameters = [
+            {
+                "id": 104,
+                "name": "WTC HK1 User Capability Flags",
+                "type": "value",
+                "bus": 0,
+                "modultyp": 6,
+                "request_group": 0,
+                "page": "hk_user",
+                "internal": True,
+            },
+            {
+                "id": 274,
+                "name": "WTC HK1 User Betriebsart",
+                "type": "value",
+                "bus": 0,
+                "modultyp": 6,
+                "request_group": 2,
+                "page": "hk_user",
+            },
+        ]
+
+        def respond(*args, **kwargs):
+            request = json.loads(kwargs["data"])["telegramm"]
+            messages = []
+            for telegram in request:
+                value = 0x40 if telegram[3] == 104 else 5
+                messages.append([6, 0, 1, telegram[3], 0, 0, value, 0])
+            return json_response(messages)
+
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(api_module.requests, "post", side_effect=respond) as post,
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        payloads = [json.loads(call.kwargs["data"])["telegramm"] for call in post.call_args_list]
+        telegrams = [telegram for payload in payloads for telegram in payload]
+        self.assertIn([6, 0, 1, 274, 0, 0, 0, 0], telegrams)
+        self.assertEqual(data["WTC HK1 User Betriebsart"], 5)
+        self.assertEqual(data["WTC HK1 User Mode Kind"], "hk")
+
     def test_failed_update_raises_and_preserves_last_data(self) -> None:
         api = api_module.WeishauptAPI("wcm.test")
         api._data = {"existing": 42}
