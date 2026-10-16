@@ -21,6 +21,9 @@ _VIRTUAL_PARAMETER_KEYS = {
     "HK2 Urlaubstemperaturniveau": "hc2_holiday_temperature_level",
     "DST Start": "daylight_saving_start",
     "DST End": "daylight_saving_end",
+    "WTC HK1 Holiday Start": "hc1_holiday_start",
+    "WTC HK1 Holiday End": "hc1_holiday_end",
+    "WTC HK1 Urlaubstemperaturniveau": "hc1_holiday_temperature_level",
 }
 
 
@@ -32,11 +35,27 @@ def parameter_translation_key(parameter: dict[str, Any]) -> str:
         return _VIRTUAL_PARAMETER_KEYS[str(parameter["name"])]
     bus = int(parameter.get("bus", 0))
     module = int(parameter.get("modultyp", parameter.get("destination", 10)))
+    # All FS circuits share the same device-relative wording. Reuse the
+    # established bus-1 catalog keys for the newly exposed bus-0 FS1 values;
+    # the protocol identity remains in the entity unique ID and diagnostics.
+    if (
+        str(parameter["name"]).startswith("WTC HK1 ")
+        and bus == 0
+        and module == 6
+        and parameter_id != 274
+    ):
+        return f"parameter_b1_m6_p{parameter_id}"
     return f"parameter_b{bus}_m{module}_p{parameter_id}"
 
 
 SELECT_TRANSLATION_KEYS = {
     "wtc_hk1_user_op_mode": "wtc_hc1_operating_mode",
+    "wtc_hk1_config_hk_type": "hc1_type",
+    "wtc_hk1_config_regelvariante": "hc1_control_variant",
+    "wtc_hk1_config_ext_room_sensor": "hc1_external_room_sensor",
+    "wtc_hk1_expert_reduced_mode": "hc1_reduced_mode",
+    "wtc_hk1_expert_room_thermostat": "hc1_room_thermostat",
+    "wtc_hk1_urlaubstemperaturniveau": "hc1_holiday_temperature_level",
     "hk1_config_hk_type": "hc1_type",
     "hk1_config_regelvariante": "hc1_control_variant",
     "hk1_config_ext_room_sensor": "hc1_external_room_sensor",
@@ -131,6 +150,11 @@ def select_option_map(translation_key: str, *, hot_water: bool = False) -> dict[
 
 
 SENSOR_ENUM_MAPS: dict[str, dict[int, str]] = {
+    "WTC HK1 Config HK Type": SELECT_OPTION_KEYS["hc_type"],
+    "WTC HK1 Config Regelvariante": SELECT_OPTION_KEYS["control_variant"],
+    "WTC HK1 Config Ext Room Sensor": SELECT_OPTION_KEYS["external_room_sensor"],
+    "WTC HK1 Expert Reduziertbetrieb": SELECT_OPTION_KEYS["reduced_mode"],
+    "WTC HK1 Expert Raumthermostat": SELECT_OPTION_KEYS["room_thermostat"],
     "HK1 Config Pump": {0: "stepped"},
     "HK2 Config Pump": {0: "stepped"},
     "HK1 Config Voltage": {

@@ -251,6 +251,99 @@ PARAMETERS = [
     {"id": 0, "name": "DST End",                    "type": "value", "virtual": True},
 ]
 
+# WTC-integrated heating circuit (physical bus 0 / WCM-FS1).  These are the
+# FS values that have direct counterparts on bus 1 and bus 2.  EM-only values
+# (module 12: pump, voltage, dedicated flow/circulation temperature) are
+# deliberately not mirrored because the integrated circuit has no EM module.
+PARAMETERS.extend(
+    [
+        # Configuration
+        {"id": 16, "name": "WTC HK1 Config HK Type", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 2419, "name": "WTC HK1 Config Regelvariante", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 321, "name": "WTC HK1 Config Ext Room Sensor", "type": "value", "bus": 0, "modultyp": 6},
+
+        # Process values
+        {"id": 2586, "name": "WTC HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 0, "modultyp": 6},
+        {"id": 17, "name": "WTC HK1 Raumtemperatur", "type": "temperature", "bus": 0, "modultyp": 6, "destination": 6},
+        {"id": 4, "name": "WTC HK1 Solltemperatur", "type": "temperature", "bus": 0, "modultyp": 6},
+        {"id": 2, "name": "WTC HK1 Solltemperatur System", "type": "temperature", "bus": 0, "modultyp": 6},
+
+        # User values
+        {"id": 5, "name": "WTC HK1 User Normal Raumtemperatur", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+        {"id": 8, "name": "WTC HK1 User Absenk Raumtemperatur", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+        {"id": 297, "name": "WTC HK1 User Normal VL Soll", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+        {"id": 298, "name": "WTC HK1 User Absenk VL Soll", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user", "conditional": True},
+        {"id": 270, "name": "WTC HK1 User Steilheit", "type": "ratio_tenths", "bus": 0, "modultyp": 6, "request_group": 2, "page": "hk_user"},
+        {"id": 2580, "name": "WTC HK1 User Raumfrosttemperatur", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+        {"id": 278, "name": "WTC HK1 User SoWi Umschaltung", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 3, "page": "hk_user"},
+        {"id": 19, "name": "WTC HK1 User Normal WW Soll", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+        {"id": 650, "name": "WTC HK1 User Absenk WW Soll", "type": "temperature", "bus": 0, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True},
+        {"id": 2418, "name": "WTC HK1 User Vorverlegung", "type": "minutes", "bus": 0, "modultyp": 6, "request_group": 3, "page": "hk_user", "conditional": True, "no_value": 32768},
+
+        # Expert values
+        {"id": 306, "name": "WTC HK1 Expert Reduziertbetrieb", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert"},
+        {"id": 702, "name": "WTC HK1 Expert Frostheizgrenze", "type": "integer_temperature", "bus": 0, "modultyp": 6, "page": "hk_expert", "no_value": 10},
+        {"id": 272, "name": "WTC HK1 Expert Ein Opti MAX", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert"},
+        {"id": 2414, "name": "WTC HK1 Expert Ein Opti IST", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
+        {"id": 2588, "name": "WTC HK1 Expert Raumthermostat", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
+
+        # Holiday values and their virtual presentation entities
+        {"id": 283, "name": "WTC HK1 Holiday Start Day", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 284, "name": "WTC HK1 Holiday Start Month", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 285, "name": "WTC HK1 Holiday Start Year", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 286, "name": "WTC HK1 Holiday End Day", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 287, "name": "WTC HK1 Holiday End Month", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 288, "name": "WTC HK1 Holiday End Year", "type": "value", "bus": 0, "modultyp": 6, "internal": True},
+        {"id": 317, "name": "WTC HK1 Holiday Temp Level", "type": "value", "bus": 0, "modultyp": 6, "request_group": 1, "page": "hk_date", "internal": True},
+        {"id": 0, "name": "WTC HK1 Holiday Start", "type": "value", "virtual": True},
+        {"id": 0, "name": "WTC HK1 Holiday End", "type": "value", "virtual": True},
+        {"id": 0, "name": "WTC HK1 Urlaubstemperaturniveau", "type": "value", "virtual": True},
+    ]
+)
+
+
+# Read-only sensor counterparts of writable numbers/selects stay registered so
+# existing entity IDs and automations continue to work.  Home Assistant hides
+# them from normal UI surfaces after the v2 migration; users can still address
+# them directly and the writable entity remains the visible canonical control.
+WRITE_BACKED_PARAMETER_NAMES = {
+    "Expert Spec Level Heating Mode",
+    "Expert Corr Outside Sensor",
+    "Expert Min VL Target",
+    "Expert Max VL Target",
+    "Expert Switch Diff VL",
+    "Expert Burner Pulse Lock",
+    "Expert Max Power Heating",
+    "Expert Max Power WW",
+    "Expert Max Charge Time WW",
+}
+
+for _prefix in ("WTC HK1", "HK1", "HK2"):
+    WRITE_BACKED_PARAMETER_NAMES.update(
+        {
+            f"{_prefix} Config HK Type",
+            f"{_prefix} Config Regelvariante",
+            f"{_prefix} Config Ext Room Sensor",
+            f"{_prefix} User Betriebsart",
+            f"{_prefix} User Normal Raumtemperatur",
+            f"{_prefix} User Absenk Raumtemperatur",
+            f"{_prefix} User Normal VL Soll",
+            f"{_prefix} User Absenk VL Soll",
+            f"{_prefix} User Steilheit",
+            f"{_prefix} User Raumfrosttemperatur",
+            f"{_prefix} User SoWi Umschaltung",
+            f"{_prefix} User Normal WW Soll",
+            f"{_prefix} User Absenk WW Soll",
+            f"{_prefix} User Vorverlegung",
+            f"{_prefix} Expert Reduziertbetrieb",
+            f"{_prefix} Expert Frostheizgrenze",
+            f"{_prefix} Expert Ein Opti MAX",
+            f"{_prefix} Expert Raumthermostat",
+            f"{_prefix} Expert Max Charge Time WW",
+            f"{_prefix} Urlaubstemperaturniveau",
+        }
+    )
+
 # HK-Konfigurations-Mappings (Enums)
 HK_CONFIG_PUMP_MAP = {
     0: "Pumpe stufig",

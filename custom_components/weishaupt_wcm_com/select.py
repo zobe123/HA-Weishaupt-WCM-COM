@@ -71,6 +71,45 @@ async def async_setup_entry(
             )
         )
 
+    # Mirror the FS configuration and expert controls on physical bus 0.
+    # Only parameters actually returned by this appliance are exposed.
+    for name, slug, mapping, parameter_id in (
+        ("WTC HK1 Config HK Type", "wtc_hk1_config_hk_type", HK_CONFIG_HK_TYPE_MAP, 16),
+        ("WTC HK1 Config Regelvariante", "wtc_hk1_config_regelvariante", HK_CONFIG_REGELVARIANTE_MAP, 2419),
+        ("WTC HK1 Config Ext Room Sensor", "wtc_hk1_config_ext_room_sensor", HK_CONFIG_EXT_ROOM_SENSOR_MAP, 321),
+        ("WTC HK1 Expert Reduziertbetrieb", "wtc_hk1_expert_reduced_mode", HK_REDUCED_MODE_MAP, 306),
+        ("WTC HK1 Expert Raumthermostat", "wtc_hk1_expert_room_thermostat", HK_ROOM_THERMOSTAT_MAP, 2588),
+    ):
+        if name in (coordinator.data or {}):
+            selects.append(
+                WeishauptHKConfigSelect(
+                    coordinator,
+                    api,
+                    name,
+                    slug,
+                    mapping,
+                    parameter_id=parameter_id,
+                    bus=0,
+                    modultyp=6,
+                    allow_write=allow_write,
+                )
+            )
+
+    if "WTC HK1 Holiday Temp Level" in (coordinator.data or {}):
+        selects.append(
+            WeishauptHKConfigSelect(
+                coordinator,
+                api,
+                "WTC HK1 Urlaubstemperaturniveau",
+                "wtc_hk1_urlaubstemperaturniveau",
+                HOLIDAY_TEMP_LEVEL_MAP,
+                parameter_id=317,
+                bus=0,
+                modultyp=6,
+                allow_write=allow_write,
+            )
+        )
+
     # HK1 uses bus=1 in PARAMETERS; we use the sensor names as keys
     # HK1
     selects.append(
@@ -272,11 +311,11 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._data_name = str(parameter["name"])
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
-        if sensor_name == "HK1 Config HK Type":
+        if sensor_name in ("WTC HK1 Config HK Type", "HK1 Config HK Type"):
             self._attr_icon = "mdi:radiator"
-        elif sensor_name == "HK1 Config Regelvariante":
+        elif sensor_name in ("WTC HK1 Config Regelvariante", "HK1 Config Regelvariante"):
             self._attr_icon = "mdi:chart-bell-curve"
-        elif sensor_name == "HK1 Config Ext Room Sensor":
+        elif sensor_name in ("WTC HK1 Config Ext Room Sensor", "HK1 Config Ext Room Sensor"):
             self._attr_icon = "mdi:home-thermometer-outline"
         elif sensor_name == "HK2 Config HK Type":
             self._attr_icon = "mdi:radiator"
@@ -290,7 +329,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
                 if hot_water_mode
                 else "mdi:home-thermometer"
             )
-        elif sensor_name == "HK1 Urlaubstemperaturniveau":
+        elif sensor_name in ("WTC HK1 Urlaubstemperaturniveau", "HK1 Urlaubstemperaturniveau"):
             self._attr_icon = "mdi:snowflake"
         elif sensor_name == "HK2 Urlaubstemperaturniveau":
             self._attr_icon = "mdi:snowflake"

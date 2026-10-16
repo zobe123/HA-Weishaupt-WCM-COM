@@ -30,6 +30,7 @@ from .const import (
     CONF_EXTERNAL_GAS_METER_ENTITY,
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     PARAMETERS,
+    WRITE_BACKED_PARAMETER_NAMES,
 )
 from .weishaupt_api import WeishauptAPI
 from .time_program_manager import TimeProgramManager
@@ -77,6 +78,28 @@ OBSOLETE_ENTITY_UNIQUE_IDS = {
         )
     },
 }
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate registry presentation without changing stable entity IDs."""
+
+    if entry.version < 2:
+        registry = er.async_get(hass)
+        for parameter_name in WRITE_BACKED_PARAMETER_NAMES:
+            unique_id = f"weishaupt_{parameter_name.lower().replace(' ', '_')}"
+            entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+            if entity_id is None:
+                continue
+            registry_entry = registry.async_get(entity_id)
+            if registry_entry is not None and registry_entry.hidden_by is None:
+                registry.async_update_entity(
+                    entity_id,
+                    hidden_by=er.RegistryEntryHider.INTEGRATION,
+                )
+
+        hass.config_entries.async_update_entry(entry, version=2)
+
+    return True
 
 
 def _remove_obsolete_entities(
@@ -239,7 +262,7 @@ def _register_services(hass: HomeAssistant) -> None:
         target = str(call.data.get("target", "start")).lower()
         date_str = call.data.get("date")
 
-        if heating_circuit not in (1, 2):
+        if heating_circuit not in (0, 1, 2):
             raise validation_error("invalid_heating_circuit", value=heating_circuit)
         if target not in ("start", "end"):
             raise validation_error("invalid_holiday_target", value=target)

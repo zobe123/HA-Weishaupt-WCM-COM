@@ -25,6 +25,7 @@ from .const import (
     ERROR_CODE_KEY,
     ERROR_CODE_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
+    WRITE_BACKED_PARAMETER_NAMES,
 )
 from .base_entity import WeishauptBaseEntity
 from .localization import (
@@ -131,6 +132,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 )
             )
         elif self._sensor_name in (
+            "WTC HK1 Urlaubstemperaturniveau",
             "HK1 Urlaubstemperaturniveau",
             "HK2 Urlaubstemperaturniveau",
         ):
@@ -150,6 +152,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # entspricht: weishaupt_<slug>
         # Beispiel: weishaupt_hk1_gemischte_außentemperatur
         self._attr_unique_id = f"weishaupt_{slug}"
+
+        # Keep legacy read-only counterparts alive for automations/history but
+        # hide them from normal UI surfaces.  The matching select/number is the
+        # visible canonical entity and already exposes the current readback.
+        if self._sensor_name in WRITE_BACKED_PARAMETER_NAMES:
+            self._attr_entity_registry_visible_default = False
 
         # Expert-/Fachmann-Werte als Diagnose-Entities kennzeichnen,
         # damit sie im Gerät in einem eigenen Abschnitt erscheinen.
@@ -172,11 +180,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:pump"
         elif self._sensor_name in ("HK1 Config Voltage", "HK2 Config Voltage"):
             self._attr_icon = "mdi:flash-triangle-outline"
-        elif self._sensor_name in ("HK1 Config HK Type", "HK2 Config HK Type"):
+        elif self._sensor_name in ("WTC HK1 Config HK Type", "HK1 Config HK Type", "HK2 Config HK Type"):
             self._attr_icon = "mdi:radiator"
-        elif self._sensor_name in ("HK1 Config Regelvariante", "HK2 Config Regelvariante"):
+        elif self._sensor_name in ("WTC HK1 Config Regelvariante", "HK1 Config Regelvariante", "HK2 Config Regelvariante"):
             self._attr_icon = "mdi:chart-bell-curve"
-        elif self._sensor_name in ("HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
+        elif self._sensor_name in ("WTC HK1 Config Ext Room Sensor", "HK1 Config Ext Room Sensor", "HK2 Config Ext Room Sensor"):
             self._attr_icon = "mdi:home-thermometer-outline"
 
         # Kessel-/HK-Prozesswerte: Icons, wo es eindeutig ist
@@ -214,16 +222,24 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:calendar-clock"
         elif self._sensor_name == "System Time":
             self._attr_icon = "mdi:clock-time-four-outline"
-        elif self._sensor_name in ("HK1 Holiday Start", "HK1 Holiday End", "HK2 Holiday Start", "HK2 Holiday End"):
+        elif self._sensor_name in (
+            "WTC HK1 Holiday Start", "WTC HK1 Holiday End",
+            "HK1 Holiday Start", "HK1 Holiday End",
+            "HK2 Holiday Start", "HK2 Holiday End",
+        ):
             self._attr_icon = "mdi:calendar-star"
-        elif self._sensor_name in ("HK1 Urlaubstemperaturniveau", "HK2 Urlaubstemperaturniveau"):
+        elif self._sensor_name in (
+            "WTC HK1 Urlaubstemperaturniveau",
+            "HK1 Urlaubstemperaturniveau",
+            "HK2 Urlaubstemperaturniveau",
+        ):
             self._attr_icon = "mdi:snowflake"
         elif self._sensor_name in ("DST Start", "DST End"):
             self._attr_icon = "mdi:calendar-clock"
 
-        elif self._sensor_name in ("HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
+        elif self._sensor_name in ("WTC HK1 Gemischte Außentemperatur", "HK1 Gemischte Außentemperatur", "HK2 Gemischte Außentemperatur"):
             self._attr_icon = "mdi:thermometer"
-        elif self._sensor_name in ("HK1 Raumtemperatur", "HK2 Raumtemperatur"):
+        elif self._sensor_name in ("WTC HK1 Raumtemperatur", "HK1 Raumtemperatur", "HK2 Raumtemperatur"):
             self._attr_icon = "mdi:home-thermometer"
         elif self._sensor_name in ("HK1 Vorlauftemperatur", "HK2 Vorlauftemperatur"):
             self._attr_icon = "mdi:thermometer"
@@ -231,7 +247,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:thermometer-water"
         elif self._sensor_name in ("HK1 Zirkulationstemperatur", "HK2 Zirkulationstemperatur"):
             self._attr_icon = "mdi:pipe"
-        elif self._sensor_name in ("HK1 Solltemperatur", "HK2 Solltemperatur", "HK1 Solltemperatur System", "HK2 Solltemperatur System"):
+        elif self._sensor_name in (
+            "WTC HK1 Solltemperatur", "WTC HK1 Solltemperatur System",
+            "HK1 Solltemperatur", "HK2 Solltemperatur",
+            "HK1 Solltemperatur System", "HK2 Solltemperatur System",
+        ):
             self._attr_icon = "mdi:thermostat"
 
         # Entity-ID wird von Home Assistant aus name/unique_id generiert.
@@ -334,98 +354,37 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     self._attr_available = False
                     return None
 
-            if self._sensor_name == "HK1 Holiday Start":
-                day = data.get("HK1 Holiday Start Day")
-                month = data.get("HK1 Holiday Start Month")
-                year_raw = data.get("HK1 Holiday Start Year")
-                # Jahr 0 bedeutet "nicht gesetzt"
-                if not year_raw:
-                    self._attr_available = True
-                    return "--"
-                if not day or not month:
-                    self._attr_available = False
-                    return None
-                year = 2000 + year_raw
-                try:
-                    self._attr_available = True
-                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
-                except (TypeError, ValueError):
-                    self._attr_available = False
-                    return None
+            for prefix in ("WTC HK1", "HK1", "HK2"):
+                for boundary in ("Start", "End"):
+                    if self._sensor_name == f"{prefix} Holiday {boundary}":
+                        day = data.get(f"{prefix} Holiday {boundary} Day")
+                        month = data.get(f"{prefix} Holiday {boundary} Month")
+                        year_raw = data.get(f"{prefix} Holiday {boundary} Year")
+                        if not year_raw:
+                            self._attr_available = True
+                            return "--"
+                        if not day or not month:
+                            self._attr_available = False
+                            return None
+                        try:
+                            self._attr_available = True
+                            return (
+                                f"{2000 + int(year_raw):04d}-"
+                                f"{int(month):02d}-{int(day):02d}"
+                            )
+                        except (TypeError, ValueError):
+                            self._attr_available = False
+                            return None
 
-            if self._sensor_name == "HK1 Holiday End":
-                day = data.get("HK1 Holiday End Day")
-                month = data.get("HK1 Holiday End Month")
-                year_raw = data.get("HK1 Holiday End Year")
-                if not year_raw:
+                if self._sensor_name == f"{prefix} Urlaubstemperaturniveau":
+                    level = data.get(f"{prefix} Holiday Temp Level")
+                    if level is None:
+                        self._attr_available = False
+                        return None
                     self._attr_available = True
-                    return "--"
-                if not day or not month:
-                    self._attr_available = False
-                    return None
-                year = 2000 + year_raw
-                try:
-                    self._attr_available = True
-                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
-                except (TypeError, ValueError):
-                    self._attr_available = False
-                    return None
-
-            if self._sensor_name == "HK1 Urlaubstemperaturniveau":
-                level = data.get("HK1 Holiday Temp Level")
-                if level is None:
-                    self._attr_available = False
-                    return None
-                self._attr_available = True
-                return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
-                    level, f"unknown_{level}"
-                )
-
-            if self._sensor_name == "HK2 Holiday Start":
-                day = data.get("HK2 Holiday Start Day")
-                month = data.get("HK2 Holiday Start Month")
-                year_raw = data.get("HK2 Holiday Start Year")
-                if not year_raw:
-                    self._attr_available = True
-                    return "--"
-                if not day or not month:
-                    self._attr_available = False
-                    return None
-                year = 2000 + year_raw
-                try:
-                    self._attr_available = True
-                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
-                except (TypeError, ValueError):
-                    self._attr_available = False
-                    return None
-
-            if self._sensor_name == "HK2 Holiday End":
-                day = data.get("HK2 Holiday End Day")
-                month = data.get("HK2 Holiday End Month")
-                year_raw = data.get("HK2 Holiday End Year")
-                if not year_raw:
-                    self._attr_available = True
-                    return "--"
-                if not day or not month:
-                    self._attr_available = False
-                    return None
-                year = 2000 + year_raw
-                try:
-                    self._attr_available = True
-                    return f"{year:04d}-{int(month):02d}-{int(day):02d}"
-                except (TypeError, ValueError):
-                    self._attr_available = False
-                    return None
-
-            if self._sensor_name == "HK2 Urlaubstemperaturniveau":
-                level = data.get("HK2 Holiday Temp Level")
-                if level is None:
-                    self._attr_available = False
-                    return None
-                self._attr_available = True
-                return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
-                    level, f"unknown_{level}"
-                )
+                    return SELECT_OPTION_KEYS["holiday_temperature_level"].get(
+                        level, f"unknown_{level}"
+                    )
 
             if self._sensor_name == "DST Start":
                 day = data.get("DST Start Day")
@@ -490,12 +449,20 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                     )
                 return mapping.get(value, f"code_{value}")
 
-            if self._sensor_name in ("HK1 Expert Reduziertbetrieb", "HK2 Expert Reduziertbetrieb"):
+            if self._sensor_name in (
+                "WTC HK1 Expert Reduziertbetrieb",
+                "HK1 Expert Reduziertbetrieb",
+                "HK2 Expert Reduziertbetrieb",
+            ):
                 return SELECT_OPTION_KEYS["reduced_mode"].get(
                     value, f"code_{value}"
                 )
 
-            if self._sensor_name in ("HK1 Expert Raumthermostat", "HK2 Expert Raumthermostat"):
+            if self._sensor_name in (
+                "WTC HK1 Expert Raumthermostat",
+                "HK1 Expert Raumthermostat",
+                "HK2 Expert Raumthermostat",
+            ):
                 return SELECT_OPTION_KEYS["room_thermostat"].get(
                     value, f"code_{value}"
                 )

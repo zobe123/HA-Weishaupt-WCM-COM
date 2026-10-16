@@ -29,6 +29,9 @@ const = load_module(f"{PACKAGE}.const", COMPONENT / "const.py")
 localization = load_module(
     f"{PACKAGE}.localization", COMPONENT / "localization.py"
 )
+device_model = load_module(
+    f"{PACKAGE}.device_model", COMPONENT / "device_model.py"
+)
 
 
 def leaf_paths(value, prefix=()):
@@ -118,9 +121,43 @@ class LocalizationContractTest(unittest.TestCase):
     def test_diagnostics_documents_correct_physical_bus_mapping(self) -> None:
         source = (COMPONENT / "diagnostics.py").read_text(encoding="utf-8")
         self.assertIn('"0": "WTC-HK1 / FS1"', source)
-        self.assertIn('"1": "EM-HK2 / radiators"', source)
-        self.assertIn('"2": "EM-HK3 / underfloor heating"', source)
+        self.assertIn('"1": "HK2 radiators / FS2 + EM2"', source)
+        self.assertIn('"2": "HK3 underfloor heating / FS3 + EM3"', source)
         self.assertNotIn("password", source.lower())
+
+    def test_device_routing_separates_fs_circuits_from_global_values(self) -> None:
+        self.assertEqual(
+            device_model.device_descriptor("WTC HK1 User Betriebsart"),
+            (
+                "weishaupt_wtc_hk1",
+                "Weishaupt WCM-COM · WTC-HK1 / FS1",
+            ),
+        )
+        self.assertEqual(
+            device_model.device_descriptor("Kessel Config Version FS")[0],
+            "weishaupt_wtc_hk1",
+        )
+        self.assertEqual(
+            device_model.device_descriptor("HK1 Raumtemperatur"),
+            (
+                "weishaupt_hk1",
+                "Weishaupt WCM-COM · HK2 Radiatoren / FS2",
+            ),
+        )
+        self.assertEqual(
+            device_model.device_descriptor("HK2 Raumtemperatur"),
+            (
+                "weishaupt_hk2",
+                "Weishaupt WCM-COM · HK3 FBH / FS3",
+            ),
+        )
+        self.assertEqual(
+            device_model.device_descriptor("Kesseltemperatur"),
+            (
+                "weishaupt_kessel",
+                "Weishaupt WCM-COM · WTC / Therme-Kessel",
+            ),
+        )
 
     def test_wtc_hc1_sensor_has_explicit_heating_mode_readback(self) -> None:
         source = (COMPONENT / "sensor.py").read_text(encoding="utf-8")

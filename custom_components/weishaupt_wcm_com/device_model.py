@@ -19,10 +19,10 @@ def device_descriptor(parameter_name: str) -> tuple[str, str]:
     if parameter_name.startswith("WTC HK1 ") or parameter_name == "Kessel Config Version FS":
         return "weishaupt_wtc_hk1", "Weishaupt WCM-COM · WTC-HK1 / FS1"
     if parameter_name.startswith("HK1 "):
-        return "weishaupt_hk1", "Weishaupt WCM-COM · HK2 Radiatoren"
+        return "weishaupt_hk1", "Weishaupt WCM-COM · HK2 Radiatoren / FS2"
     if parameter_name.startswith("HK2 "):
-        return "weishaupt_hk2", "Weishaupt WCM-COM · HK3 FBH"
-    return "weishaupt_kessel", "Weishaupt WCM-COM · WTC / Kessel"
+        return "weishaupt_hk2", "Weishaupt WCM-COM · HK3 FBH / FS3"
+    return "weishaupt_kessel", "Weishaupt WCM-COM · WTC / Therme-Kessel"
 
 
 def device_info(parameter_name: str, *, sw_version: str | None = None) -> dict[str, Any]:

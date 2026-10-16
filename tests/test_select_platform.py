@@ -171,6 +171,51 @@ class SelectPlatformTest(unittest.TestCase):
         api.write_parameter.assert_called_once_with(274, 0, 6, 5)
         coordinator.async_request_refresh.assert_awaited_once()
 
+    def test_wtc_hk1_mirrors_supported_fs_selects_on_bus_zero(self) -> None:
+        coordinator = Mock()
+        coordinator.data = {
+            "WTC HK1 User Mode Kind": "hk",
+            "WTC HK1 Config HK Type": 4,
+            "WTC HK1 Config Regelvariante": 2,
+            "WTC HK1 Config Ext Room Sensor": 1,
+            "WTC HK1 Expert Reduziertbetrieb": 0,
+            "WTC HK1 Expert Raumthermostat": 0,
+            "WTC HK1 Holiday Temp Level": 1,
+        }
+        hass = Mock()
+        hass.data = {
+            "weishaupt_wcm_com": {
+                "entry-1": {
+                    "coordinator": coordinator,
+                    "api": Mock(),
+                    "allow_write": True,
+                }
+            }
+        }
+        added: list[object] = []
+        asyncio.run(
+            select_module.async_setup_entry(
+                hass,
+                Mock(entry_id="entry-1"),
+                lambda entities: added.extend(entities),
+            )
+        )
+
+        wtc_entities = [
+            entity for entity in added
+            if entity._sensor_name.startswith("WTC HK1")
+        ]
+        self.assertEqual(len(wtc_entities), 7)
+        self.assertTrue(all(entity._bus == 0 for entity in wtc_entities))
+        self.assertTrue(all(entity._modultyp == 6 for entity in wtc_entities))
+        self.assertEqual(
+            {
+                frozenset(entity.device_info["identifiers"])
+                for entity in wtc_entities
+            },
+            {frozenset({("weishaupt_wcm_com", "weishaupt_wtc_hk1")})},
+        )
+
     def test_legacy_bus_one_and_two_unique_ids_are_unchanged(self) -> None:
         coordinator = Mock(data={})
         bus_one = select_module.WeishauptHKConfigSelect(

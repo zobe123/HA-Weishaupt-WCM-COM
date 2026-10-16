@@ -14,15 +14,22 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   sends parameter 274 exclusively to bus 0 / FS module 6.
 - Separated WTC/boiler process values from the integrated WTC heating circuit
   in Home Assistant's device view.
+- Gave FS1 the same supported configuration, setpoint, optimisation, frost,
+  room and holiday entities as FS2/FS3, while keeping EM-only values on the
+  two extension-module circuits.
+- Kept global burner, boiler, domestic-hot-water and plant values on the
+  dedicated WTC / boiler device.
 - Removed repeated circuit names from entities shown inside a circuit device;
   the device supplies the context while entity rows stay short and readable.
+- Hid redundant read-only sensor counterparts of writable controls from normal
+  UI surfaces without deleting their stable IDs, history or automation access.
 
 ### Compatibility
 
 - Preserved every existing bus-1/bus-2 unique ID and device identifier; only
   their displayed physical circuit names change.
 - Added regression coverage for bus-0 readback, all operating-mode options,
-  the bus-0 write target and legacy IDs.
+  the bus-0 write target, FS-core symmetry, EM separation and legacy IDs.
 
 ## [1.3.0]
 

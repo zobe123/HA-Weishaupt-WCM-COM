@@ -463,6 +463,41 @@ async def async_setup_entry(
         )
     )
 
+    # WTC-integrated FS1 mirrors the bus-1/bus-2 heating-circuit controls.
+    # Add only values returned by the appliance so unsupported settings do not
+    # create unavailable clutter on the device page.
+    for name, parameter_id, minimum, maximum, step, scale, unit in (
+        ("WTC HK1 Expert Frostheizgrenze", 702, -20, 0, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 Expert Ein Opti MAX", 272, 0, 240, 15, 1.0 / 15.0, UnitOfTime.MINUTES),
+        ("WTC HK1 User Normal Raumtemperatur", 5, 10, 35, 0.5, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Absenk Raumtemperatur", 8, 10, 35, 0.5, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Normal VL Soll", 297, 8, 85, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Absenk VL Soll", 298, 8, 85, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Steilheit", 270, 2.5, 40, 0.5, 1.0, None),
+        ("WTC HK1 User Raumfrosttemperatur", 2580, 4, 35, 0.5, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User SoWi Umschaltung", 278, 8, 30, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Normal WW Soll", 19, 8, 80, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Absenk WW Soll", 650, 8, 80, 1, 1.0, UnitOfTemperature.CELSIUS),
+        ("WTC HK1 User Vorverlegung", 2418, 5, 270, 5, 1.0, UnitOfTime.MINUTES),
+    ):
+        if name in (coordinator.data or {}):
+            numbers.append(
+                WeishauptExpertNumber(
+                    coordinator,
+                    api,
+                    name,
+                    parameter_id=parameter_id,
+                    min_value=minimum,
+                    max_value=maximum,
+                    step=step,
+                    scale=scale,
+                    unit=unit,
+                    bus=0,
+                    modultyp=6,
+                    allow_write=allow_write,
+                )
+            )
+
     # Additional values exposed by the original User/Expert WebUI. They are
     # added only when the appliance returned the parameter during discovery.
     for hk in (1, 2):

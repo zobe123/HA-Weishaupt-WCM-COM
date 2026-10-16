@@ -40,8 +40,8 @@ async def async_get_config_entry_diagnostics(
         "entry_state": entry.state.value,
         "bus_mapping": {
             "0": "WTC-HK1 / FS1",
-            "1": "EM-HK2 / radiators",
-            "2": "EM-HK3 / underfloor heating",
+            "1": "HK2 radiators / FS2 + EM2",
+            "2": "HK3 underfloor heating / FS3 + EM3",
         },
         "bus_parameters": bus_parameters,
         "coordinator_data": coordinator_data,

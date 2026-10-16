@@ -22,11 +22,24 @@ def load_parameters() -> list[dict]:
     """Read PARAMETERS without importing Home Assistant."""
 
     module = ast.parse(CONST_PATH.read_text(encoding="utf-8"))
+    parameters: list[dict] = []
     for node in module.body:
-        if not isinstance(node, ast.Assign):
-            continue
-        if any(isinstance(target, ast.Name) and target.id == "PARAMETERS" for target in node.targets):
-            return ast.literal_eval(node.value)
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "PARAMETERS"
+            for target in node.targets
+        ):
+            parameters.extend(ast.literal_eval(node.value))
+        elif (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Attribute)
+            and isinstance(node.value.func.value, ast.Name)
+            and node.value.func.value.id == "PARAMETERS"
+            and node.value.func.attr == "extend"
+        ):
+            parameters.extend(ast.literal_eval(node.value.args[0]))
+    if parameters:
+        return parameters
     raise AssertionError("PARAMETERS not found")
 
 
@@ -181,6 +194,31 @@ class ProtocolTest(unittest.TestCase):
         for circuit in (1, 2):
             for parameter_id in (19, 650, 2418, 306, 2414, 2588):
                 self.assertIn((parameter_id, circuit), identities)
+
+    def test_all_three_fs_circuits_share_the_core_parameter_set(self) -> None:
+        parameters = load_parameters()
+        identities = {
+            (item["id"], item.get("bus", 0), item.get("modultyp", 10))
+            for item in parameters
+            if not item.get("virtual")
+        }
+        fs_core = {
+            2, 4, 5, 8, 16, 17, 270, 272, 274, 278, 306, 321, 702,
+            2414, 2419, 2580, 2586,
+        }
+        for bus in (0, 1, 2):
+            for parameter_id in fs_core:
+                with self.subTest(bus=bus, parameter_id=parameter_id):
+                    self.assertIn((parameter_id, bus, 6), identities)
+
+    def test_fs1_does_not_gain_em_only_parameters(self) -> None:
+        identities = {
+            (item["id"], item.get("bus", 0), item.get("modultyp", 10))
+            for item in load_parameters()
+            if not item.get("virtual")
+        }
+        for parameter_id in (15, 857, 1257, 65019):
+            self.assertNotIn((parameter_id, 0, 12), identities)
 
     def test_live_no_value_markers_are_parameter_specific(self) -> None:
         parameters = {item["name"]: item for item in load_parameters()}

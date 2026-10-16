@@ -1200,7 +1200,7 @@
   "services": {
     "set_holiday_date": {
       "name": "Urlaubsdatum setzen",
-      "description": "Urlaubsbeginn oder -ende für HK2 Radiatoren/HK3 FBH setzen.",
+      "description": "Urlaubsbeginn oder -ende für WTC-HK1/FS1, HK2 Radiatoren/FS2 oder HK3 FBH/FS3 setzen.",
       "fields": {
         "config_entry_id": {
           "name": "WCM-COM-Gerät"

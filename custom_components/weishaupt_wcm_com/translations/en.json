@@ -1200,7 +1200,7 @@
   "services": {
     "set_holiday_date": {
       "name": "Set holiday date",
-      "description": "Set the holiday start or end date for HC2 radiators/HC3 underfloor heating.",
+      "description": "Set the holiday start or end date for WTC-HC1/FS1, HC2 radiators/FS2 or HC3 underfloor heating/FS3.",
       "fields": {
         "config_entry_id": {
           "name": "WCM-COM device"

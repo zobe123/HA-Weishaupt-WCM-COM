@@ -73,8 +73,10 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `Pumpe`, `Flamme`, `Heizung`, `Warmwasser` – on/off status
 - `Status` – error/warning code with mapped description
 - `WTC-HC1 / FS1` – the heating circuit integrated in the WTC (physical bus 0)
-- `HC2 radiators` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
-- `HC3 underfloor heating` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
+- `HC2 radiators / FS2` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
+- `HC3 underfloor heating / FS3` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
+- `WTC / boiler` – global burner, boiler, domestic-hot-water and plant values
+  that do not belong to one heating circuit
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
 - Active-program calendars expose the effective HC2/HC3 heating schedules plus
   one global hot-water schedule. Circulation is added only when the controller
@@ -91,6 +93,13 @@ The integration queries various parameters from the WCM-COM interface and expose
   entity is created yet.
 
 Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
+
+FS1, FS2 and FS3 use the same device-relative entity names and expose the same
+supported heating-circuit core. Pump, voltage, dedicated flow/circulation and
+EM firmware entities remain exclusive to circuits that physically have an EM
+module. A writable `select` or `number` is the visible canonical entity for a
+setting; its legacy read-only sensor counterpart remains available by entity ID
+for compatibility but is hidden from normal UI surfaces.
 
 ## Usage notes
 

@@ -114,7 +114,7 @@ class WeishauptAPI:
         # Split in mehrere Requests, damit der WCM-COM alle Telegramme
         # beantwortet (begrenzte Anzahl pro Antwort).
         #  - globale Prozesswerte (Kessel)
-        #  - Heizkreis-Prozesswerte (HK1/HK2)
+        #  - Heizkreis-Prozesswerte (FS1/FS2/FS3)
         #  - Heizkreis-Konfig-Parameter (Pumpen, Spannungen, HK-Typ, Ext. Fühler)
         #  - HK-User-Parameter (Betriebsarten & User-Temperaturen)
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
@@ -133,8 +133,7 @@ class WeishauptAPI:
             p
             for p in PARAMETERS
             if ("bus" in p or "modultyp" in p)
-            and not p["name"].startswith("HK1 Config")
-            and not p["name"].startswith("HK2 Config")
+            and " Config " not in p["name"]
             and p.get("page") != "hk_user"
             and not p.get("internal")
             and not p.get("virtual")

@@ -1,6 +1,6 @@
 set_holiday_date:
   name: Set holiday date
-  description: Set HC2 radiators / HC3 underfloor-heating holiday dates via raw parameters.
+  description: Set FS1 / HC2 radiators / HC3 underfloor-heating holiday dates via raw parameters.
   fields:
     config_entry_id:
       name: WCM-COM device
@@ -12,12 +12,12 @@ set_holiday_date:
 
     heating_circuit:
       name: Heating circuit
-      description: 1 = HC2 radiators (bus 1), 2 = HC3 underfloor heating (bus 2)
+      description: 0 = WTC-HC1 / FS1, 1 = HC2 radiators / FS2, 2 = HC3 underfloor heating / FS3
       required: false
       example: 1
       selector:
         number:
-          min: 1
+          min: 0
           max: 2
           step: 1
           mode: box
