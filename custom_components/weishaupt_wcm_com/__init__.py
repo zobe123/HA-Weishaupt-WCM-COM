@@ -124,9 +124,14 @@ def _remove_obsolete_entities(
         unique_ids_by_platform["sensor"].add(f"weishaupt_{slug}")
         unique_ids_by_platform["number"].add(f"weishaupt_{slug}_number")
         if parameter["name"].endswith("Expert Raumthermostat"):
-            hk = 1 if parameter["name"].startswith("HK1") else 2
+            if parameter["name"].startswith("WTC HK1"):
+                select_slug = "wtc_hk1_expert_room_thermostat"
+            elif parameter["name"].startswith("HK1"):
+                select_slug = "hk1_expert_room_thermostat"
+            else:
+                select_slug = "hk2_expert_room_thermostat"
             unique_ids_by_platform["select"].add(
-                f"weishaupt_hk{hk}_expert_room_thermostat_select"
+                f"weishaupt_{select_slug}_select"
             )
 
     for platform, unique_ids in unique_ids_by_platform.items():

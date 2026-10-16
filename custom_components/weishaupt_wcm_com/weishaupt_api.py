@@ -303,6 +303,9 @@ class WeishauptAPI:
                                 value = self.get_signed_value(low_byte, high_byte)
                             elif param["type"] == "value":
                                 value = self.get_value(low_byte, high_byte)
+                                wire_scale = int(param.get("wire_scale", 1))
+                                if wire_scale != 1:
+                                    value = value // wire_scale
                                 # Numerische Prüfung für 'value'
                                 if not isinstance(value, (int, float)):
                                     _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")

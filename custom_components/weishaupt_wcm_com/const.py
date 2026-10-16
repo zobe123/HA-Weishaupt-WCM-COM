@@ -258,7 +258,7 @@ PARAMETERS = [
 PARAMETERS.extend(
     [
         # Configuration
-        {"id": 16, "name": "WTC HK1 Config HK Type", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 16, "name": "WTC HK1 Config HK Type", "type": "value", "bus": 0, "modultyp": 6, "wire_scale": 256},
         {"id": 2419, "name": "WTC HK1 Config Regelvariante", "type": "value", "bus": 0, "modultyp": 6},
         {"id": 321, "name": "WTC HK1 Config Ext Room Sensor", "type": "value", "bus": 0, "modultyp": 6},
 
@@ -282,10 +282,10 @@ PARAMETERS.extend(
 
         # Expert values
         {"id": 306, "name": "WTC HK1 Expert Reduziertbetrieb", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert"},
-        {"id": 702, "name": "WTC HK1 Expert Frostheizgrenze", "type": "integer_temperature", "bus": 0, "modultyp": 6, "page": "hk_expert", "no_value": 10},
+        {"id": 702, "name": "WTC HK1 Expert Frostheizgrenze", "type": "integer_temperature", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
         {"id": 272, "name": "WTC HK1 Expert Ein Opti MAX", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert"},
         {"id": 2414, "name": "WTC HK1 Expert Ein Opti IST", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
-        {"id": 2588, "name": "WTC HK1 Expert Raumthermostat", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
+        {"id": 2588, "name": "WTC HK1 Expert Raumthermostat", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 32768},
 
         # Holiday values and their virtual presentation entities
         {"id": 283, "name": "WTC HK1 Holiday Start Day", "type": "value", "bus": 0, "modultyp": 6, "internal": True},

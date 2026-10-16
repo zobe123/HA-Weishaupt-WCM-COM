@@ -156,6 +156,37 @@ class ApiTransportTest(unittest.TestCase):
         self.assertNotIn("HK1 User Vorverlegung", data)
         self.assertEqual(data["HK1 User Normal WW Soll"], 50.0)
 
+    def test_bus_zero_high_byte_enum_is_scaled_to_its_option_code(self) -> None:
+        parameters = [
+            {
+                "id": 16,
+                "name": "WTC HK1 Config HK Type",
+                "type": "value",
+                "bus": 0,
+                "modultyp": 6,
+                "wire_scale": 256,
+            },
+            {
+                "id": 2588,
+                "name": "WTC HK1 Expert Raumthermostat",
+                "type": "value",
+                "bus": 0,
+                "modultyp": 6,
+                "no_value": 32768,
+            },
+        ]
+        response = json_response(
+            [[6, 0, 1, 16, 0, 0, 0, 4], [6, 0, 1, 2588, 0, 0, 0, 128]]
+        )
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(api_module.requests, "post", return_value=response),
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        self.assertEqual(data["WTC HK1 Config HK Type"], 4)
+        self.assertNotIn("WTC HK1 Expert Raumthermostat", data)
+
     def test_server_busy_write_raises(self) -> None:
         response = Mock()
         response.text = "<HTML>Sorry, the server is busy.</HTML>"

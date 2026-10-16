@@ -222,6 +222,14 @@ class ProtocolTest(unittest.TestCase):
 
     def test_live_no_value_markers_are_parameter_specific(self) -> None:
         parameters = {item["name"]: item for item in load_parameters()}
+        self.assertEqual(
+            parameters["WTC HK1 Config HK Type"]["wire_scale"],
+            256,
+        )
+        self.assertEqual(
+            parameters["WTC HK1 Expert Raumthermostat"]["no_value"],
+            32768,
+        )
         for circuit in (1, 2):
             self.assertEqual(
                 parameters[f"HK{circuit} User Vorverlegung"]["no_value"],

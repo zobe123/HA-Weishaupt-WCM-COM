@@ -171,6 +171,32 @@ class SelectPlatformTest(unittest.TestCase):
         api.write_parameter.assert_called_once_with(274, 0, 6, 5)
         coordinator.async_request_refresh.assert_awaited_once()
 
+    def test_wtc_hk1_high_byte_enum_write_preserves_wire_encoding(self) -> None:
+        coordinator = Mock(data={"WTC HK1 Config HK Type": 4})
+        coordinator.async_request_refresh = AsyncMock()
+        api = Mock()
+        entity = select_module.WeishauptHKConfigSelect(
+            coordinator,
+            api,
+            "WTC HK1 Config HK Type",
+            "wtc_hk1_config_hk_type",
+            select_module.HK_CONFIG_HK_TYPE_MAP,
+            parameter_id=16,
+            bus=0,
+            modultyp=6,
+            allow_write=True,
+        )
+
+        async def run_executor(function, *args):
+            return function(*args)
+
+        entity.hass = Mock()
+        entity.hass.async_add_executor_job = run_executor
+        asyncio.run(entity.async_select_option("inside_boiler"))
+
+        api.write_parameter.assert_called_once_with(16, 0, 6, 1024)
+        coordinator.async_request_refresh.assert_awaited_once()
+
     def test_wtc_hk1_mirrors_supported_fs_selects_on_bus_zero(self) -> None:
         coordinator = Mock()
         coordinator.data = {

@@ -17,6 +17,8 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 - Gave FS1 the same supported configuration, setpoint, optimisation, frost,
   room and holiday entities as FS2/FS3, while keeping EM-only values on the
   two extension-module circuits.
+- Decoded the WTC-integrated heating-circuit type with its bus-0 high-byte
+  wire format and suppresses unsupported FS1 expert controls cleanly.
 - Kept global burner, boiler, domestic-hot-water and plant values on the
   dedicated WTC / boiler device.
 - Removed repeated circuit names from entities shown inside a circuit device;

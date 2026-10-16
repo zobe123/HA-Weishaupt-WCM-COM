@@ -309,6 +309,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             module_type=modultyp,
         )
         self._data_name = str(parameter["name"])
+        self._wire_scale = int(parameter.get("wire_scale", 1))
 
         # Schönerer Anzeigename ohne "Config"-Präfix + passende Icons
         if sensor_name in ("WTC HK1 Config HK Type", "HK1 Config HK Type"):
@@ -417,7 +418,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._parameter_id,
             self._bus,
             self._modultyp,
-            code,
+            code * self._wire_scale,
         )
 
         # Nach dem Schreiben direkt ein Update anstoßen
