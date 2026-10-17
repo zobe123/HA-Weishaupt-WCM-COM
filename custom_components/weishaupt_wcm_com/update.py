@@ -52,8 +52,12 @@ async def async_setup_entry(
         update_method=async_update_firmware,
         update_interval=FIRMWARE_SCAN_INTERVAL,
     )
-    await coordinator.async_config_entry_first_refresh()
     async_add_entities([WeishauptFirmwareUpdateEntity(coordinator)])
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_config_entry_first_refresh(),
+        "weishaupt_wcm_com_firmware_check",
+    )
 
 
 class WeishauptFirmwareUpdateEntity(CoordinatorEntity, UpdateEntity):

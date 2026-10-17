@@ -134,14 +134,21 @@ class UpdatePlatformTest(unittest.TestCase):
             return function(*args)
 
         hass.async_add_executor_job = run_executor
-        added = []
-        asyncio.run(
-            update_module.async_setup_entry(
-                hass,
-                Mock(entry_id="entry-1"),
-                lambda entities: added.extend(entities),
-            )
+        entry = Mock(entry_id="entry-1")
+        background_tasks = []
+        entry.async_create_background_task.side_effect = (
+            lambda hass, coroutine, name: background_tasks.append(coroutine)
         )
+        added = []
+
+        async def setup_and_refresh():
+            await update_module.async_setup_entry(
+                hass, entry, lambda entities: added.extend(entities)
+            )
+            self.assertEqual(len(background_tasks), 1)
+            await background_tasks[0]
+
+        asyncio.run(setup_and_refresh())
 
         api.check_firmware_update.assert_called_once_with()
         self.assertEqual(len(added), 1)
@@ -168,14 +175,22 @@ class UpdatePlatformTest(unittest.TestCase):
             return function(*args)
 
         hass.async_add_executor_job = run_executor
-        added = []
-        asyncio.run(
-            update_module.async_setup_entry(
-                hass,
-                Mock(entry_id="entry-1"),
-                lambda entities: added.extend(entities),
-            )
+        entry = Mock(entry_id="entry-1")
+        background_tasks = []
+        entry.async_create_background_task.side_effect = (
+            lambda hass, coroutine, name: background_tasks.append(coroutine)
         )
+        added = []
+
+        async def setup_and_refresh():
+            await update_module.async_setup_entry(
+                hass, entry, lambda entities: added.extend(entities)
+            )
+            self.assertEqual(len(added), 1)
+            self.assertFalse(added[0].available)
+            await background_tasks[0]
+
+        asyncio.run(setup_and_refresh())
 
         self.assertEqual(len(added), 1)
         self.assertFalse(added[0].available)
