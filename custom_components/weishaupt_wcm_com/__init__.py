@@ -10,7 +10,7 @@ import logging
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -34,6 +34,7 @@ from .const import (
     DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
     CONF_EXTERNAL_GAS_METER_ENTITY,
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
+    CONNECTION_DATA_KEYS,
     PARAMETERS,
     WRITE_BACKED_PARAMETER_NAMES,
     normalize_host,
@@ -158,6 +159,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_kwargs["unique_id"] = normalize_host(host)
         hass.config_entries.async_update_entry(entry, **update_kwargs)
 
+    if entry.version < 6:
+        data = dict(entry.data)
+        options = dict(entry.options)
+        for key in CONNECTION_DATA_KEYS:
+            if key in options:
+                data[key] = options.pop(key)
+
+        update_kwargs = {
+            "version": 6,
+            "data": data,
+            "options": options,
+        }
+        host = data.get(CONF_HOST)
+        if host:
+            data[CONF_HOST] = normalize_host(host)
+        if entry.unique_id is None and host:
+            update_kwargs["unique_id"] = normalize_host(host)
+        hass.config_entries.async_update_entry(entry, **update_kwargs)
+
     return True
 
 
@@ -203,11 +223,9 @@ def _remove_obsolete_entities(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
 
-    # Prefer legacy connection values accidentally stored in options by <=1.2.10,
-    # while the corrected options flow persists them in entry.data.
-    host: str | None = entry.options.get("host", entry.data.get("host"))
-    username: str | None = entry.options.get("username", entry.data.get("username"))
-    password: str | None = entry.options.get("password", entry.data.get("password"))
+    host: str | None = entry.data.get(CONF_HOST)
+    username: str | None = entry.data.get(CONF_USERNAME)
+    password: str | None = entry.data.get(CONF_PASSWORD)
 
     # Read scan interval, write flag and advanced logging from options (or use defaults)
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -281,8 +299,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services only once per integration domain
     if not hass.services.has_service(DOMAIN, "set_holiday_date"):
         _register_services(hass)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
     await async_register_frontend(
@@ -512,33 +528,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
         async_unregister_frontend(hass, entry.entry_id)
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update.
-
-    Called when options (e.g. scan interval) are changed in the UI.
-    """
-
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
-    advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
-
-    entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-    if not entry_data:
-        return
-
-    coordinator: DataUpdateCoordinator | None = entry_data.get("coordinator")
-    if coordinator is None:
-        return
-
-    # Reload the entry so that entities pick up changed options (e.g. allow_write)
-    await hass.config_entries.async_reload(entry.entry_id)
-
-    _LOGGER.info(
-        "Reloaded config entry %s after options update (scan_interval=%s, allow_write=%s, advanced_logging=%s)",
-        entry.entry_id,
-        scan_interval,
-        allow_write,
-        advanced_logging,
-    )

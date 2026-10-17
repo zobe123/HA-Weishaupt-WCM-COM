@@ -4,6 +4,7 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 
 DOMAIN = 'weishaupt_wcm_com'
 NAME_PREFIX = "Weishaupt "
+CONNECTION_DATA_KEYS = ("host", "username", "password")
 
 
 def normalize_host(host: str) -> str:

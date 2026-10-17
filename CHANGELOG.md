@@ -4,6 +4,22 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.4b1]
+
+### Fixed
+
+- Show a translated message when setup is aborted because the WCM-COM is
+  already configured.
+- Move legacy connection settings out of config-entry options so updated
+  credentials cannot be shadowed by stale values.
+- Schedule exactly one reload after successful reauthentication or options
+  changes.
+
+### Tests
+
+- Add behavioral Home Assistant config-flow coverage for duplicate setup,
+  authentication failures, legacy migration and reload scheduling.
+
 ## [1.4.3]
 
 ### Improved

@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This WCM-COM is already configured",
       "reauth_successful": "Authentication updated successfully",
       "reauth_unsuccessful": "The integration entry could not be found"
     },
