@@ -196,7 +196,7 @@ class ApiTransportTest(unittest.TestCase):
             with self.assertRaises(api_module.WeishauptCommunicationError):
                 api.write_parameter(274, 1, 6, 11)
 
-    def test_batch_write_uses_generic_type_and_keeps_order(self) -> None:
+    def test_batch_write_uses_standard_type_and_keeps_order(self) -> None:
         response = json_response([])
         with patch.object(api_module.requests, "post", return_value=response) as post:
             api = api_module.WeishauptAPI("wcm.test")
@@ -209,9 +209,9 @@ class ApiTransportTest(unittest.TestCase):
             )
 
         payloads = [call.kwargs["data"] for call in post.call_args_list]
-        self.assertIn('[[6, 1, 2, 283, 0, 1, 1, 0]]', payloads[0])
-        self.assertIn('[[6, 1, 2, 284, 0, 1, 8, 0]]', payloads[1])
-        self.assertIn('[[6, 1, 2, 285, 0, 1, 26, 0]]', payloads[2])
+        self.assertIn('[[6, 1, 2, 283, 0, 0, 1, 0]]', payloads[0])
+        self.assertIn('[[6, 1, 2, 284, 0, 0, 8, 0]]', payloads[1])
+        self.assertIn('[[6, 1, 2, 285, 0, 0, 26, 0]]', payloads[2])
 
     def test_time_program_read_uses_webui_groups_and_byte_order(self) -> None:
         active = (24 << 8) | 32  # 06:00-08:00
@@ -240,6 +240,7 @@ class ApiTransportTest(unittest.TestCase):
         ids = (5136, 5137, 5138)
         state = {parameter_id: 32896 for parameter_id in ids}
         commands = []
+        write_types = []
 
         def respond(*args, **kwargs):
             payload = json.loads(kwargs["data"])
@@ -263,6 +264,7 @@ class ApiTransportTest(unittest.TestCase):
                     ]
                 )
             telegram = telegrams[0]
+            write_types.append(telegram[5])
             state[telegram[3]] = telegram[6] + 256 * telegram[7]
             return json_response([])
 
@@ -273,7 +275,82 @@ class ApiTransportTest(unittest.TestCase):
             )
 
         self.assertEqual(commands, [1, 2, 2, 2, 1])
+        self.assertEqual(write_types, [protocol.STANDARD_TELEGRAM] * 3)
         self.assertEqual(tuple(state[parameter_id] for parameter_id in ids), values)
+
+    def test_time_program_write_rejects_invalid_original_before_writing(self) -> None:
+        ids = (5136, 5137, 5138)
+        original = {ids[0]: 257, ids[1]: 32896, ids[2]: 32896}
+        values = ((24 << 8) | 32, (48 << 8) | 52, 32896)
+        api = api_module.WeishauptAPI("wcm.test")
+
+        with (
+            patch.object(api, "_read_raw_parameters_unlocked", return_value=original),
+            patch.object(api, "_write_parameter_unlocked") as write,
+        ):
+            with self.assertRaisesRegex(
+                api_module.WeishauptCommunicationError,
+                "original day is invalid",
+            ):
+                api.write_time_program_day(1, "heating_1", "monday", values)
+
+        write.assert_not_called()
+
+    def test_time_program_failed_verification_restores_and_verifies_original(self) -> None:
+        ids = (5136, 5137, 5138)
+        original_values = ((24 << 8) | 32, 32896, 32896)
+        requested_values = ((28 << 8) | 36, 32896, 32896)
+        original = dict(zip(ids, original_values))
+        mismatched = dict(zip(ids, (requested_values[0], 0, 32896)))
+        api = api_module.WeishauptAPI("wcm.test")
+
+        with (
+            patch.object(
+                api,
+                "_read_raw_parameters_unlocked",
+                side_effect=[original, mismatched, original],
+            ),
+            patch.object(api, "_write_parameter_unlocked") as write,
+        ):
+            with self.assertRaisesRegex(
+                api_module.WeishauptCommunicationError,
+                "verification failed after writing",
+            ):
+                api.write_time_program_day(
+                    1, "heating_1", "monday", requested_values
+                )
+
+        self.assertEqual(
+            [call.args for call in write.call_args_list],
+            [
+                *(zip(ids, (1,) * 3, (6,) * 3, requested_values)),
+                *(zip(ids, (1,) * 3, (6,) * 3, original_values)),
+            ],
+        )
+
+    def test_time_program_failed_rollback_reports_compound_error(self) -> None:
+        ids = (5136, 5137, 5138)
+        original_values = ((24 << 8) | 32, 32896, 32896)
+        requested_values = ((28 << 8) | 36, 32896, 32896)
+        original = dict(zip(ids, original_values))
+        mismatched = dict(zip(ids, (requested_values[0], 0, 32896)))
+        api = api_module.WeishauptAPI("wcm.test")
+
+        with (
+            patch.object(
+                api,
+                "_read_raw_parameters_unlocked",
+                side_effect=[original, mismatched, mismatched],
+            ),
+            patch.object(api, "_write_parameter_unlocked"),
+        ):
+            with self.assertRaisesRegex(
+                api_module.WeishauptCommunicationError,
+                "rollback could not be verified",
+            ):
+                api.write_time_program_day(
+                    1, "heating_1", "monday", requested_values
+                )
 
 
 if __name__ == "__main__":

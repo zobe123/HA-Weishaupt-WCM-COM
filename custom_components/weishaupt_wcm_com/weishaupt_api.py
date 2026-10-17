@@ -8,7 +8,6 @@ from requests.auth import HTTPDigestAuth
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 from .protocol import (
-    GENERIC_TELEGRAM,
     READ_COMMAND,
     STANDARD_TELEGRAM,
     WRITE_COMMAND,
@@ -492,6 +491,10 @@ class WeishauptAPI:
         values = tuple(int(value) for value in encoded_intervals)
         if len(values) != 3:
             raise ValueError("Exactly three encoded intervals are required")
+        try:
+            decode_day(values)
+        except ValueError as err:
+            raise ValueError(f"Invalid requested time program: {err}") from err
 
         bus = int(heating_circuit)
         with _lock:
@@ -500,6 +503,14 @@ class WeishauptAPI:
                 raise WeishauptCommunicationError(
                     "Cannot safely update time program because the original day is incomplete"
                 )
+            original_values = tuple(original[parameter_id] for parameter_id in ids)
+            try:
+                decode_day(original_values)
+            except ValueError as err:
+                raise WeishauptCommunicationError(
+                    "Cannot safely update time program because the original day "
+                    f"is invalid: {err}"
+                ) from err
 
             try:
                 for parameter_id, value in zip(ids, values):
@@ -509,14 +520,28 @@ class WeishauptAPI:
                     raise WeishauptCommunicationError(
                         "Time-program verification failed after writing the complete day"
                     )
-            except Exception:
+            except Exception as update_err:
                 _LOGGER.warning(
                     "Restoring previous time program after an incomplete or unverified write"
                 )
-                for parameter_id in ids:
-                    self._write_parameter_unlocked(
-                        parameter_id, bus, 6, original[parameter_id]
+                try:
+                    for parameter_id, value in zip(ids, original_values):
+                        self._write_parameter_unlocked(parameter_id, bus, 6, value)
+                    restored = self._read_raw_parameters_unlocked(
+                        ids, bus=bus, modultyp=6
                     )
+                    restored_values = tuple(
+                        restored.get(parameter_id) for parameter_id in ids
+                    )
+                    if restored_values != original_values:
+                        raise WeishauptCommunicationError(
+                            "Time-program rollback verification failed"
+                        )
+                except Exception as rollback_err:
+                    raise WeishauptCommunicationError(
+                        f"Time-program update failed ({update_err}) and rollback "
+                        f"could not be verified ({rollback_err})"
+                    ) from rollback_err
                 raise
 
     def _read_raw_parameters_unlocked(
@@ -600,7 +625,7 @@ class WeishauptAPI:
                     bus=bus,
                     command=WRITE_COMMAND,
                     parameter_id=parameter_id,
-                    telegram_type=GENERIC_TELEGRAM,
+                    telegram_type=STANDARD_TELEGRAM,
                     value=code,
                 )
             ],

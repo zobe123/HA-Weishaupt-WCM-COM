@@ -152,7 +152,7 @@ class ProtocolTest(unittest.TestCase):
         )
         self.assertEqual(telegram, [10, 0, 2, 3103, 0, 1, 216, 255])
 
-    def test_write_telegram_uses_generic_type(self) -> None:
+    def test_builder_preserves_explicit_generic_type(self) -> None:
         telegram = protocol.build_telegram(
             module_type=6,
             bus=1,
