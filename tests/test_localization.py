@@ -130,7 +130,7 @@ class LocalizationContractTest(unittest.TestCase):
             device_model.device_descriptor("WTC HK1 User Betriebsart"),
             (
                 "weishaupt_wtc_hk1",
-                "Weishaupt WCM-COM · WTC-HK1 / FS1",
+                "HK1 · WTC / FS1",
             ),
         )
         self.assertEqual(
@@ -141,21 +141,21 @@ class LocalizationContractTest(unittest.TestCase):
             device_model.device_descriptor("HK1 Raumtemperatur"),
             (
                 "weishaupt_hk1",
-                "Weishaupt WCM-COM · HK2 Radiatoren / FS2",
+                "HK2 · Radiatoren / FS2",
             ),
         )
         self.assertEqual(
             device_model.device_descriptor("HK2 Raumtemperatur"),
             (
                 "weishaupt_hk2",
-                "Weishaupt WCM-COM · HK3 FBH / FS3",
+                "HK3 · FBH / FS3",
             ),
         )
         self.assertEqual(
             device_model.device_descriptor("Kesseltemperatur"),
             (
                 "weishaupt_kessel",
-                "Weishaupt WCM-COM · WTC / Therme-Kessel",
+                "Therme / Kessel",
             ),
         )
 

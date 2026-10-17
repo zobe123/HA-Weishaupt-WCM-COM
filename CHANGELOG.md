@@ -21,6 +21,8 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   wire format and suppresses unsupported FS1 expert controls cleanly.
 - Kept global burner, boiler, domestic-hot-water and plant values on the
   dedicated WTC / boiler device.
+- Shortened the four Home Assistant device names so their distinguishing
+  circuit or boiler label remains fully visible on narrow mobile screens.
 - Removed repeated circuit names from entities shown inside a circuit device;
   the device supplies the context while entity rows stay short and readable.
 - Hid redundant read-only sensor counterparts of writable controls from normal

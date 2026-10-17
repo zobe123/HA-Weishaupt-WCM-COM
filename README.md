@@ -72,10 +72,10 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `Warmwassertemperatur` – hot water temperature
 - `Pumpe`, `Flamme`, `Heizung`, `Warmwasser` – on/off status
 - `Status` – error/warning code with mapped description
-- `WTC-HC1 / FS1` – the heating circuit integrated in the WTC (physical bus 0)
-- `HC2 radiators / FS2` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
-- `HC3 underfloor heating / FS3` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
-- `WTC / boiler` – global burner, boiler, domestic-hot-water and plant values
+- `HK1 · WTC / FS1` – the heating circuit integrated in the WTC (physical bus 0)
+- `HK2 · Radiatoren / FS2` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
+- `HK3 · FBH / FS3` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
+- `Therme / Kessel` – global burner, boiler, domestic-hot-water and plant values
   that do not belong to one heating circuit
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
 - Active-program calendars expose the effective HC2/HC3 heating schedules plus

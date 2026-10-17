@@ -255,8 +255,8 @@ class SelectPlatformTest(unittest.TestCase):
 
         self.assertEqual(bus_one._attr_unique_id, "weishaupt_hk1_user_op_mode_select")
         self.assertEqual(bus_two._attr_unique_id, "weishaupt_hk2_user_op_mode_select")
-        self.assertIn("HK2 Radiatoren", bus_one.device_info["name"])
-        self.assertIn("HK3 FBH", bus_two.device_info["name"])
+        self.assertEqual(bus_one.device_info["name"], "HK2 · Radiatoren / FS2")
+        self.assertEqual(bus_two.device_info["name"], "HK3 · FBH / FS3")
 
     def test_holiday_select_uses_raw_data_name(self) -> None:
         coordinator = Mock()
