@@ -11,7 +11,11 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.helpers import entity_registry as er
 
@@ -31,8 +35,9 @@ from .const import (
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     PARAMETERS,
     WRITE_BACKED_PARAMETER_NAMES,
+    normalize_host,
 )
-from .weishaupt_api import WeishauptAPI
+from .weishaupt_api import WeishauptAPI, WeishauptAuthenticationError
 from .time_program_manager import TimeProgramManager
 from .frontend import async_register_frontend, async_unregister_frontend
 
@@ -145,6 +150,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.config_entries.async_update_entry(entry, version=4)
 
+    if entry.version < 5:
+        update_kwargs: dict[str, object] = {"version": 5}
+        host = entry.options.get(CONF_HOST, entry.data.get(CONF_HOST))
+        if entry.unique_id is None and host:
+            update_kwargs["unique_id"] = normalize_host(host)
+        hass.config_entries.async_update_entry(entry, **update_kwargs)
+
     return True
 
 
@@ -227,6 +239,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await hass.async_add_executor_job(api.update)
             return api.data
+        except WeishauptAuthenticationError as err:
+            raise ConfigEntryAuthFailed(
+                "WCM-COM rejected the configured credentials"
+            ) from err
         except Exception as err:  # pragma: no cover  # pylint: disable=broad-except
             raise UpdateFailed(f"Error communicating with WCM-COM: {err}") from err
 

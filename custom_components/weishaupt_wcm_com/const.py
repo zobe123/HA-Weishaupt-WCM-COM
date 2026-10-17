@@ -5,6 +5,12 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 DOMAIN = 'weishaupt_wcm_com'
 NAME_PREFIX = "Weishaupt "
 
+
+def normalize_host(host: str) -> str:
+    """Return a stable config-entry identity for a WCM-COM host."""
+
+    return str(host).strip().rstrip(".").lower()
+
 # Standard Scan Interval in Sekunden
 DEFAULT_SCAN_INTERVAL = 60
 

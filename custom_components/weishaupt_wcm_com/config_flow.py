@@ -1,5 +1,7 @@
 """Config flow for Weishaupt WCM-COM integration."""
 import logging
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -20,53 +22,161 @@ from .const import (
     DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
     CONF_EXTERNAL_GAS_METER_ENTITY,
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
+    normalize_host,
 )
-from .weishaupt_api import WeishauptAPI
+from .weishaupt_api import (
+    WeishauptAPI,
+    WeishauptAuthenticationError,
+    WeishauptCommunicationError,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+PASSWORD_SELECTOR = selector.TextSelector(
+    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+)
+
+
+async def _async_validate_connection(hass, connection_data: dict[str, Any]) -> None:
+    """Validate WCM-COM connection data without blocking the event loop."""
+
+    api = WeishauptAPI(
+        connection_data[CONF_HOST],
+        connection_data.get(CONF_USERNAME),
+        connection_data.get(CONF_PASSWORD),
+    )
+    data = await hass.async_add_executor_job(api.get_data)
+    if not data:
+        raise WeishauptCommunicationError("WCM-COM returned no data")
+
+
+def _host_is_configured(hass, host: str, *, exclude_entry_id: str) -> bool:
+    """Return whether another config entry already uses this WCM-COM host."""
+
+    unique_id = normalize_host(host)
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id == exclude_entry_id:
+            continue
+        configured_host = entry.options.get(
+            CONF_HOST, entry.data.get(CONF_HOST, "")
+        )
+        if entry.unique_id == unique_id or (
+            configured_host and normalize_host(configured_host) == unique_id
+        ):
+            return True
+    return False
+
 
 class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Weishaupt WCM-COM."""
 
-    VERSION = 4
+    VERSION = 5
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+
+        self._reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
-
-            # Validierung der Verbindung
-            api = WeishauptAPI(host, username, password)
+            user_input = {
+                **user_input,
+                CONF_HOST: normalize_host(user_input[CONF_HOST]),
+            }
+            await self.async_set_unique_id(user_input[CONF_HOST])
+            self._abort_if_unique_id_configured()
             try:
-                # Da get_data eine blockierende Methode ist, führen wir sie im Executor aus
-                data = await self.hass.async_add_executor_job(api.get_data)
-                if not data:
-                    errors["base"] = "cannot_connect"
-                else:
-                    # Erfolgreiche Verbindung
-                    return self.async_create_entry(title="Weishaupt WCM-COM", data=user_input)
-            except Exception as e:
-                _LOGGER.error(f"Error connecting to Weishaupt WCM-COM: {e}")
+                await _async_validate_connection(self.hass, user_input)
+            except WeishauptAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except WeishauptCommunicationError:
                 errors["base"] = "cannot_connect"
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected error validating WCM-COM: %s", err)
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title="Weishaupt WCM-COM", data=user_input
+                )
 
-        data_schema = vol.Schema({
-            vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_USERNAME): str,
-            vol.Optional(CONF_PASSWORD): str,
-        })
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+            }
+        )
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reauth(self, entry_data: dict[str, Any]):
+        """Start reauthentication for an existing WCM-COM entry."""
+
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Validate replacement WCM-COM credentials."""
+
+        errors = {}
+        if self._reauth_entry is None:
+            return self.async_abort(reason="reauth_unsuccessful")
+
+        if user_input is not None:
+            connection_data = {
+                **self._reauth_entry.data,
+                CONF_HOST: normalize_host(self._reauth_entry.data[CONF_HOST]),
+                CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+            }
+            try:
+                await _async_validate_connection(self.hass, connection_data)
+            except WeishauptAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except WeishauptCommunicationError:
+                errors["base"] = "cannot_connect"
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Unexpected error reauthenticating WCM-COM: %s", err
+                )
+                errors["base"] = "cannot_connect"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry,
+                    data=connection_data,
+                )
+                await self.hass.config_entries.async_reload(
+                    self._reauth_entry.entry_id
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=self._reauth_entry.data.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+                }
+            ),
+            errors=errors,
         )
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         return WeishauptOptionsFlowHandler(config_entry)
+
 
 class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Weishaupt WCM-COM options."""
@@ -84,23 +194,37 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             connection_data = {
-                CONF_HOST: user_input[CONF_HOST],
+                CONF_HOST: normalize_host(user_input[CONF_HOST]),
                 CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD, ""),
+                CONF_PASSWORD: user_input.get(
+                    CONF_PASSWORD,
+                    self._config_entry.data.get(CONF_PASSWORD, ""),
+                ),
             }
-            api = WeishauptAPI(
+            if _host_is_configured(
+                self.hass,
                 connection_data[CONF_HOST],
-                connection_data[CONF_USERNAME],
-                connection_data[CONF_PASSWORD],
-            )
-            try:
-                data = await self.hass.async_add_executor_job(api.get_data)
-                if not data:
+                exclude_entry_id=self._config_entry.entry_id,
+            ):
+                errors["base"] = "already_configured"
+            else:
+                try:
+                    await _async_validate_connection(self.hass, connection_data)
+                except WeishauptAuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except WeishauptCommunicationError:
+                    errors["base"] = "cannot_connect"
+                except Exception as err:  # pylint: disable=broad-except
+                    _LOGGER.exception(
+                        "Unexpected error validating updated WCM-COM connection: %s",
+                        err,
+                    )
                     errors["base"] = "cannot_connect"
                 else:
                     self.hass.config_entries.async_update_entry(
                         self._config_entry,
                         data=connection_data,
+                        unique_id=connection_data[CONF_HOST],
                     )
                     options_data = {
                         CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
@@ -117,16 +241,13 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                         ),
                     }
                     return self.async_create_entry(title="", data=options_data)
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error("Error validating updated WCM-COM connection: %s", err)
-                errors["base"] = "cannot_connect"
 
         # Aktuelle Werte aus Entry / Optionen als Default
         source = user_input or self._config_entry.options
         host = source.get(CONF_HOST, self._config_entry.data.get(CONF_HOST, ""))
-        username = source.get(CONF_USERNAME, self._config_entry.data.get(CONF_USERNAME, ""))
-        password = source.get(CONF_PASSWORD, self._config_entry.data.get(CONF_PASSWORD, ""))
-
+        username = source.get(
+            CONF_USERNAME, self._config_entry.data.get(CONF_USERNAME, "")
+        )
         scan_interval = source.get(
             CONF_SCAN_INTERVAL,
             DEFAULT_SCAN_INTERVAL,
@@ -163,7 +284,7 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Required(CONF_HOST, default=host): str,
                 vol.Optional(CONF_USERNAME, default=username): str,
-                vol.Optional(CONF_PASSWORD, default=password): str,
+                vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=scan_interval,

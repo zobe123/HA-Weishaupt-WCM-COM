@@ -60,6 +60,18 @@ def json_response(telegram: list[list[int]]) -> Mock:
     return response
 
 
+def unauthorized_response() -> Mock:
+    """Return a minimal HTTP 401 response."""
+
+    response = Mock()
+    response.text = "Unauthorized"
+    response.status_code = 401
+    response.raise_for_status.side_effect = requests.exceptions.HTTPError(
+        "401 Client Error: Unauthorized"
+    )
+    return response
+
+
 class ApiTransportTest(unittest.TestCase):
     """Verify transport errors, protocol matching and write behavior."""
 
@@ -131,6 +143,47 @@ class ApiTransportTest(unittest.TestCase):
                 api.update()
 
         self.assertEqual(api.data, {"existing": 42})
+
+    def test_authentication_failure_is_not_retried(self) -> None:
+        with (
+            patch.object(
+                api_module.requests,
+                "post",
+                return_value=unauthorized_response(),
+            ) as post,
+            patch.object(api_module.time, "sleep") as sleep,
+        ):
+            with self.assertRaises(api_module.WeishauptAuthenticationError):
+                api_module.WeishauptAPI("wcm.test", "user", "wrong").get_data()
+
+        self.assertEqual(post.call_count, 1)
+        sleep.assert_not_called()
+
+    def test_firmware_authentication_failure_is_specific(self) -> None:
+        with patch.object(
+            api_module.requests,
+            "post",
+            return_value=unauthorized_response(),
+        ) as post:
+            with self.assertRaises(api_module.WeishauptAuthenticationError):
+                api_module.WeishauptAPI(
+                    "wcm.test", "user", "wrong"
+                ).check_firmware_update()
+
+        self.assertEqual(post.call_count, 1)
+
+    def test_write_authentication_failure_is_specific(self) -> None:
+        with patch.object(
+            api_module.requests,
+            "post",
+            return_value=unauthorized_response(),
+        ) as post:
+            with self.assertRaises(api_module.WeishauptAuthenticationError):
+                api_module.WeishauptAPI(
+                    "wcm.test", "user", "wrong"
+                ).write_parameter(274, 1, 6, 11)
+
+        self.assertEqual(post.call_count, 1)
 
     def test_parameter_specific_no_value_marker_is_omitted(self) -> None:
         parameters = [

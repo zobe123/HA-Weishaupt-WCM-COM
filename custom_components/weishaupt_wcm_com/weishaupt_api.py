@@ -42,6 +42,23 @@ class WeishauptCommunicationError(Exception):
     """Raised when a complete WCM-COM update or write cannot be completed."""
 
 
+class WeishauptAuthenticationError(WeishauptCommunicationError):
+    """Raised when WCM-COM rejects the configured credentials."""
+
+
+def _raise_for_status(response) -> None:
+    """Raise a dedicated authentication error for HTTP 401 responses."""
+
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as err:
+        if response.status_code == 401:
+            raise WeishauptAuthenticationError(
+                "WCM-COM rejected the configured username or password"
+            ) from err
+        raise
+
+
 class WeishauptAPI:
     """API class for interacting with the Weishaupt WCM-COM."""
 
@@ -193,6 +210,7 @@ class WeishauptAPI:
                 headers={"Content-Type": "application/json"},
                 timeout=60,
             )
+            _raise_for_status(response)
             if not response.text.strip():
                 raise WeishauptCommunicationError(
                     "WCM-COM returned an empty firmware response"
@@ -201,7 +219,6 @@ class WeishauptAPI:
                 raise WeishauptCommunicationError(
                     "WCM-COM returned 'server busy' during the firmware check"
                 )
-            response.raise_for_status()
             return response.json()
         except WeishauptCommunicationError:
             raise
@@ -359,7 +376,7 @@ class WeishauptAPI:
                         headers={'Content-Type': 'application/json'},
                         timeout=60  # Timeout auf 60 Sekunden erhöhen
                     )
-                    req.raise_for_status()
+                    _raise_for_status(req)
 
                     # Prüfen, ob die Antwort gültig ist
                     if req.text.strip() == "":
@@ -521,11 +538,10 @@ class WeishauptAPI:
                 self._data = result  # Speichern Sie die aktualisierten Daten
                 return  # Erfolgreiches Ende der Schleife, Daten erfolgreich abgerufen
 
+            except WeishauptAuthenticationError:
+                raise
             except requests.exceptions.HTTPError as err:
-                if req.status_code == 401:
-                    _LOGGER.error("Authentication failed. Please check your username and password.")
-                else:
-                    _LOGGER.error(f"HTTP error occurred: {err}")
+                _LOGGER.error("HTTP error occurred: %s", err)
             except requests.exceptions.RequestException as e:
                 _LOGGER.warning(
                     "WCM-COM request attempt %s/3 failed: %s",
@@ -725,11 +741,11 @@ class WeishauptAPI:
                 headers={"Content-Type": "application/json"},
                 timeout=60,
             )
+            _raise_for_status(response)
             if "<HTML>" in response.text.upper():
                 raise WeishauptCommunicationError(
                     "WCM-COM returned 'server busy' while reading a time program"
                 )
-            response.raise_for_status()
             payload = response.json()
         except (requests.exceptions.RequestException, json.JSONDecodeError) as err:
             raise WeishauptCommunicationError(
@@ -792,13 +808,14 @@ class WeishauptAPI:
                 timeout=30,
             )
 
+            _raise_for_status(req)
+
             # A write is successful only when WCM-COM actually accepts it.
             if "<HTML>" in req.text.upper():
                 raise WeishauptCommunicationError(
                     f"WCM-COM returned 'server busy' while writing parameter {parameter_id}"
                 )
 
-            req.raise_for_status()
             _LOGGER.debug("Write result: %s", req.text)
         except requests.exceptions.RequestException as err:
             raise WeishauptCommunicationError(

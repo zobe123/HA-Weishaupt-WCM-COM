@@ -4,6 +4,19 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.3b1]
+
+### Improved
+
+- Trigger Home Assistant's reauthentication flow immediately when WCM-COM
+  rejects stored credentials, and distinguish invalid credentials from an
+  unreachable controller during setup and reconfiguration.
+- Prevent duplicate config entries for the same normalized host and migrate
+  existing entries to the same stable config-entry identity.
+- Mask password inputs in setup, reauthentication and options forms.
+- Declare the integration as a hub and align the documented Home Assistant and
+  Python minimum versions with the APIs used by the integration.
+
 ## [1.4.2]
 
 ### New

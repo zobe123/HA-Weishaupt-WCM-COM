@@ -1,7 +1,13 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "Authentication updated successfully",
+      "reauth_unsuccessful": "The integration entry could not be found"
+    },
     "error": {
-      "cannot_connect": "Unable to connect to WCM-COM"
+      "already_configured": "This WCM-COM is already configured",
+      "cannot_connect": "Unable to connect to WCM-COM",
+      "invalid_auth": "Invalid username or password"
     },
     "step": {
       "user": {
@@ -12,12 +18,22 @@
           "username": "Username",
           "password": "Password"
         }
+      },
+      "reauth_confirm": {
+        "title": "Update WCM-COM credentials",
+        "description": "Enter the current credentials for this WCM-COM controller",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
       }
     }
   },
   "options": {
     "error": {
-      "cannot_connect": "The updated connection settings could not be verified"
+      "already_configured": "This WCM-COM is already configured",
+      "cannot_connect": "The updated connection settings could not be verified",
+      "invalid_auth": "Invalid username or password"
     },
     "step": {
       "init": {

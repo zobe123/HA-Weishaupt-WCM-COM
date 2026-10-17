@@ -24,7 +24,7 @@ It reads important parameters from your boiler and heating circuits and exposes 
 - Home Assistant Core
 - Weishaupt WCM-COM control unit reachable in your local network
 - Network connection to the Weishaupt WCM-COM (via LAN)
-- Python 3.8 or higher
+- Python 3.11 or higher
 
 ## Installation
 

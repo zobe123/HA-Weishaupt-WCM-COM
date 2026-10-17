@@ -1,7 +1,13 @@
 {
   "config": {
+    "abort": {
+      "reauth_successful": "Authentifizierung erfolgreich aktualisiert",
+      "reauth_unsuccessful": "Der Integrationseintrag wurde nicht gefunden"
+    },
     "error": {
-      "cannot_connect": "Verbindung zum WCM-COM konnte nicht hergestellt werden"
+      "already_configured": "Dieses WCM-COM ist bereits eingerichtet",
+      "cannot_connect": "Verbindung zum WCM-COM konnte nicht hergestellt werden",
+      "invalid_auth": "Benutzername oder Passwort ist ungültig"
     },
     "step": {
       "user": {
@@ -12,12 +18,22 @@
           "username": "Benutzername",
           "password": "Passwort"
         }
+      },
+      "reauth_confirm": {
+        "title": "WCM-COM-Zugangsdaten aktualisieren",
+        "description": "Aktuelle Zugangsdaten für diesen WCM-COM-Regler eingeben",
+        "data": {
+          "username": "Benutzername",
+          "password": "Passwort"
+        }
       }
     }
   },
   "options": {
     "error": {
-      "cannot_connect": "Die geänderten Verbindungsdaten konnten nicht bestätigt werden"
+      "already_configured": "Dieses WCM-COM ist bereits eingerichtet",
+      "cannot_connect": "Die geänderten Verbindungsdaten konnten nicht bestätigt werden",
+      "invalid_auth": "Benutzername oder Passwort ist ungültig"
     },
     "step": {
       "init": {
