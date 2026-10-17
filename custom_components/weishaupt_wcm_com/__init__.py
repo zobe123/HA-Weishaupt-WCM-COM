@@ -38,7 +38,7 @@ from .frontend import async_register_frontend, async_unregister_frontend
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
+BASE_PLATFORMS: list[str] = ["sensor", "select", "number", "update"]
 
 OPTIONAL_CALENDAR_UNIQUE_IDS = {
     "weishaupt_hk1_active_heating_program",

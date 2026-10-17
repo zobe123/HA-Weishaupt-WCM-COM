@@ -4,6 +4,20 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.2b1]
+
+### New
+
+- Added a read-only WCM-COM firmware update entity showing the installed and
+  latest version reported by the official Weishaupt update service.
+- Check for new device firmware once per day and on manual entity refresh,
+  serialized with normal polling to protect the WCM-COM web server.
+
+### Safety
+
+- Firmware installation is intentionally not exposed because the controller
+  update process can reset network settings.
+
 ## [1.4.1]
 
 ### Fixed

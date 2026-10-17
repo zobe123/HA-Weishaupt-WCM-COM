@@ -1163,6 +1163,11 @@
       "circulation_program": {
         "name": "Zirkulations-Zeitprogramm"
       }
+    },
+    "update": {
+      "wcm_com_firmware": {
+        "name": "WCM-COM Firmware"
+      }
     }
   },
   "exceptions": {

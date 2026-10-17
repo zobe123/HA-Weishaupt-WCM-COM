@@ -8,6 +8,7 @@ from requests.auth import HTTPDigestAuth
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 from .protocol import (
+    GENERIC_TELEGRAM,
     READ_COMMAND,
     STANDARD_TELEGRAM,
     WRITE_COMMAND,
@@ -29,6 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 
 # Lock initialisieren, um sicherzustellen, dass nur eine Anfrage gleichzeitig erfolgt
 _lock = threading.Lock()
+
+FIRMWARE_VERSION_PARAMETER = 20015
+FIRMWARE_CHECK_PARAMETER = 20116
+FIRMWARE_STATUS_PARAMETER = 20117
+FIRMWARE_CHECK_TIMEOUT = 180
+FIRMWARE_CHECK_INTERVAL = 2
 
 
 class WeishauptCommunicationError(Exception):
@@ -65,6 +72,143 @@ class WeishauptAPI:
         with _lock:
             self._fetch_data()
         return self._data
+
+    def get_firmware_version(self) -> str:
+        """Read the locally installed WCM-COM firmware version."""
+
+        with _lock:
+            _, version = self._read_firmware_parameter_unlocked(
+                FIRMWARE_VERSION_PARAMETER
+            )
+        if not version:
+            raise WeishauptCommunicationError(
+                "WCM-COM returned no installed firmware version"
+            )
+        return version
+
+    def check_firmware_update(
+        self,
+        *,
+        timeout: float = FIRMWARE_CHECK_TIMEOUT,
+        poll_interval: float = FIRMWARE_CHECK_INTERVAL,
+    ) -> dict[str, str | bool]:
+        """Ask the Weishaupt server for a newer firmware version."""
+
+        with _lock:
+            _, installed_version = self._read_firmware_parameter_unlocked(
+                FIRMWARE_VERSION_PARAMETER
+            )
+            if not installed_version:
+                raise WeishauptCommunicationError(
+                    "WCM-COM returned no installed firmware version"
+                )
+
+            self._request_firmware_telegram_unlocked(
+                build_coco_telegram(
+                    module_type=0,
+                    bus=0,
+                    command=WRITE_COMMAND,
+                    parameter_id=FIRMWARE_CHECK_PARAMETER,
+                    telegram_type=STANDARD_TELEGRAM,
+                    value=1,
+                )
+            )
+
+            deadline = time.monotonic() + max(0.0, float(timeout))
+            while True:
+                status, available_version = self._read_firmware_parameter_unlocked(
+                    FIRMWARE_STATUS_PARAMETER
+                )
+                if status == 1:
+                    latest_version = installed_version
+                    break
+                if status == 2:
+                    if not available_version:
+                        raise WeishauptCommunicationError(
+                            "WCM-COM reported an update without a firmware version"
+                        )
+                    latest_version = available_version
+                    break
+                if status == 3:
+                    raise WeishauptCommunicationError(
+                        "WCM-COM firmware server returned an error"
+                    )
+                if status != 0:
+                    raise WeishauptCommunicationError(
+                        f"WCM-COM returned unknown firmware status {status}"
+                    )
+                if time.monotonic() >= deadline:
+                    raise WeishauptCommunicationError(
+                        "Timed out waiting for the WCM-COM firmware server"
+                    )
+                time.sleep(max(0.0, float(poll_interval)))
+
+        return {
+            "installed_version": installed_version,
+            "latest_version": latest_version,
+            "update_available": latest_version != installed_version,
+        }
+
+    def _read_firmware_parameter_unlocked(
+        self, parameter_id: int
+    ) -> tuple[int, str | None]:
+        """Read one firmware parameter; caller must hold the API lock."""
+
+        payload = self._request_firmware_telegram_unlocked(
+            build_coco_telegram(
+                module_type=0,
+                bus=0,
+                command=READ_COMMAND,
+                parameter_id=parameter_id,
+                telegram_type=GENERIC_TELEGRAM,
+            )
+        )
+        for message in payload.get("telegramm", []):
+            if (
+                len(message) >= 8
+                and int(message[0]) == 0
+                and int(message[1]) == 0
+                and int(message[3]) == int(parameter_id)
+                and int(message[5]) == GENERIC_TELEGRAM
+            ):
+                value = message[7]
+                return int(message[6]), str(value).strip() if value else None
+        raise WeishauptCommunicationError(
+            f"WCM-COM omitted firmware parameter {parameter_id}"
+        )
+
+    def _request_firmware_telegram_unlocked(self, telegram: list[int]) -> dict:
+        """Send one firmware telegram; caller must hold the API lock."""
+
+        auth = (
+            HTTPDigestAuth(self._username, self._password)
+            if self._username and self._password
+            else None
+        )
+        try:
+            response = requests.post(
+                f"http://{self._host}/parameter.json",
+                auth=auth,
+                data=json.dumps({"prot": "coco", "telegramm": [telegram]}),
+                headers={"Content-Type": "application/json"},
+                timeout=60,
+            )
+            if not response.text.strip():
+                raise WeishauptCommunicationError(
+                    "WCM-COM returned an empty firmware response"
+                )
+            if "<HTML>" in response.text.upper():
+                raise WeishauptCommunicationError(
+                    "WCM-COM returned 'server busy' during the firmware check"
+                )
+            response.raise_for_status()
+            return response.json()
+        except WeishauptCommunicationError:
+            raise
+        except (requests.exceptions.RequestException, json.JSONDecodeError) as err:
+            raise WeishauptCommunicationError(
+                f"Error checking WCM-COM firmware: {err}"
+            ) from err
 
     def _fetch_data(self):
         """Actual data fetching logic."""

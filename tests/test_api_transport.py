@@ -196,6 +196,67 @@ class ApiTransportTest(unittest.TestCase):
             with self.assertRaises(api_module.WeishauptCommunicationError):
                 api.write_parameter(274, 1, 6, 11)
 
+    def test_firmware_check_uses_webui_telegrams_and_reports_current(self) -> None:
+        responses = [
+            json_response([[0, 0, 1, 20015, 0, 1, 9, "376-09 C"]]),
+            json_response([]),
+            json_response([[0, 0, 1, 20117, 0, 1, 0, 0]]),
+            json_response([[0, 0, 1, 20117, 0, 1, 1, 0]]),
+        ]
+        with (
+            patch.object(api_module.requests, "post", side_effect=responses) as post,
+            patch.object(api_module.time, "sleep"),
+        ):
+            result = api_module.WeishauptAPI("wcm.test").check_firmware_update()
+
+        self.assertEqual(
+            result,
+            {
+                "installed_version": "376-09 C",
+                "latest_version": "376-09 C",
+                "update_available": False,
+            },
+        )
+        telegrams = [
+            json.loads(call.kwargs["data"])["telegramm"][0]
+            for call in post.call_args_list
+        ]
+        self.assertEqual(
+            telegrams,
+            [
+                [0, 0, 1, 20015, 0, 1, 0, 0],
+                [0, 0, 2, 20116, 0, 0, 1, 0],
+                [0, 0, 1, 20117, 0, 1, 0, 0],
+                [0, 0, 1, 20117, 0, 1, 0, 0],
+            ],
+        )
+
+    def test_firmware_check_reports_available_version(self) -> None:
+        responses = [
+            json_response([[0, 0, 1, 20015, 0, 1, 9, "376-09 C"]]),
+            json_response([]),
+            json_response([[0, 0, 1, 20117, 0, 1, 2, "377-01 A"]]),
+        ]
+        with patch.object(api_module.requests, "post", side_effect=responses):
+            result = api_module.WeishauptAPI("wcm.test").check_firmware_update()
+
+        self.assertEqual(result["installed_version"], "376-09 C")
+        self.assertEqual(result["latest_version"], "377-01 A")
+        self.assertTrue(result["update_available"])
+
+    def test_firmware_server_error_is_isolated_as_communication_error(self) -> None:
+        responses = [
+            json_response([[0, 0, 1, 20015, 0, 1, 9, "376-09 C"]]),
+            json_response([]),
+            json_response([[0, 0, 1, 20117, 0, 1, 3, 0]]),
+        ]
+        with patch.object(api_module.requests, "post", side_effect=responses):
+            with self.assertRaisesRegex(
+                api_module.WeishauptCommunicationError,
+                "firmware server returned an error",
+            ):
+                api_module.WeishauptAPI("wcm.test").check_firmware_update()
+
     def test_batch_write_uses_standard_type_and_keeps_order(self) -> None:
         response = json_response([])
         with patch.object(api_module.requests, "post", return_value=response) as post:
