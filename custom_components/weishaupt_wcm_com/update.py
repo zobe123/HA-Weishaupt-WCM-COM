@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from homeassistant.components.update import UpdateEntity
+from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,7 @@ class WeishauptFirmwareUpdateEntity(CoordinatorEntity, UpdateEntity):
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:update"
-    _attr_supported_features = 0
+    _attr_supported_features = UpdateEntityFeature(0)
 
     @property
     def available(self) -> bool:

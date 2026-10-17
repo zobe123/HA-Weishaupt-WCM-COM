@@ -8,6 +8,7 @@ import sys
 import types
 import unittest
 from unittest.mock import Mock
+from enum import IntFlag
 
 
 ROOT = Path(__file__).parents[1] / "custom_components" / "weishaupt_wcm_com"
@@ -43,6 +44,12 @@ class UpdateEntity:
     """Minimal Home Assistant update stub."""
 
 
+class UpdateEntityFeature(IntFlag):
+    """Minimal Home Assistant update feature flags."""
+
+    INSTALL = 1
+
+
 class EntityCategory:
     DIAGNOSTIC = "diagnostic"
 
@@ -76,6 +83,7 @@ class DataUpdateCoordinator:
 
 
 update_component.UpdateEntity = UpdateEntity
+update_component.UpdateEntityFeature = UpdateEntityFeature
 config_entries_module.ConfigEntry = object
 const_module.EntityCategory = EntityCategory
 core_module.HomeAssistant = object
@@ -141,7 +149,7 @@ class UpdatePlatformTest(unittest.TestCase):
         self.assertEqual(entity.installed_version, "376-09 C")
         self.assertEqual(entity.latest_version, "376-09 C")
         self.assertEqual(entity._attr_unique_id, "weishaupt_wcm_com_firmware")
-        self.assertEqual(entity._attr_supported_features, 0)
+        self.assertEqual(entity._attr_supported_features, UpdateEntityFeature(0))
         self.assertTrue(entity.available)
         self.assertEqual(entity.coordinator.update_interval, timedelta(hours=24))
         self.assertEqual(
