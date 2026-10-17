@@ -53,6 +53,15 @@ HIDDEN_DUPLICATE_HOT_WATER_NUMBER_UNIQUE_IDS = {
     for level in ("normal", "absenk")
 }
 
+DISABLED_TECHNICAL_HOT_WATER_UNIQUE_IDS = {
+    "sensor": {
+        f"weishaupt_{prefix}_user_{level}_ww_soll"
+        for prefix in ("wtc_hk1", "hk1", "hk2")
+        for level in ("normal", "absenk")
+    },
+    "number": set(HIDDEN_DUPLICATE_HOT_WATER_NUMBER_UNIQUE_IDS),
+}
+
 OBSOLETE_ENTITY_UNIQUE_IDS = {
     "sensor": {
         "weishaupt_hk1_user_sollwert_solar",
@@ -119,6 +128,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
         hass.config_entries.async_update_entry(entry, version=3)
+
+    if entry.version < 4:
+        registry = er.async_get(hass)
+        for platform, unique_ids in DISABLED_TECHNICAL_HOT_WATER_UNIQUE_IDS.items():
+            for unique_id in unique_ids:
+                entity_id = registry.async_get_entity_id(platform, DOMAIN, unique_id)
+                if entity_id is None:
+                    continue
+                registry_entry = registry.async_get(entity_id)
+                if registry_entry is not None and registry_entry.disabled_by is None:
+                    registry.async_update_entity(
+                        entity_id,
+                        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+                    )
+
+        hass.config_entries.async_update_entry(entry, version=4)
 
     return True
 

@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Weishaupt WCM-COM."""
 
-    VERSION = 3
+    VERSION = 4
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""

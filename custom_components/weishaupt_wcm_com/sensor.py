@@ -36,7 +36,11 @@ from .localization import (
     operation_phase_key,
     parameter_translation_key,
 )
-from .device_model import device_info, is_hot_water_parameter
+from .device_model import (
+    device_info,
+    is_hot_water_parameter,
+    is_hot_water_readback_duplicate,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +162,8 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # visible canonical entity and already exposes the current readback.
         if self._sensor_name in WRITE_BACKED_PARAMETER_NAMES:
             self._attr_entity_registry_visible_default = False
+        if is_hot_water_readback_duplicate(self._sensor_name):
+            self._attr_entity_registry_enabled_default = False
 
         # Expert-/Fachmann-Werte als Diagnose-Entities kennzeichnen,
         # damit sie im Gerät in einem eigenen Abschnitt erscheinen.

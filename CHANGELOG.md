@@ -16,6 +16,8 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   boiler instead of the room-heating circuits, while preserving stable IDs.
 - Hide the duplicate FS2/FS3 hot-water setpoint controls from normal UI
   surfaces without deleting their history or automation access.
+- Disable technical FS hot-water control/readback duplicates, omit unsupported
+  zero/unknown temperature sensors and label calendars as time programs.
 
 ## [1.4.0]
 

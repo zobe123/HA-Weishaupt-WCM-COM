@@ -28,6 +28,12 @@ def is_duplicate_hot_water_control(parameter_name: str) -> bool:
     )
 
 
+def is_hot_water_readback_duplicate(parameter_name: str) -> bool:
+    """Return whether a sensor only mirrors a writable hot-water control."""
+
+    return parameter_name.endswith(("Normal WW Soll", "Absenk WW Soll"))
+
+
 def device_descriptor(
     parameter_name: str, *, hot_water: bool = False
 ) -> tuple[str, str]:

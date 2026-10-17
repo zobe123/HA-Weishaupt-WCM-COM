@@ -1158,10 +1158,10 @@
         "name": "HK3 FBH aktives Heizprogramm"
       },
       "hot_water_program": {
-        "name": "Warmwasser"
+        "name": "Warmwasser-Zeitprogramm"
       },
       "circulation_program": {
-        "name": "Zirkulation"
+        "name": "Zirkulations-Zeitprogramm"
       }
     }
   },

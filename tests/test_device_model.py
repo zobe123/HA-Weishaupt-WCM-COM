@@ -86,6 +86,20 @@ class DeviceModelTest(unittest.TestCase):
             device_model.is_duplicate_hot_water_control("HK1 User Normal VL Soll")
         )
 
+    def test_every_hot_water_setpoint_readback_is_a_duplicate(self) -> None:
+        for prefix in ("WTC HK1", "HK1", "HK2"):
+            for level in ("Normal", "Absenk"):
+                self.assertTrue(
+                    device_model.is_hot_water_readback_duplicate(
+                        f"{prefix} User {level} WW Soll"
+                    )
+                )
+        self.assertFalse(
+            device_model.is_hot_water_readback_duplicate(
+                "WTC HK1 User Normal Raumtemperatur"
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

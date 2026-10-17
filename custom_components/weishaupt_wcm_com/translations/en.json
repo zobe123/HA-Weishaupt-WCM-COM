@@ -1158,10 +1158,10 @@
         "name": "HC3 underfloor heating active heating program"
       },
       "hot_water_program": {
-        "name": "Hot water"
+        "name": "Hot-water schedule"
       },
       "circulation_program": {
-        "name": "Circulation"
+        "name": "Circulation schedule"
       }
     }
   },

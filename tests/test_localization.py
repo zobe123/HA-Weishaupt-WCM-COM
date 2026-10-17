@@ -65,6 +65,25 @@ class LocalizationContractTest(unittest.TestCase):
             leaf_paths(self.catalogs["en"]),
         )
 
+    def test_hot_water_calendars_have_unambiguous_names(self) -> None:
+        self.assertEqual(
+            self.catalogs["de"]["entity"]["calendar"]["hot_water_program"]["name"],
+            "Warmwasser-Zeitprogramm",
+        )
+        self.assertEqual(
+            self.catalogs["en"]["entity"]["calendar"]["hot_water_program"]["name"],
+            "Hot-water schedule",
+        )
+
+    def test_missing_fs_hot_water_measurements_are_conditional(self) -> None:
+        by_name = {parameter["name"]: parameter for parameter in const.PARAMETERS}
+        for circuit in (1, 2):
+            temperature = by_name[f"HK{circuit} Warmwassertemperatur"]
+            circulation = by_name[f"HK{circuit} Zirkulationstemperatur"]
+            self.assertTrue(temperature["conditional"])
+            self.assertEqual(temperature["no_value"], 0)
+            self.assertTrue(circulation["conditional"])
+
     def test_device_entity_names_do_not_repeat_device_context(self) -> None:
         prefixes = {
             "de": ("WTC-HK1 ", "HK2 Radiatoren ", "HK3 FBH "),

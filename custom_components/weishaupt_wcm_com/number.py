@@ -585,7 +585,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # historical bus-1/bus-2 controls available for compatibility, but do
         # not show those technical duplicates on a fresh installation.
         if is_duplicate_hot_water_control(sensor_name):
-            self._attr_entity_registry_visible_default = False
+            self._attr_entity_registry_enabled_default = False
 
         self._attr_native_min_value = float(min_value)
         self._attr_native_max_value = float(max_value)
