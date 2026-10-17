@@ -32,6 +32,7 @@ class ConfigContractTest(unittest.TestCase):
     def test_setup_maps_authentication_failure_to_home_assistant(self) -> None:
         source = (COMPONENT / "__init__.py").read_text(encoding="utf-8")
 
+        self.assertIn("from homeassistant.const import CONF_HOST", source)
         self.assertIn("except WeishauptAuthenticationError as err:", source)
         self.assertIn("raise ConfigEntryAuthFailed", source)
         self.assertIn('update_kwargs["unique_id"] = normalize_host(host)', source)
