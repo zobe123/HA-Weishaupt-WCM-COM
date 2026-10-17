@@ -45,7 +45,7 @@ class ConfigContractTest(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertEqual(manifest["integration_type"], "hub")
-        self.assertEqual(manifest["version"], "1.4.3b1")
+        self.assertEqual(manifest["version"], "1.4.3")
         self.assertEqual(hacs["homeassistant"], "2023.12.0")
         self.assertIn("Python 3.11 or higher", readme)
 
