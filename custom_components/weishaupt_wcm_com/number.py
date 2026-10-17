@@ -20,7 +20,7 @@ from .base_entity import WeishauptBaseEntity
 from .const import DOMAIN, PARAMETERS
 from .protocol import encode_value, write_scale
 from .localization import parameter_translation_key
-from .device_model import device_info
+from .device_model import device_info, is_duplicate_hot_water_control
 
 
 async def async_setup_entry(
@@ -580,6 +580,12 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         self._attr_translation_key = parameter_translation_key(parameter)
         self._attr_has_entity_name = True
         self._attr_unique_id = f"weishaupt_{slug}_number"
+
+        # Bus 0 / FS1 is the canonical domestic-hot-water control.  Keep the
+        # historical bus-1/bus-2 controls available for compatibility, but do
+        # not show those technical duplicates on a fresh installation.
+        if is_duplicate_hot_water_control(sensor_name):
+            self._attr_entity_registry_visible_default = False
 
         self._attr_native_min_value = float(min_value)
         self._attr_native_max_value = float(max_value)

@@ -12,6 +12,10 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   are persisted by controllers that reject generic write telegrams.
 - Validate the saved time-program day before changing it and verify that an
   automatic rollback restored the exact original values after a failed write.
+- Group domestic-hot-water controls, temperatures and schedules with the
+  boiler instead of the room-heating circuits, while preserving stable IDs.
+- Hide the duplicate FS2/FS3 hot-water setpoint controls from normal UI
+  surfaces without deleting their history or automation access.
 
 ## [1.4.0]
 

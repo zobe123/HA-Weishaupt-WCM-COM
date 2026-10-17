@@ -47,6 +47,12 @@ OPTIONAL_CALENDAR_UNIQUE_IDS = {
     "weishaupt_circulation_time_program",
 }
 
+HIDDEN_DUPLICATE_HOT_WATER_NUMBER_UNIQUE_IDS = {
+    f"weishaupt_hk{heating_circuit}_user_{level}_ww_soll_number"
+    for heating_circuit in (1, 2)
+    for level in ("normal", "absenk")
+}
+
 OBSOLETE_ENTITY_UNIQUE_IDS = {
     "sensor": {
         "weishaupt_hk1_user_sollwert_solar",
@@ -98,6 +104,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 )
 
         hass.config_entries.async_update_entry(entry, version=2)
+
+    if entry.version < 3:
+        registry = er.async_get(hass)
+        for unique_id in HIDDEN_DUPLICATE_HOT_WATER_NUMBER_UNIQUE_IDS:
+            entity_id = registry.async_get_entity_id("number", DOMAIN, unique_id)
+            if entity_id is None:
+                continue
+            registry_entry = registry.async_get(entity_id)
+            if registry_entry is not None and registry_entry.hidden_by is None:
+                registry.async_update_entity(
+                    entity_id,
+                    hidden_by=er.RegistryEntryHider.INTEGRATION,
+                )
+
+        hass.config_entries.async_update_entry(entry, version=3)
 
     return True
 

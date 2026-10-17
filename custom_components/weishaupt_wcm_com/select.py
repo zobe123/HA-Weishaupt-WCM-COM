@@ -289,6 +289,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         self._bus = bus
         self._modultyp = modultyp
         self._allow_write = allow_write
+        self._hot_water_mode = hot_water_mode
         self._attr_extra_state_attributes = {
             "wcm_bus": bus,
             "wcm_module": modultyp,
@@ -341,7 +342,10 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
     def device_info(self):
         """Attach to the corrected device while preserving legacy IDs."""
 
-        return device_info(self._sensor_name)
+        return device_info(
+            self._sensor_name,
+            hot_water=self._hot_water_mode,
+        )
 
     @staticmethod
     def _extract_option_label(text: str) -> str:

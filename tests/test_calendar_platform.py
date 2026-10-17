@@ -128,6 +128,10 @@ class CalendarPlatformTest(unittest.TestCase):
                 "hot_water_program",
             ],
         )
+        self.assertEqual(
+            added[-1].device_info["identifiers"],
+            {("weishaupt_wcm_com", "weishaupt_kessel")},
+        )
 
     def test_platform_adds_circulation_only_with_a_real_signal(self) -> None:
         manager = Mock()

@@ -76,7 +76,8 @@ The integration queries various parameters from the WCM-COM interface and expose
 - `HK2 · Radiatoren / FS2` – extension-module circuit on physical bus 1 (legacy entity IDs keep `hk1`)
 - `HK3 · FBH / FS3` – extension-module circuit on physical bus 2 (legacy entity IDs keep `hk2`)
 - `Therme / Kessel` – global burner, boiler, domestic-hot-water and plant values
-  that do not belong to one heating circuit
+  that do not belong to one heating circuit; technical FS2/FS3 hot-water
+  setpoint duplicates stay compatible but hidden
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
 - Active-program calendars expose the effective HC2/HC3 heating schedules plus
   one global hot-water schedule. Circulation is added only when the controller

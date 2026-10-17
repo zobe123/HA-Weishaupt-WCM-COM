@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .device_model import device_info
 from .time_program import (
     WEEKDAYS,
     active_heating_program,
@@ -86,6 +87,14 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
         """Return the active or next event from the last loaded schedule."""
 
         return self._event
+
+    @property
+    def device_info(self):
+        """Attach schedules to their functional Home Assistant device."""
+
+        if self._program in {"hot_water", "circulation"}:
+            return device_info("Warmwasser-Zeitprogramm")
+        return device_info(f"HK{self._heating_circuit} Zeitprogramm")
 
     async def async_get_events(
         self,

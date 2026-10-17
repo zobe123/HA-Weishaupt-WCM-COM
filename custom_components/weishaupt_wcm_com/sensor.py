@@ -36,7 +36,7 @@ from .localization import (
     operation_phase_key,
     parameter_translation_key,
 )
-from .device_model import device_info
+from .device_model import device_info, is_hot_water_parameter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -268,7 +268,12 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         # FS/EM-Versionen auf die jeweiligen Geräte mappen:
         # - Kessel: EM-Version (falls vorhanden)
         # - HK1/HK2: FS-Version des jeweiligen Heizkreises
-        if self._sensor_name.startswith("HK1 "):
+        if is_hot_water_parameter(self._sensor_name):
+            # These entities are grouped with the boiler.  Do not let a
+            # technical FS/EM source prefix overwrite the boiler's software
+            # metadata with a heating-circuit firmware version.
+            sw_version = None
+        elif self._sensor_name.startswith("HK1 "):
             fs = data.get("HK1 Config Version FS")
             em = data.get("HK1 Config Version EM")
             if fs and em:
