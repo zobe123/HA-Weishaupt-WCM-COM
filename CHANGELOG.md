@@ -4,7 +4,7 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [Unreleased 1.4.1b1]
+## [1.4.1]
 
 ### Fixed
 
