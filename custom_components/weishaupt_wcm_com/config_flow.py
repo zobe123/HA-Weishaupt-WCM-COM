@@ -259,8 +259,14 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                     unique_id=connection_data[CONF_HOST],
                 )
                 if changed:
-                    await self.hass.config_entries.async_reload(
-                        self._config_entry.entry_id
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._config_entry.entry_id
+                        ),
+                        (
+                            "Reload Weishaupt WCM-COM after options update "
+                            f"{self._config_entry.entry_id}"
+                        ),
                     )
                 return self.async_create_entry(title="", data=options_data)
 

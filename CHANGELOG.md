@@ -4,6 +4,21 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.4b3]
+
+### Fixed
+
+- Close the options dialog immediately after saving instead of waiting for the
+  slow WCM-COM config-entry reload to finish.
+- Keep connection validation synchronous only when host or credentials were
+  actually changed; the required integration reload then continues in the
+  background.
+
+### Tests
+
+- Verify that an options update returns while its scheduled reload is still
+  running.
+
 ## [1.4.4b2]
 
 ### Improved

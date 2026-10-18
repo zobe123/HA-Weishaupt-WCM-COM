@@ -1,5 +1,6 @@
 """Behavior tests for the Home Assistant config and options flows."""
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -202,6 +203,63 @@ async def test_options_only_update_skips_connection_check(hass) -> None:
     assert entry.options[CONF_ALLOW_WRITE] is True
     validate_connection.assert_not_awaited()
     reload_entry.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_options_flow_returns_before_reload_finishes(hass) -> None:
+    """Saving options does not keep the dialog open during a slow reload."""
+
+    entry = _entry(
+        options={
+            CONF_SCAN_INTERVAL: 60,
+            CONF_ALLOW_WRITE: False,
+            CONF_ADVANCED_LOGGING: False,
+            CONF_SHOW_TIME_PROGRAM_PANEL: True,
+            CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
+            CONF_EXTERNAL_GAS_METER_ENTITY: "",
+        }
+    )
+    entry.add_to_hass(hass)
+    reload_started = asyncio.Event()
+    finish_reload = asyncio.Event()
+
+    async def _slow_reload(entry_id: str) -> bool:
+        assert entry_id == entry.entry_id
+        reload_started.set()
+        await finish_reload.wait()
+        return True
+
+    with (
+        patch(
+            "custom_components.weishaupt_wcm_com.config_flow._async_validate_connection",
+            AsyncMock(),
+        ) as validate_connection,
+        patch.object(hass.config_entries, "async_reload", side_effect=_slow_reload),
+    ):
+        form = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await asyncio.wait_for(
+            hass.config_entries.options.async_configure(
+                form["flow_id"],
+                {
+                    CONF_HOST: "wcm-com.local",
+                    CONF_USERNAME: "",
+                    CONF_PASSWORD: "",
+                    CONF_SCAN_INTERVAL: 90,
+                    CONF_ALLOW_WRITE: False,
+                    CONF_ADVANCED_LOGGING: False,
+                    CONF_SHOW_TIME_PROGRAM_PANEL: True,
+                    CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
+                },
+            ),
+            timeout=0.5,
+        )
+        await asyncio.wait_for(reload_started.wait(), timeout=0.5)
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert not finish_reload.is_set()
+        validate_connection.assert_not_awaited()
+
+        finish_reload.set()
+        await hass.async_block_till_done()
 
 
 async def test_connection_change_is_validated_before_one_reload(hass) -> None:
