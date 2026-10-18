@@ -4,6 +4,19 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.4b2]
+
+### Improved
+
+- Skip the WCM-COM connection check when only operational options change.
+- Explain that changed connection settings are verified and that a new IP
+  address can take a few minutes to respond.
+
+### Tests
+
+- Distinguish options-only updates from connection reconfiguration in the
+  Home Assistant flow tests.
+
 ## [1.4.4b1]
 
 ### Fixed

@@ -158,8 +158,8 @@ async def test_reauth_updates_credentials_and_schedules_one_reload(hass) -> None
     reload_entry.assert_awaited_once_with(entry.entry_id)
 
 
-async def test_options_update_schedules_one_reload(hass) -> None:
-    """Connection and operational option changes schedule one reload total."""
+async def test_options_only_update_skips_connection_check(hass) -> None:
+    """Operational option changes skip validation and schedule one reload."""
 
     entry = _entry(
         options={
@@ -177,7 +177,7 @@ async def test_options_update_schedules_one_reload(hass) -> None:
         patch(
             "custom_components.weishaupt_wcm_com.config_flow._async_validate_connection",
             AsyncMock(),
-        ),
+        ) as validate_connection,
         patch.object(
             hass.config_entries, "async_reload", AsyncMock(return_value=True)
         ) as reload_entry,
@@ -200,4 +200,59 @@ async def test_options_update_schedules_one_reload(hass) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_SCAN_INTERVAL] == 90
     assert entry.options[CONF_ALLOW_WRITE] is True
+    validate_connection.assert_not_awaited()
+    reload_entry.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_connection_change_is_validated_before_one_reload(hass) -> None:
+    """Changed connection data is validated before scheduling one reload."""
+
+    entry = _entry(
+        data={
+            CONF_HOST: "wcm-com.local",
+            CONF_USERNAME: "old-user",
+            CONF_PASSWORD: "old-password",
+        },
+        options={
+            CONF_SCAN_INTERVAL: 60,
+            CONF_ALLOW_WRITE: False,
+            CONF_ADVANCED_LOGGING: False,
+            CONF_SHOW_TIME_PROGRAM_PANEL: True,
+            CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
+            CONF_EXTERNAL_GAS_METER_ENTITY: "",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "custom_components.weishaupt_wcm_com.config_flow._async_validate_connection",
+            AsyncMock(),
+        ) as validate_connection,
+        patch.object(
+            hass.config_entries, "async_reload", AsyncMock(return_value=True)
+        ) as reload_entry,
+    ):
+        form = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            form["flow_id"],
+            {
+                CONF_HOST: " NEW-WCM.LOCAL. ",
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-password",
+                CONF_SCAN_INTERVAL: 60,
+                CONF_ALLOW_WRITE: False,
+                CONF_ADVANCED_LOGGING: False,
+                CONF_SHOW_TIME_PROGRAM_PANEL: True,
+                CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.data == {
+        CONF_HOST: "new-wcm.local",
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-password",
+    }
+    validate_connection.assert_awaited_once_with(hass, entry.data)
     reload_entry.assert_awaited_once_with(entry.entry_id)

@@ -199,21 +199,31 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
+            current_connection_data = {
+                CONF_HOST: normalize_host(
+                    self._config_entry.data.get(CONF_HOST, "")
+                ),
+                CONF_USERNAME: self._config_entry.data.get(CONF_USERNAME, ""),
+                CONF_PASSWORD: self._config_entry.data.get(CONF_PASSWORD, ""),
+            }
             connection_data = {
                 CONF_HOST: normalize_host(user_input[CONF_HOST]),
                 CONF_USERNAME: user_input.get(CONF_USERNAME, ""),
-                CONF_PASSWORD: user_input.get(
-                    CONF_PASSWORD,
-                    self._config_entry.data.get(CONF_PASSWORD, ""),
-                ),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD)
+                or current_connection_data[CONF_PASSWORD],
             }
-            if _host_is_configured(
+            connection_changed = connection_data != current_connection_data
+            host_changed = (
+                connection_data[CONF_HOST] != current_connection_data[CONF_HOST]
+            )
+
+            if host_changed and _host_is_configured(
                 self.hass,
                 connection_data[CONF_HOST],
                 exclude_entry_id=self._config_entry.entry_id,
             ):
                 errors["base"] = "already_configured"
-            else:
+            elif connection_changed:
                 try:
                     await _async_validate_connection(self.hass, connection_data)
                 except WeishauptAuthenticationError:
@@ -226,32 +236,33 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                         err,
                     )
                     errors["base"] = "cannot_connect"
-                else:
-                    options_data = {
-                        CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
-                        CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE],
-                        CONF_ADVANCED_LOGGING: user_input[CONF_ADVANCED_LOGGING],
-                        CONF_SHOW_TIME_PROGRAM_PANEL: user_input[
-                            CONF_SHOW_TIME_PROGRAM_PANEL
-                        ],
-                        CONF_EXPOSE_TIME_PROGRAM_CALENDARS: user_input[
-                            CONF_EXPOSE_TIME_PROGRAM_CALENDARS
-                        ],
-                        CONF_EXTERNAL_GAS_METER_ENTITY: user_input.get(
-                            CONF_EXTERNAL_GAS_METER_ENTITY, ""
-                        ),
-                    }
-                    changed = self.hass.config_entries.async_update_entry(
-                        self._config_entry,
-                        data=connection_data,
-                        options=options_data,
-                        unique_id=connection_data[CONF_HOST],
+
+            if not errors:
+                options_data = {
+                    CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
+                    CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE],
+                    CONF_ADVANCED_LOGGING: user_input[CONF_ADVANCED_LOGGING],
+                    CONF_SHOW_TIME_PROGRAM_PANEL: user_input[
+                        CONF_SHOW_TIME_PROGRAM_PANEL
+                    ],
+                    CONF_EXPOSE_TIME_PROGRAM_CALENDARS: user_input[
+                        CONF_EXPOSE_TIME_PROGRAM_CALENDARS
+                    ],
+                    CONF_EXTERNAL_GAS_METER_ENTITY: user_input.get(
+                        CONF_EXTERNAL_GAS_METER_ENTITY, ""
+                    ),
+                }
+                changed = self.hass.config_entries.async_update_entry(
+                    self._config_entry,
+                    data=connection_data,
+                    options=options_data,
+                    unique_id=connection_data[CONF_HOST],
+                )
+                if changed:
+                    await self.hass.config_entries.async_reload(
+                        self._config_entry.entry_id
                     )
-                    if changed:
-                        await self.hass.config_entries.async_reload(
-                            self._config_entry.entry_id
-                        )
-                    return self.async_create_entry(title="", data=options_data)
+                return self.async_create_entry(title="", data=options_data)
 
         # Aktuelle Werte aus Entry / Optionen als Default
         source = user_input or self._config_entry.options

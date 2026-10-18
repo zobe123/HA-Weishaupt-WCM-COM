@@ -38,6 +38,7 @@
     },
     "step": {
       "init": {
+        "description": "Only changes to the host, username or password are verified before saving. With a new IP address, this check can take a few minutes because the WCM-COM interface responds slowly. Changes to the remaining options are saved without this connection check.",
         "data": {
           "host": "Host",
           "username": "Username",

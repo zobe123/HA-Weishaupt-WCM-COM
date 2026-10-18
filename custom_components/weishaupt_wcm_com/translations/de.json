@@ -38,6 +38,7 @@
     },
     "step": {
       "init": {
+        "description": "Nur Änderungen an Host, Benutzername oder Passwort werden vor dem Speichern geprüft. Bei einer neuen IP-Adresse kann diese Prüfung wegen der langsamen WCM-COM-Schnittstelle einige Minuten dauern. Änderungen an den übrigen Optionen werden ohne diese Verbindungsprüfung gespeichert.",
         "data": {
           "host": "Host",
           "username": "Benutzername",
