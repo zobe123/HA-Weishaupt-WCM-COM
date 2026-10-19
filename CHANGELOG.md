@@ -4,35 +4,7 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [1.4.4b3]
-
-### Fixed
-
-- Close the options dialog immediately after saving instead of waiting for the
-  slow WCM-COM config-entry reload to finish.
-- Keep connection validation synchronous only when host or credentials were
-  actually changed; the required integration reload then continues in the
-  background.
-
-### Tests
-
-- Verify that an options update returns while its scheduled reload is still
-  running.
-
-## [1.4.4b2]
-
-### Improved
-
-- Skip the WCM-COM connection check when only operational options change.
-- Explain that changed connection settings are verified and that a new IP
-  address can take a few minutes to respond.
-
-### Tests
-
-- Distinguish options-only updates from connection reconfiguration in the
-  Home Assistant flow tests.
-
-## [1.4.4b1]
+## [1.4.4]
 
 ### Fixed
 
@@ -42,11 +14,26 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   credentials cannot be shadowed by stale values.
 - Schedule exactly one reload after successful reauthentication or options
   changes.
+- Close the options dialog immediately after saving instead of waiting for the
+  slow WCM-COM config-entry reload to finish.
+- Keep connection validation synchronous only when host or credentials were
+  actually changed; the required integration reload then continues in the
+  background.
+
+### Improved
+
+- Skip the WCM-COM connection check when only operational options change.
+- Explain that changed connection settings are verified and that a new IP
+  address can take a few minutes to respond.
 
 ### Tests
 
 - Add behavioral Home Assistant config-flow coverage for duplicate setup,
   authentication failures, legacy migration and reload scheduling.
+- Distinguish options-only updates from connection reconfiguration in the
+  Home Assistant flow tests.
+- Verify that an options update returns while its scheduled reload is still
+  running.
 
 ## [1.4.3]
 
