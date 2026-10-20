@@ -26,6 +26,8 @@ from .const import (
     DOMAIN,
     CONF_ALLOW_WRITE,
     DEFAULT_ALLOW_WRITE,
+    CONF_ALLOW_FIRMWARE_CHECK,
+    DEFAULT_ALLOW_FIRMWARE_CHECK,
     CONF_ADVANCED_LOGGING,
     DEFAULT_ADVANCED_LOGGING,
     CONF_SHOW_TIME_PROGRAM_PANEL,
@@ -230,6 +232,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Read scan interval, write flag and advanced logging from options (or use defaults)
     scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     allow_write: bool = entry.options.get(CONF_ALLOW_WRITE, DEFAULT_ALLOW_WRITE)
+    allow_firmware_check: bool = entry.options.get(
+        CONF_ALLOW_FIRMWARE_CHECK, DEFAULT_ALLOW_FIRMWARE_CHECK
+    )
     advanced_logging: bool = entry.options.get(CONF_ADVANCED_LOGGING, DEFAULT_ADVANCED_LOGGING)
     show_time_program_panel: bool = entry.options.get(
         CONF_SHOW_TIME_PROGRAM_PANEL, DEFAULT_SHOW_TIME_PROGRAM_PANEL
@@ -289,6 +294,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "coordinator": coordinator,
         "time_program_manager": TimeProgramManager(hass, api),
         "allow_write": allow_write,
+        "allow_firmware_check": allow_firmware_check,
         "advanced_logging": advanced_logging,
         "show_time_program_panel": show_time_program_panel,
         "expose_time_program_calendars": expose_time_program_calendars,

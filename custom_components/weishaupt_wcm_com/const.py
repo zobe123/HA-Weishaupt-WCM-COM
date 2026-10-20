@@ -22,6 +22,11 @@ CONF_SCAN_INTERVAL = "scan_interval"
 CONF_ALLOW_WRITE = "allow_write"
 DEFAULT_ALLOW_WRITE = False
 
+# Firmware update discovery sends one dedicated search command to WCM-COM.
+# Keep that opt-in separate from the general expert write permission.
+CONF_ALLOW_FIRMWARE_CHECK = "allow_firmware_check"
+DEFAULT_ALLOW_FIRMWARE_CHECK = False
+
 # Advanced logging flag (more verbose debug logs when True)
 CONF_ADVANCED_LOGGING = "advanced_logging"
 DEFAULT_ADVANCED_LOGGING = False

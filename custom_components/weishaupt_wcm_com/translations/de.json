@@ -45,6 +45,7 @@
           "password": "Passwort",
           "scan_interval": "Abfrageintervall (Sekunden)",
           "allow_write": "Schreibzugriffe auf WCM-COM erlauben (Expertenmodus)",
+          "allow_firmware_check": "Automatische Firmwareprüfung erlauben (sendet nur einen Suchbefehl, installiert nichts)",
           "advanced_logging": "Erweitertes Logging aktivieren (zusätzliche Debug-Ausgaben zur Fehlersuche)",
           "show_time_program_panel": "Zeitprogramme in der Seitenleiste anzeigen",
           "expose_time_program_calendars": "Aktive Zeitprogramme dem Home-Assistant-Kalender hinzufügen",

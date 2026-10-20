@@ -256,9 +256,14 @@ class ApiTransportTest(unittest.TestCase):
             json_response([[0, 0, 1, 20117, 0, 1, 0, 0]]),
             json_response([[0, 0, 1, 20117, 0, 1, 1, 0]]),
         ]
+        def assert_sleep_without_lock(_seconds: float) -> None:
+            self.assertFalse(api_module._lock.locked())
+
         with (
             patch.object(api_module.requests, "post", side_effect=responses) as post,
-            patch.object(api_module.time, "sleep"),
+            patch.object(
+                api_module.time, "sleep", side_effect=assert_sleep_without_lock
+            ) as sleep,
         ):
             result = api_module.WeishauptAPI("wcm.test").check_firmware_update()
 
@@ -283,6 +288,7 @@ class ApiTransportTest(unittest.TestCase):
                 [0, 0, 1, 20117, 0, 1, 0, 0],
             ],
         )
+        sleep.assert_called_once_with(api_module.FIRMWARE_CHECK_INTERVAL)
 
     def test_firmware_check_reports_available_version(self) -> None:
         responses = [

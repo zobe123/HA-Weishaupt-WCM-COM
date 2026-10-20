@@ -43,11 +43,14 @@ If the integration is not yet listed in the default HACS store, add it as a cust
 
 ### 2. Manual installation
 
-1. Clone this repository into your `custom_components` folder:
+1. Clone this repository and copy only the integration directory into Home
+   Assistant's `custom_components` folder:
 
    ```bash
-   git clone https://github.com/zobe123/HA-Weishaupt-WCM-COM \
-     ~/.homeassistant/custom_components/weishaupt_wcm_com
+   git clone https://github.com/zobe123/HA-Weishaupt-WCM-COM
+   mkdir -p ~/.homeassistant/custom_components
+   cp -r HA-Weishaupt-WCM-COM/custom_components/weishaupt_wcm_com \
+     ~/.homeassistant/custom_components/
    ```
 
 2. Restart Home Assistant.
@@ -115,6 +118,14 @@ By default the integration runs in a **read-only** mode:
 
 - All process and expert values are read from the WCM-COM and exposed as entities.
 - Configuration entities (expert sliders and heating-circuit selects) are visible but writes are blocked.
+- The installed WCM-COM firmware version is read without sending a write command.
+
+Checking Weishaupt's server for a newer firmware version requires one dedicated
+search command (`20116 = 1`) on the WCM-COM. This command does not install
+firmware or change heating settings, but it is technically a write telegram and
+is therefore disabled by default. To allow the automatic daily online check,
+enable **"Allow automatic firmware checks"** in the integration options. This
+permission is independent of expert write mode.
 
 If you really want to change configuration parameters from Home Assistant, you must explicitly enable writes in the integration options:
 
@@ -153,7 +164,7 @@ Please use the [issue tracker](https://github.com/zobe123/HA-Weishaupt-WCM-COM/i
 
 ## License
 
-This project is licensed under the MIT License.  
+This project is licensed under the Apache License 2.0.
 See the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments

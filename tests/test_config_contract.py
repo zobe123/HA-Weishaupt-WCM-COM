@@ -20,9 +20,11 @@ class ConfigContractTest(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertEqual(manifest["integration_type"], "hub")
-        self.assertEqual(manifest["version"], "1.4.4")
+        self.assertTrue(manifest["single_config_entry"])
+        self.assertEqual(manifest["version"], "1.4.5b1")
         self.assertEqual(hacs["homeassistant"], "2023.12.0")
         self.assertIn("Python 3.11 or higher", readme)
+        self.assertIn("Apache License 2.0", readme)
 
     def test_duplicate_abort_reason_is_translated(self) -> None:
         for language in ("de", "en"):

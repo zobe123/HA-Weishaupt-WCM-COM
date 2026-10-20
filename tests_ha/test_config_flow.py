@@ -19,6 +19,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.weishaupt_wcm_com import async_migrate_entry
 from custom_components.weishaupt_wcm_com.const import (
     CONF_ADVANCED_LOGGING,
+    CONF_ALLOW_FIRMWARE_CHECK,
     CONF_ALLOW_WRITE,
     CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
     CONF_EXTERNAL_GAS_METER_ENTITY,
@@ -59,8 +60,8 @@ async def _finish_user_flow(hass, user_input: dict) -> ConfigFlowResult:
     )
 
 
-async def test_duplicate_host_aborts_with_translated_reason(hass) -> None:
-    """A normalized duplicate host aborts with the translated reason key."""
+async def test_second_config_entry_is_rejected(hass) -> None:
+    """The manifest rejects a second WCM-COM config entry."""
 
     _entry().add_to_hass(hass)
 
@@ -70,7 +71,7 @@ async def test_duplicate_host_aborts_with_translated_reason(hass) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_user_flow_maps_401_to_invalid_auth(hass) -> None:
@@ -166,6 +167,7 @@ async def test_options_only_update_skips_connection_check(hass) -> None:
         options={
             CONF_SCAN_INTERVAL: 60,
             CONF_ALLOW_WRITE: False,
+            CONF_ALLOW_FIRMWARE_CHECK: False,
             CONF_ADVANCED_LOGGING: False,
             CONF_SHOW_TIME_PROGRAM_PANEL: True,
             CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
@@ -192,6 +194,7 @@ async def test_options_only_update_skips_connection_check(hass) -> None:
                 CONF_PASSWORD: "",
                 CONF_SCAN_INTERVAL: 90,
                 CONF_ALLOW_WRITE: True,
+                CONF_ALLOW_FIRMWARE_CHECK: True,
                 CONF_ADVANCED_LOGGING: False,
                 CONF_SHOW_TIME_PROGRAM_PANEL: True,
                 CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
@@ -201,6 +204,7 @@ async def test_options_only_update_skips_connection_check(hass) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_SCAN_INTERVAL] == 90
     assert entry.options[CONF_ALLOW_WRITE] is True
+    assert entry.options[CONF_ALLOW_FIRMWARE_CHECK] is True
     validate_connection.assert_not_awaited()
     reload_entry.assert_awaited_once_with(entry.entry_id)
 
@@ -212,6 +216,7 @@ async def test_options_flow_returns_before_reload_finishes(hass) -> None:
         options={
             CONF_SCAN_INTERVAL: 60,
             CONF_ALLOW_WRITE: False,
+            CONF_ALLOW_FIRMWARE_CHECK: False,
             CONF_ADVANCED_LOGGING: False,
             CONF_SHOW_TIME_PROGRAM_PANEL: True,
             CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
@@ -245,6 +250,7 @@ async def test_options_flow_returns_before_reload_finishes(hass) -> None:
                     CONF_PASSWORD: "",
                     CONF_SCAN_INTERVAL: 90,
                     CONF_ALLOW_WRITE: False,
+                    CONF_ALLOW_FIRMWARE_CHECK: False,
                     CONF_ADVANCED_LOGGING: False,
                     CONF_SHOW_TIME_PROGRAM_PANEL: True,
                     CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
@@ -274,6 +280,7 @@ async def test_connection_change_is_validated_before_one_reload(hass) -> None:
         options={
             CONF_SCAN_INTERVAL: 60,
             CONF_ALLOW_WRITE: False,
+            CONF_ALLOW_FIRMWARE_CHECK: False,
             CONF_ADVANCED_LOGGING: False,
             CONF_SHOW_TIME_PROGRAM_PANEL: True,
             CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,
@@ -300,6 +307,7 @@ async def test_connection_change_is_validated_before_one_reload(hass) -> None:
                 CONF_PASSWORD: "new-password",
                 CONF_SCAN_INTERVAL: 60,
                 CONF_ALLOW_WRITE: False,
+                CONF_ALLOW_FIRMWARE_CHECK: False,
                 CONF_ADVANCED_LOGGING: False,
                 CONF_SHOW_TIME_PROGRAM_PANEL: True,
                 CONF_EXPOSE_TIME_PROGRAM_CALENDARS: True,

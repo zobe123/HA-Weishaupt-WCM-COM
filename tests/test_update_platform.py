@@ -109,6 +109,8 @@ for module in (
 
 const = types.ModuleType(f"{PACKAGE}.const")
 const.DOMAIN = "weishaupt_wcm_com"
+const.CONF_ALLOW_FIRMWARE_CHECK = "allow_firmware_check"
+const.DEFAULT_ALLOW_FIRMWARE_CHECK = False
 sys.modules[const.__name__] = const
 load_module(f"{PACKAGE}.device_model", ROOT / "device_model.py")
 api_module = types.ModuleType(f"{PACKAGE}.weishaupt_api")
@@ -120,7 +122,41 @@ update_module = load_module(f"{PACKAGE}.update", ROOT / "update.py")
 class UpdatePlatformTest(unittest.TestCase):
     """Verify firmware discovery, metadata and read-only behavior."""
 
-    def test_setup_checks_once_and_creates_daily_read_only_entity(self) -> None:
+    def test_read_only_setup_reads_installed_version_without_online_check(self) -> None:
+        api = Mock()
+        api.get_firmware_version.return_value = "376-09 C"
+        hass = Mock()
+        hass.data = {"weishaupt_wcm_com": {"entry-1": {"api": api}}}
+
+        async def run_executor(function, *args):
+            return function(*args)
+
+        hass.async_add_executor_job = run_executor
+        entry = Mock(entry_id="entry-1", options={})
+        background_tasks = []
+        entry.async_create_background_task.side_effect = (
+            lambda hass, coroutine, name: background_tasks.append(coroutine)
+        )
+        added = []
+
+        async def setup_and_refresh():
+            await update_module.async_setup_entry(
+                hass, entry, lambda entities: added.extend(entities)
+            )
+            self.assertEqual(len(background_tasks), 1)
+            await background_tasks[0]
+
+        asyncio.run(setup_and_refresh())
+
+        api.get_firmware_version.assert_called_once_with()
+        api.check_firmware_update.assert_not_called()
+        self.assertEqual(len(added), 1)
+        entity = added[0]
+        self.assertEqual(entity.installed_version, "376-09 C")
+        self.assertIsNone(entity.latest_version)
+        self.assertTrue(entity.available)
+
+    def test_opted_in_setup_checks_once_and_creates_daily_entity(self) -> None:
         api = Mock()
         api.check_firmware_update.return_value = {
             "installed_version": "376-09 C",
@@ -134,7 +170,9 @@ class UpdatePlatformTest(unittest.TestCase):
             return function(*args)
 
         hass.async_add_executor_job = run_executor
-        entry = Mock(entry_id="entry-1")
+        entry = Mock(
+            entry_id="entry-1", options={"allow_firmware_check": True}
+        )
         background_tasks = []
         entry.async_create_background_task.side_effect = (
             lambda hass, coroutine, name: background_tasks.append(coroutine)
@@ -175,7 +213,9 @@ class UpdatePlatformTest(unittest.TestCase):
             return function(*args)
 
         hass.async_add_executor_job = run_executor
-        entry = Mock(entry_id="entry-1")
+        entry = Mock(
+            entry_id="entry-1", options={"allow_firmware_check": True}
+        )
         background_tasks = []
         entry.async_create_background_task.side_effect = (
             lambda hass, coroutine, name: background_tasks.append(coroutine)

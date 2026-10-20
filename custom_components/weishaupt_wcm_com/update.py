@@ -16,7 +16,11 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import (
+    CONF_ALLOW_FIRMWARE_CHECK,
+    DEFAULT_ALLOW_FIRMWARE_CHECK,
+    DOMAIN,
+)
 from .device_model import device_info
 from .weishaupt_api import WeishauptAPI
 
@@ -29,13 +33,25 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the read-only WCM-COM firmware update entity."""
+    """Set up WCM-COM firmware information and optional online discovery."""
 
     api: WeishauptAPI = hass.data[DOMAIN][entry.entry_id]["api"]
+    allow_firmware_check = entry.options.get(
+        CONF_ALLOW_FIRMWARE_CHECK, DEFAULT_ALLOW_FIRMWARE_CHECK
+    )
 
     async def async_update_firmware() -> dict[str, str | bool]:
         try:
-            return await hass.async_add_executor_job(api.check_firmware_update)
+            if allow_firmware_check:
+                return await hass.async_add_executor_job(api.check_firmware_update)
+            installed_version = await hass.async_add_executor_job(
+                api.get_firmware_version
+            )
+            return {
+                "installed_version": installed_version,
+                "latest_version": "",
+                "update_available": False,
+            }
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.warning("WCM-COM firmware check failed: %s", err)
             return {
@@ -74,7 +90,7 @@ class WeishauptFirmwareUpdateEntity(CoordinatorEntity, UpdateEntity):
     def available(self) -> bool:
         """Keep a vendor-server failure isolated to this one entity."""
 
-        return bool(self.installed_version and self.latest_version)
+        return bool(self.installed_version)
 
     @property
     def installed_version(self) -> str | None:

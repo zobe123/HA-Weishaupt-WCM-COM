@@ -4,6 +4,26 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.5b1]
+
+### Fixed
+
+- Keep online firmware discovery disabled until the user explicitly enables
+  its dedicated option; read only the installed version by default.
+- Release the shared WCM-COM lock between firmware-status polls so regular
+  sensor updates can run while the vendor check is waiting.
+- Correct the documented Apache-2.0 license and manual installation path.
+
+### Changed
+
+- Declare the integration as single-config-entry because entity and device
+  identifiers intentionally remain stable and unscoped.
+
+### Tests
+
+- Verify that read-only setup sends no firmware-search command, opted-in setup
+  performs the online check, and polling sleeps without holding the API lock.
+
 ## [1.4.4]
 
 ### Fixed

@@ -115,11 +115,12 @@ class WeishauptAPI:
             _, installed_version = self._read_firmware_parameter_unlocked(
                 FIRMWARE_VERSION_PARAMETER
             )
-            if not installed_version:
-                raise WeishauptCommunicationError(
-                    "WCM-COM returned no installed firmware version"
-                )
+        if not installed_version:
+            raise WeishauptCommunicationError(
+                "WCM-COM returned no installed firmware version"
+            )
 
+        with _lock:
             self._request_firmware_telegram_unlocked(
                 build_coco_telegram(
                     module_type=0,
@@ -131,34 +132,35 @@ class WeishauptAPI:
                 )
             )
 
-            deadline = time.monotonic() + max(0.0, float(timeout))
-            while True:
+        deadline = time.monotonic() + max(0.0, float(timeout))
+        while True:
+            with _lock:
                 status, available_version = self._read_firmware_parameter_unlocked(
                     FIRMWARE_STATUS_PARAMETER
                 )
-                if status == 1:
-                    latest_version = installed_version
-                    break
-                if status == 2:
-                    if not available_version:
-                        raise WeishauptCommunicationError(
-                            "WCM-COM reported an update without a firmware version"
-                        )
-                    latest_version = available_version
-                    break
-                if status == 3:
+            if status == 1:
+                latest_version = installed_version
+                break
+            if status == 2:
+                if not available_version:
                     raise WeishauptCommunicationError(
-                        "WCM-COM firmware server returned an error"
+                        "WCM-COM reported an update without a firmware version"
                     )
-                if status != 0:
-                    raise WeishauptCommunicationError(
-                        f"WCM-COM returned unknown firmware status {status}"
-                    )
-                if time.monotonic() >= deadline:
-                    raise WeishauptCommunicationError(
-                        "Timed out waiting for the WCM-COM firmware server"
-                    )
-                time.sleep(max(0.0, float(poll_interval)))
+                latest_version = available_version
+                break
+            if status == 3:
+                raise WeishauptCommunicationError(
+                    "WCM-COM firmware server returned an error"
+                )
+            if status != 0:
+                raise WeishauptCommunicationError(
+                    f"WCM-COM returned unknown firmware status {status}"
+                )
+            if time.monotonic() >= deadline:
+                raise WeishauptCommunicationError(
+                    "Timed out waiting for the WCM-COM firmware server"
+                )
+            time.sleep(max(0.0, float(poll_interval)))
 
         return {
             "installed_version": installed_version,

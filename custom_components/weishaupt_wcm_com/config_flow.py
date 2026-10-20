@@ -14,6 +14,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     CONF_ALLOW_WRITE,
     DEFAULT_ALLOW_WRITE,
+    CONF_ALLOW_FIRMWARE_CHECK,
+    DEFAULT_ALLOW_FIRMWARE_CHECK,
     CONF_ADVANCED_LOGGING,
     DEFAULT_ADVANCED_LOGGING,
     CONF_SHOW_TIME_PROGRAM_PANEL,
@@ -241,6 +243,9 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                 options_data = {
                     CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL],
                     CONF_ALLOW_WRITE: user_input[CONF_ALLOW_WRITE],
+                    CONF_ALLOW_FIRMWARE_CHECK: user_input[
+                        CONF_ALLOW_FIRMWARE_CHECK
+                    ],
                     CONF_ADVANCED_LOGGING: user_input[CONF_ADVANCED_LOGGING],
                     CONF_SHOW_TIME_PROGRAM_PANEL: user_input[
                         CONF_SHOW_TIME_PROGRAM_PANEL
@@ -286,6 +291,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_ALLOW_WRITE,
             DEFAULT_ALLOW_WRITE,
         )
+        allow_firmware_check = source.get(
+            CONF_ALLOW_FIRMWARE_CHECK,
+            DEFAULT_ALLOW_FIRMWARE_CHECK,
+        )
         advanced_logging = source.get(
             CONF_ADVANCED_LOGGING,
             DEFAULT_ADVANCED_LOGGING,
@@ -322,6 +331,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_ALLOW_WRITE,
                     default=allow_write,
+                ): bool,
+                vol.Required(
+                    CONF_ALLOW_FIRMWARE_CHECK,
+                    default=allow_firmware_check,
                 ): bool,
                 vol.Required(
                     CONF_ADVANCED_LOGGING,
