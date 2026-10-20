@@ -21,7 +21,7 @@ class ConfigContractTest(unittest.TestCase):
 
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertTrue(manifest["single_config_entry"])
-        self.assertEqual(manifest["version"], "1.4.5b1")
+        self.assertEqual(manifest["version"], "1.4.5b2")
         self.assertEqual(hacs["homeassistant"], "2023.12.0")
         self.assertIn("Python 3.11 or higher", readme)
         self.assertIn("Apache License 2.0", readme)

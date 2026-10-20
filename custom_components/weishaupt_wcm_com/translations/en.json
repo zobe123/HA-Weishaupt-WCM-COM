@@ -45,7 +45,7 @@
           "password": "Password",
           "scan_interval": "Scan interval (seconds)",
           "allow_write": "Allow writes to WCM-COM (expert mode)",
-          "allow_firmware_check": "Allow automatic firmware checks (sends only a search command and never installs firmware)",
+          "allow_firmware_check": "Automatically check for new firmware (sends a write telegram)",
           "advanced_logging": "Enable advanced logging (extra debug output for troubleshooting)",
           "show_time_program_panel": "Show time programs in the sidebar",
           "expose_time_program_calendars": "Add active time programs to the Home Assistant calendar",
