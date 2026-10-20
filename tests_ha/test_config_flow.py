@@ -14,9 +14,14 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.weishaupt_wcm_com import async_migrate_entry
+from custom_components.weishaupt_wcm_com import (
+    FIRMWARE_UPDATE_UNIQUE_ID,
+    _remove_disabled_firmware_update_entity,
+    async_migrate_entry,
+)
 from custom_components.weishaupt_wcm_com.const import (
     CONF_ADVANCED_LOGGING,
     CONF_ALLOW_FIRMWARE_CHECK,
@@ -72,6 +77,24 @@ async def test_second_config_entry_is_rejected(hass) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_disabled_firmware_check_removes_registered_update_entity(hass) -> None:
+    """Disabling online checks removes the now-unsupported update entity."""
+
+    entry = _entry()
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    registry_entry = registry.async_get_or_create(
+        "update",
+        DOMAIN,
+        FIRMWARE_UPDATE_UNIQUE_ID,
+        config_entry=entry,
+    )
+
+    _remove_disabled_firmware_update_entity(hass)
+
+    assert registry.async_get(registry_entry.entity_id) is None
 
 
 async def test_user_flow_maps_401_to_invalid_auth(hass) -> None:

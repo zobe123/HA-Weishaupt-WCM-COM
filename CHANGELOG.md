@@ -4,6 +4,15 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.5b4]
+
+### Changed
+
+- Create the firmware update entity only while automatic online firmware checks
+  are enabled, and remove its registry entry when the option is disabled.
+- Remove the redundant installed-firmware diagnostic sensor; the installed
+  version remains available in the WCM-COM device information.
+
 ## [1.4.5b3]
 
 ### Added

@@ -44,11 +44,12 @@ from .const import (
 from .weishaupt_api import WeishauptAPI, WeishauptAuthenticationError
 from .time_program_manager import TimeProgramManager
 from .frontend import async_register_frontend, async_unregister_frontend
-from .firmware import create_firmware_coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-BASE_PLATFORMS: list[str] = ["sensor", "select", "number", "update"]
+BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
+
+FIRMWARE_UPDATE_UNIQUE_ID = "weishaupt_wcm_com_firmware"
 
 OPTIONAL_CALENDAR_UNIQUE_IDS = {
     "weishaupt_hk1_active_heating_program",
@@ -74,6 +75,7 @@ DISABLED_TECHNICAL_HOT_WATER_UNIQUE_IDS = {
 
 OBSOLETE_ENTITY_UNIQUE_IDS = {
     "sensor": {
+        "weishaupt_wcm_com_installed_firmware",
         "weishaupt_hk1_user_sollwert_solar",
         "weishaupt_hk2_user_sollwert_solar",
         "weishaupt_hk1_user_betriebsart_hk",
@@ -223,6 +225,17 @@ def _remove_obsolete_entities(
                 registry.async_remove(entity_id)
 
 
+def _remove_disabled_firmware_update_entity(hass: HomeAssistant) -> None:
+    """Remove the optional firmware update entity when its check is disabled."""
+
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        "update", DOMAIN, FIRMWARE_UPDATE_UNIQUE_ID
+    )
+    if entity_id is not None:
+        registry.async_remove(entity_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
 
@@ -249,6 +262,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     )
     platforms = [*BASE_PLATFORMS]
+    if allow_firmware_check:
+        platforms.append("update")
     if expose_time_program_calendars:
         platforms.append("calendar")
 
@@ -283,22 +298,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # First refresh before entities are created
     await coordinator.async_config_entry_first_refresh()
-    firmware_coordinator = create_firmware_coordinator(
-        hass,
-        api,
-        allow_online_check=allow_firmware_check,
-    )
     _remove_obsolete_entities(
         hass,
         coordinator.data or {},
         remove_optional_calendars=not expose_time_program_calendars,
     )
+    if not allow_firmware_check:
+        _remove_disabled_firmware_update_entity(hass)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         "api": api,
         "coordinator": coordinator,
-        "firmware_coordinator": firmware_coordinator,
         "time_program_manager": TimeProgramManager(hass, api),
         "allow_write": allow_write,
         "allow_firmware_check": allow_firmware_check,
@@ -308,12 +319,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "external_gas_meter_entity": external_gas_meter_entity,
         "platforms": platforms,
     }
-
-    entry.async_create_background_task(
-        hass,
-        firmware_coordinator.async_config_entry_first_refresh(),
-        "weishaupt_wcm_com_firmware_check",
-    )
 
     # Register services only once per integration domain
     if not hass.services.has_service(DOMAIN, "set_holiday_date"):

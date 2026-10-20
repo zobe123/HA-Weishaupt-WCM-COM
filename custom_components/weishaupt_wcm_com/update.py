@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
+import logging
+from datetime import timedelta
+
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 from .device_model import device_info
+from .weishaupt_api import WeishauptAPI
+
+_LOGGER = logging.getLogger(__name__)
+FIRMWARE_SCAN_INTERVAL = timedelta(hours=24)
 
 
 async def async_setup_entry(
@@ -19,10 +29,35 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up WCM-COM firmware information and optional online discovery."""
+    """Set up the opted-in WCM-COM online firmware check."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]["firmware_coordinator"]
+    api: WeishauptAPI = hass.data[DOMAIN][entry.entry_id]["api"]
+
+    async def async_update_firmware() -> dict[str, str | bool]:
+        try:
+            return await hass.async_add_executor_job(api.check_firmware_update)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning("WCM-COM firmware check failed: %s", err)
+            return {
+                "installed_version": "",
+                "latest_version": "",
+                "update_available": False,
+                "check_error": str(err),
+            }
+
+    coordinator = DataUpdateCoordinator[dict[str, str | bool]](
+        hass,
+        _LOGGER,
+        name="weishaupt_wcm_com_firmware",
+        update_method=async_update_firmware,
+        update_interval=FIRMWARE_SCAN_INTERVAL,
+    )
     async_add_entities([WeishauptFirmwareUpdateEntity(coordinator)])
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_config_entry_first_refresh(),
+        "weishaupt_wcm_com_firmware_check",
+    )
 
 
 class WeishauptFirmwareUpdateEntity(CoordinatorEntity, UpdateEntity):

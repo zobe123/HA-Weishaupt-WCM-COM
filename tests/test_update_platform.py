@@ -1,4 +1,4 @@
-"""Regression tests for WCM-COM firmware entities."""
+"""Regression tests for the WCM-COM firmware update entity."""
 
 import asyncio
 from datetime import timedelta
@@ -30,7 +30,6 @@ sys.modules[PACKAGE] = package
 
 homeassistant = types.ModuleType("homeassistant")
 components = types.ModuleType("homeassistant.components")
-sensor_component = types.ModuleType("homeassistant.components.sensor")
 update_component = types.ModuleType("homeassistant.components.update")
 config_entries_module = types.ModuleType("homeassistant.config_entries")
 const_module = types.ModuleType("homeassistant.const")
@@ -39,10 +38,6 @@ helpers = types.ModuleType("homeassistant.helpers")
 device_registry_module = types.ModuleType("homeassistant.helpers.device_registry")
 entity_platform_module = types.ModuleType("homeassistant.helpers.entity_platform")
 coordinator_module = types.ModuleType("homeassistant.helpers.update_coordinator")
-
-
-class SensorEntity:
-    """Minimal Home Assistant sensor stub."""
 
 
 class UpdateEntity:
@@ -83,7 +78,6 @@ class DataUpdateCoordinator:
         self.data = await self.update_method()
 
 
-sensor_component.SensorEntity = SensorEntity
 update_component.UpdateEntity = UpdateEntity
 update_component.UpdateEntityFeature = UpdateEntityFeature
 config_entries_module.ConfigEntry = object
@@ -97,7 +91,6 @@ coordinator_module.DataUpdateCoordinator = DataUpdateCoordinator
 for module in (
     homeassistant,
     components,
-    sensor_component,
     update_component,
     config_entries_module,
     const_module,
@@ -116,110 +109,87 @@ load_module(f"{PACKAGE}.device_model", ROOT / "device_model.py")
 api_module = types.ModuleType(f"{PACKAGE}.weishaupt_api")
 api_module.WeishauptAPI = object
 sys.modules[api_module.__name__] = api_module
-firmware_module = load_module(f"{PACKAGE}.firmware", ROOT / "firmware.py")
 update_module = load_module(f"{PACKAGE}.update", ROOT / "update.py")
 
 
-def create_test_coordinator(api: Mock, *, allow_online_check: bool):
-    """Create a firmware coordinator with a synchronous executor stub."""
+class UpdatePlatformTest(unittest.TestCase):
+    """Verify opted-in firmware discovery and update metadata."""
 
-    hass = Mock()
-
-    async def run_executor(function, *args):
-        return function(*args)
-
-    hass.async_add_executor_job = run_executor
-    coordinator = firmware_module.create_firmware_coordinator(
-        hass,
-        api,
-        allow_online_check=allow_online_check,
-    )
-    hass.data = {
-        "weishaupt_wcm_com": {
-            "entry-1": {"firmware_coordinator": coordinator}
-        }
-    }
-    return hass, coordinator
-
-
-class FirmwarePlatformTest(unittest.TestCase):
-    """Verify the shared firmware coordinator and both entity types."""
-
-    def test_read_only_refresh_exposes_installed_version_sensor(self) -> None:
-        api = Mock()
-        api.get_firmware_version.return_value = "376-09 C"
-        hass, coordinator = create_test_coordinator(
-            api, allow_online_check=False
-        )
-
-        asyncio.run(coordinator.async_config_entry_first_refresh())
-
-        api.get_firmware_version.assert_called_once_with()
-        api.check_firmware_update.assert_not_called()
-        sensor = firmware_module.WeishauptInstalledFirmwareSensor(coordinator)
-        self.assertEqual(sensor.native_value, "376-09 C")
-        self.assertTrue(sensor.available)
-        self.assertEqual(
-            sensor._attr_unique_id, "weishaupt_wcm_com_installed_firmware"
-        )
-        self.assertEqual(
-            sensor.device_info["identifiers"],
-            {("weishaupt_wcm_com", "weishaupt_kessel")},
-        )
-
-        added = []
-        asyncio.run(
-            update_module.async_setup_entry(
-                hass,
-                Mock(entry_id="entry-1"),
-                lambda entities: added.extend(entities),
-            )
-        )
-        self.assertEqual(len(added), 1)
-        self.assertEqual(added[0].installed_version, "376-09 C")
-        self.assertIsNone(added[0].latest_version)
-
-    def test_opted_in_refresh_populates_update_entity(self) -> None:
+    def test_opted_in_setup_checks_once_and_creates_daily_entity(self) -> None:
         api = Mock()
         api.check_firmware_update.return_value = {
             "installed_version": "376-09 C",
             "latest_version": "376-09 C",
             "update_available": False,
         }
-        hass, coordinator = create_test_coordinator(
-            api, allow_online_check=True
-        )
+        hass = Mock()
+        hass.data = {"weishaupt_wcm_com": {"entry-1": {"api": api}}}
 
-        asyncio.run(coordinator.async_config_entry_first_refresh())
+        async def run_executor(function, *args):
+            return function(*args)
+
+        hass.async_add_executor_job = run_executor
+        entry = Mock(entry_id="entry-1")
+        background_tasks = []
+        entry.async_create_background_task.side_effect = (
+            lambda hass, coroutine, name: background_tasks.append(coroutine)
+        )
+        added = []
+
+        async def setup_and_refresh():
+            await update_module.async_setup_entry(
+                hass, entry, lambda entities: added.extend(entities)
+            )
+            self.assertEqual(len(background_tasks), 1)
+            await background_tasks[0]
+
+        asyncio.run(setup_and_refresh())
 
         api.check_firmware_update.assert_called_once_with()
-        added = []
-        asyncio.run(
-            update_module.async_setup_entry(
-                hass,
-                Mock(entry_id="entry-1"),
-                lambda entities: added.extend(entities),
-            )
-        )
+        api.get_firmware_version.assert_not_called()
+        self.assertEqual(len(added), 1)
         entity = added[0]
         self.assertEqual(entity.installed_version, "376-09 C")
         self.assertEqual(entity.latest_version, "376-09 C")
+        self.assertEqual(entity._attr_unique_id, "weishaupt_wcm_com_firmware")
         self.assertEqual(entity._attr_supported_features, UpdateEntityFeature(0))
-        self.assertEqual(coordinator.update_interval, timedelta(hours=24))
         self.assertTrue(entity.available)
+        self.assertEqual(entity.coordinator.update_interval, timedelta(hours=24))
+        self.assertEqual(
+            entity.device_info["identifiers"],
+            {("weishaupt_wcm_com", "weishaupt_kessel")},
+        )
 
-    def test_vendor_failure_isolated_to_firmware_entities(self) -> None:
+    def test_vendor_failure_does_not_block_platform_setup(self) -> None:
         api = Mock()
         api.check_firmware_update.side_effect = RuntimeError("vendor unavailable")
-        _, coordinator = create_test_coordinator(api, allow_online_check=True)
+        hass = Mock()
+        hass.data = {"weishaupt_wcm_com": {"entry-1": {"api": api}}}
 
-        asyncio.run(coordinator.async_config_entry_first_refresh())
+        async def run_executor(function, *args):
+            return function(*args)
 
-        sensor = firmware_module.WeishauptInstalledFirmwareSensor(coordinator)
-        entity = update_module.WeishauptFirmwareUpdateEntity(coordinator)
-        self.assertFalse(sensor.available)
-        self.assertFalse(entity.available)
-        self.assertEqual(coordinator.data["check_error"], "vendor unavailable")
+        hass.async_add_executor_job = run_executor
+        entry = Mock(entry_id="entry-1")
+        background_tasks = []
+        entry.async_create_background_task.side_effect = (
+            lambda hass, coroutine, name: background_tasks.append(coroutine)
+        )
+        added = []
+
+        async def setup_and_refresh():
+            await update_module.async_setup_entry(
+                hass, entry, lambda entities: added.extend(entities)
+            )
+            self.assertEqual(len(added), 1)
+            await background_tasks[0]
+
+        asyncio.run(setup_and_refresh())
+
+        self.assertFalse(added[0].available)
+        self.assertEqual(
+            added[0].coordinator.data["check_error"], "vendor unavailable"
+        )
 
 
 if __name__ == "__main__":
