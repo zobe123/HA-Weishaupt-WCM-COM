@@ -18,7 +18,8 @@
         "data": {
           "host": "Host",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "boiler_profile": "Heat generator"
         }
       },
       "reauth_confirm": {
@@ -50,12 +51,20 @@
           "advanced_logging": "Enable advanced logging (extra debug output for troubleshooting)",
           "show_time_program_panel": "Show time programs in the sidebar",
           "expose_time_program_calendars": "Add active time programs to the Home Assistant calendar",
-          "external_gas_meter_entity": "External gas meter (optional)"
+          "external_gas_meter_entity": "External gas meter (optional)",
+          "boiler_profile": "Heat generator"
         }
       }
     }
   },
   "selector": {
+    "boiler_profile": {
+      "options": {
+        "auto": "Detect automatically",
+        "wtc_g": "WTC-G (gas)",
+        "wtc_ob": "WTC-OB (oil)"
+      }
+    },
     "time_program": {
       "options": {
         "heating_1": "Heating program 1",
@@ -318,6 +327,26 @@
       },
       "parameter_b0_m10_p3159": {
         "name": "Burner operating hours"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Burner output"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Solenoid valve 1",
+        "state": {"off": "Off", "on": "On"}
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Solenoid valve 2",
+        "state": {"off": "Off", "on": "On"}
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Burner cycle count"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Burner operating hours"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Oil meter"
       },
       "parameter_b0_m10_p700": {
         "name": "Time since last maintenance"
@@ -758,6 +787,24 @@
       },
       "parameter_b0_m10_p3159": {
         "name": "Burner operating hours"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Burner output"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Solenoid valve 1"
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Solenoid valve 2"
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Burner cycle count"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Burner operating hours"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Oil meter"
       },
       "parameter_b0_m10_p700": {
         "name": "Time since last maintenance"

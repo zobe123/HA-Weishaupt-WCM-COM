@@ -42,6 +42,19 @@ DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS = True
 CONF_EXTERNAL_GAS_METER_ENTITY = "external_gas_meter_entity"
 DEFAULT_EXTERNAL_GAS_METER_ENTITY = ""
 
+# Boiler profile. Automatic detection only reads profile-specific process
+# parameters; it never writes to the WCM-COM.
+CONF_BOILER_PROFILE = "boiler_profile"
+BOILER_PROFILE_AUTO = "auto"
+BOILER_PROFILE_WTC_G = "wtc_g"
+BOILER_PROFILE_WTC_OB = "wtc_ob"
+DEFAULT_BOILER_PROFILE = BOILER_PROFILE_AUTO
+BOILER_PROFILES = (
+    BOILER_PROFILE_AUTO,
+    BOILER_PROFILE_WTC_G,
+    BOILER_PROFILE_WTC_OB,
+)
+
 
 # Sensor Keys
 OUTSIDE_TEMPERATURE_KEY = "Outside Temperature"
@@ -91,13 +104,25 @@ PARAMETERS = [
     {"id": 2,    "name": "Wärmeanforderung",          "type": "temperature"},
     {"id": 13,   "name": "Vorlauftemperatur",         "type": "temperature"},
     {"id": 118,  "name": "Puffer Oben",               "type": "temperature"},
-    {"id": 138,  "name": "Laststellung",              "type": "percent"},
-    {"id": 1497, "name": "Gasventil 1",               "type": "binary"},
-    {"id": 1498, "name": "Gasventil 2",               "type": "binary"},
+    {"id": 138,  "name": "Laststellung",              "type": "percent", "profile": "wtc_g"},
+    {"id": 1497, "name": "Gasventil 1",               "type": "binary", "profile": "wtc_g"},
+    {"id": 1498, "name": "Gasventil 2",               "type": "binary", "profile": "wtc_g"},
     {"id": 2572, "name": "Gedämpfte Außentemperatur", "type": "temperature"},
-    {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value_1000"},
-    {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "hours_1000"},
-    {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "days"},
+    {"id": 3158, "name": "Schaltspielzahl Brenner",   "type": "value_1000", "profile": "wtc_g"},
+    {"id": 3159, "name": "Betriebsstunden Brenner",   "type": "hours_100", "profile": "wtc_g"},
+    {"id": 4176, "name": "Laststellung",              "type": "power_tenths", "profile": "wtc_ob"},
+    {"id": 1497, "name": "Magnetventil 1",            "type": "binary", "profile": "wtc_ob", "translation_key": "wtc_ob_magnetic_valve_1"},
+    {"id": 1498, "name": "Magnetventil 2",            "type": "binary", "profile": "wtc_ob", "translation_key": "wtc_ob_magnetic_valve_2"},
+    {"id": 3196, "name": "WTC-OB Schaltspiele Low",   "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3197, "name": "WTC-OB Schaltspiele High",  "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3198, "name": "WTC-OB Betriebsstunden Low",  "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3199, "name": "WTC-OB Betriebsstunden High", "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3792, "name": "WTC-OB Ölzähler High",      "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3793, "name": "WTC-OB Ölzähler Low",       "type": "value", "profile": "wtc_ob", "internal": True},
+    {"id": 3196, "name": "Schaltspielzahl Brenner",   "type": "value", "profile": "wtc_ob", "virtual": True},
+    {"id": 3198, "name": "Betriebsstunden Brenner",   "type": "hours", "profile": "wtc_ob", "virtual": True},
+    {"id": 3793, "name": "Ölzähler",                  "type": "liters", "profile": "wtc_ob", "virtual": True},
+    {"id": 700,  "name": "Zeit seit letzter Wartung", "type": "hours_10"},
 
     # Fachmann / Experten-Parameter (global)
     {"id": 3794, "name": "Expert Device Conf",             "type": "value"},
@@ -507,3 +532,34 @@ WARNING_CODE_MAP = {
     88: "W88: Kommunikation zu EM#8 oder WCM-FS#8 fehlerhaft",
     # Weitere Warncodes hinzufügen, falls vorhanden
 }
+
+
+def parameters_for_profile(profile: str) -> list[dict]:
+    """Return the parameter set for one boiler profile."""
+
+    if profile not in (BOILER_PROFILE_WTC_G, BOILER_PROFILE_WTC_OB):
+        profile = BOILER_PROFILE_WTC_G
+    return [
+        parameter
+        for parameter in PARAMETERS
+        if parameter.get("profile", profile) == profile
+    ]
+
+
+def detected_profile(data: dict) -> str | None:
+    """Resolve a boiler profile from read-only profile probe results."""
+
+    has_gas = "WTC-G Detection" in data
+    has_oil = any(name.startswith("WTC-OB Detection") for name in data)
+    if has_oil and not has_gas:
+        return BOILER_PROFILE_WTC_OB
+    if has_gas and not has_oil:
+        return BOILER_PROFILE_WTC_G
+    return None
+
+
+PROFILE_DETECTION_PARAMETERS = [
+    {"id": 3158, "name": "WTC-G Detection", "type": "value", "internal": True},
+    {"id": 3196, "name": "WTC-OB Detection Low", "type": "value", "internal": True},
+    {"id": 3197, "name": "WTC-OB Detection High", "type": "value", "internal": True},
+]

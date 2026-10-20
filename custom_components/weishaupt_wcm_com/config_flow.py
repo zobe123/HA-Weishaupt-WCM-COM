@@ -26,6 +26,9 @@ from .const import (
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     CONNECTION_DATA_KEYS,
     normalize_host,
+    CONF_BOILER_PROFILE,
+    DEFAULT_BOILER_PROFILE,
+    BOILER_PROFILES,
 )
 from .weishaupt_api import (
     WeishauptAPI,
@@ -38,6 +41,13 @@ _LOGGER = logging.getLogger(__name__)
 
 PASSWORD_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+)
+BOILER_PROFILE_SELECTOR = selector.SelectSelector(
+    selector.SelectSelectorConfig(
+        options=list(BOILER_PROFILES),
+        translation_key="boiler_profile",
+        mode=selector.SelectSelectorMode.DROPDOWN,
+    )
 )
 
 
@@ -74,7 +84,7 @@ def _host_is_configured(hass, host: str, *, exclude_entry_id: str) -> bool:
 class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Weishaupt WCM-COM."""
 
-    VERSION = 6
+    VERSION = 7
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -107,8 +117,13 @@ class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error validating WCM-COM: %s", err)
                 errors["base"] = "cannot_connect"
             else:
+                profile = user_input.pop(
+                    CONF_BOILER_PROFILE, DEFAULT_BOILER_PROFILE
+                )
                 return self.async_create_entry(
-                    title="Weishaupt WCM-COM", data=user_input
+                    title="Weishaupt WCM-COM",
+                    data=user_input,
+                    options={CONF_BOILER_PROFILE: profile},
                 )
 
         data_schema = vol.Schema(
@@ -116,6 +131,9 @@ class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_USERNAME): str,
                 vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+                vol.Required(
+                    CONF_BOILER_PROFILE, default=DEFAULT_BOILER_PROFILE
+                ): BOILER_PROFILE_SELECTOR,
             }
         )
 
@@ -261,6 +279,9 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_EXTERNAL_GAS_METER_ENTITY: user_input.get(
                         CONF_EXTERNAL_GAS_METER_ENTITY, ""
                     ),
+                    CONF_BOILER_PROFILE: user_input.get(
+                        CONF_BOILER_PROFILE, DEFAULT_BOILER_PROFILE
+                    ),
                 }
                 changed = self.hass.config_entries.async_update_entry(
                     self._config_entry,
@@ -316,6 +337,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_EXTERNAL_GAS_METER_ENTITY,
             DEFAULT_EXTERNAL_GAS_METER_ENTITY,
         )
+        boiler_profile = source.get(
+            CONF_BOILER_PROFILE,
+            DEFAULT_BOILER_PROFILE,
+        )
 
         gas_meter_key = vol.Optional(CONF_EXTERNAL_GAS_METER_ENTITY)
         if external_gas_meter_entity:
@@ -329,6 +354,10 @@ class WeishauptOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_HOST, default=host): str,
                 vol.Optional(CONF_USERNAME, default=username): str,
                 vol.Optional(CONF_PASSWORD): PASSWORD_SELECTOR,
+                vol.Required(
+                    CONF_BOILER_PROFILE,
+                    default=boiler_profile,
+                ): BOILER_PROFILE_SELECTOR,
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=scan_interval,

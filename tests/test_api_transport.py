@@ -75,6 +75,22 @@ def unauthorized_response() -> Mock:
 class ApiTransportTest(unittest.TestCase):
     """Verify transport errors, protocol matching and write behavior."""
 
+    def test_wtc_ob_high_low_counters_match_webui_formula(self) -> None:
+        result = {
+            "WTC-OB Schaltspiele High": 12,
+            "WTC-OB Schaltspiele Low": 345,
+            "WTC-OB Betriebsstunden High": 6,
+            "WTC-OB Betriebsstunden Low": 789,
+            "WTC-OB Ölzähler High": 3,
+            "WTC-OB Ölzähler Low": 210,
+        }
+
+        api_module.combine_wtc_ob_counters(result)
+
+        self.assertEqual(result["Schaltspielzahl Brenner"], 12345)
+        self.assertEqual(result["Betriebsstunden Brenner"], 6789)
+        self.assertEqual(result["Ölzähler"], 3210)
+
     def test_read_uses_standard_type_and_request_context(self) -> None:
         response = json_response([[6, 1, 1, 274, 0, 0, 11, 0]])
         with patch.object(api_module.requests, "post", return_value=response) as post:

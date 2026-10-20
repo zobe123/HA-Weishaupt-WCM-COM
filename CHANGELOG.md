@@ -4,6 +4,25 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.0b1] - Unreleased
+
+### Added
+
+- Add WTC-G and WTC-OB boiler profiles with automatic, read-only detection and
+  a manual profile override in the integration options.
+- Add WTC-OB burner output, burner cycles, burner operating hours and oil-meter
+  entities using the same high/low formulas as the original WCM-COM WebUI.
+
+### Fixed
+
+- Scale WTC-G burner operating hours by 100 and maintenance time by 10 hours,
+  matching the original WebUI implementation.
+
+### Compatibility
+
+- Existing entries migrate to the historical WTC-G profile; automatic
+  detection can be enabled explicitly afterward.
+
 ## [1.4.6]
 
 ### Fixed

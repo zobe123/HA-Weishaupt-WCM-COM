@@ -18,7 +18,8 @@
         "data": {
           "host": "Host",
           "username": "Benutzername",
-          "password": "Passwort"
+          "password": "Passwort",
+          "boiler_profile": "Wärmeerzeuger"
         }
       },
       "reauth_confirm": {
@@ -50,12 +51,20 @@
           "advanced_logging": "Erweitertes Logging aktivieren (zusätzliche Debug-Ausgaben zur Fehlersuche)",
           "show_time_program_panel": "Zeitprogramme in der Seitenleiste anzeigen",
           "expose_time_program_calendars": "Aktive Zeitprogramme dem Home-Assistant-Kalender hinzufügen",
-          "external_gas_meter_entity": "Externer Gaszähler (optional)"
+          "external_gas_meter_entity": "Externer Gaszähler (optional)",
+          "boiler_profile": "Wärmeerzeuger"
         }
       }
     }
   },
   "selector": {
+    "boiler_profile": {
+      "options": {
+        "auto": "Automatisch erkennen",
+        "wtc_g": "WTC-G (Gas)",
+        "wtc_ob": "WTC-OB (Öl)"
+      }
+    },
     "time_program": {
       "options": {
         "heating_1": "Heizprogramm 1",
@@ -318,6 +327,26 @@
       },
       "parameter_b0_m10_p3159": {
         "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Brennerleistung"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Magnetventil 1",
+        "state": {"off": "Aus", "on": "Ein"}
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Magnetventil 2",
+        "state": {"off": "Aus", "on": "Ein"}
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Schaltspielzahl Brenner"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Ölzähler"
       },
       "parameter_b0_m10_p700": {
         "name": "Zeit seit letzter Wartung"
@@ -758,6 +787,24 @@
       },
       "parameter_b0_m10_p3159": {
         "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Brennerleistung"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Magnetventil 1"
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Magnetventil 2"
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Schaltspielzahl Brenner"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Betriebsstunden Brenner"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Ölzähler"
       },
       "parameter_b0_m10_p700": {
         "name": "Zeit seit letzter Wartung"

@@ -30,6 +30,8 @@ _VIRTUAL_PARAMETER_KEYS = {
 def parameter_translation_key(parameter: dict[str, Any]) -> str:
     """Return a stable, language-neutral translation key for a parameter."""
 
+    if translation_key := parameter.get("translation_key"):
+        return str(translation_key)
     parameter_id = int(parameter["id"])
     if parameter_id == 0:
         return _VIRTUAL_PARAMETER_KEYS[str(parameter["name"])]

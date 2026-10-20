@@ -61,12 +61,15 @@ If the integration is not yet listed in the default HACS store, add it as a cust
 2. Click **Add Integration** and search for **Weishaupt WCM-COM**.
 3. Enter:
    - the IP address of your WCM-COM,
-   - optional username and password (if configured on the device).
+   - optional username and password (if configured on the device),
+   - the heat-generator profile. **Automatic** uses read-only model-specific
+     parameters; WTC-G or WTC-OB can be selected manually as a fallback.
 4. Confirm to create the integration.
 
 One WCM-COM can be configured per Home Assistant installation.
 
-You can later change IP, username, password and the scan interval via the integration’s **Reconfigure** (wrench) options flow.
+You can later change IP, username, password, the heat-generator profile and the
+scan interval via the integration’s **Reconfigure** (wrench) options flow.
 
 ## Parameters and Entities
 

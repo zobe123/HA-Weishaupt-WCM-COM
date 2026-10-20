@@ -61,6 +61,16 @@ def load_constant(name: str):
 class ProtocolTest(unittest.TestCase):
     """Verify protocol discriminators and wire-value conversion."""
 
+    def test_boiler_profile_parameters_are_explicitly_separated(self) -> None:
+        """WTC-G and WTC-OB must not poll each other's exclusive counters."""
+
+        parameters = load_parameters()
+        by_id = {(item["id"], item.get("profile")) for item in parameters}
+        self.assertIn((3158, "wtc_g"), by_id)
+        self.assertIn((3197, "wtc_ob"), by_id)
+        self.assertNotIn((3158, "wtc_ob"), by_id)
+        self.assertNotIn((3197, "wtc_g"), by_id)
+
     def test_parameter_274_has_one_capability_selected_definition(self) -> None:
         """The WebUI exposes one parameter-274 interpretation per bus."""
 
@@ -109,7 +119,7 @@ class ProtocolTest(unittest.TestCase):
 
     def test_request_group_identities_are_unique(self) -> None:
 
-        identities: dict[tuple[int, int, int, int], str] = {}
+        identities: dict[tuple[int, int, int, str, int, str], str] = {}
         for item in load_parameters():
             if item.get("virtual"):
                 continue
@@ -119,6 +129,7 @@ class ProtocolTest(unittest.TestCase):
                 item.get("modultyp", item.get("destination", 10)),
                 item.get("page", "default"),
                 protocol.parameter_group(item),
+                item.get("profile", "common"),
             )
             self.assertNotIn(
                 identity,

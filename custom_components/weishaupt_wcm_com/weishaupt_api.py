@@ -38,6 +38,29 @@ FIRMWARE_CHECK_TIMEOUT = 180
 FIRMWARE_CHECK_INTERVAL = 2
 
 
+def combine_wtc_ob_counters(result: dict) -> None:
+    """Combine WTC-OB high/low counter words in-place like the WebUI."""
+
+    parts = (
+        (
+            "WTC-OB Schaltspiele High",
+            "WTC-OB Schaltspiele Low",
+            "Schaltspielzahl Brenner",
+        ),
+        (
+            "WTC-OB Betriebsstunden High",
+            "WTC-OB Betriebsstunden Low",
+            "Betriebsstunden Brenner",
+        ),
+        ("WTC-OB Ölzähler High", "WTC-OB Ölzähler Low", "Ölzähler"),
+    )
+    for high_key, low_key, target_key in parts:
+        high = result.get(high_key)
+        low = result.get(low_key)
+        if high is not None and low is not None:
+            result[target_key] = high * 1000 + low
+
+
 class WeishauptCommunicationError(Exception):
     """Raised when a complete WCM-COM update or write cannot be completed."""
 
@@ -62,13 +85,21 @@ def _raise_for_status(response) -> None:
 class WeishauptAPI:
     """API class for interacting with the Weishaupt WCM-COM."""
 
-    def __init__(self, host, username=None, password=None, advanced_logging: bool = False):
+    def __init__(
+        self,
+        host,
+        username=None,
+        password=None,
+        advanced_logging: bool = False,
+        parameters=None,
+    ):
         """Initialize the API."""
         self._host = host
         self._username = username
         self._password = password
         self._data = {}
         self.previous_values = {}
+        self._parameters = PARAMETERS if parameters is None else parameters
         # Optionaler Modus für zusätzliche Debug-Logs
         self.advanced_logging = advanced_logging
 
@@ -281,11 +312,11 @@ class WeishauptAPI:
         #  - HK-User-Parameter (Betriebsarten & User-Temperaturen)
         #  - Fachmann-/Expert-Parameter (P10, P12, P18, ...)
         global_params = [
-            p for p in PARAMETERS
+            p for p in self._parameters
             if "bus" not in p and "modultyp" not in p and not p["name"].startswith("Expert ") and not p.get("virtual")
         ]
         expert_params = [
-            p for p in PARAMETERS
+            p for p in self._parameters
             if p["name"].startswith("Expert ")
         ]
         # Heizkreis-Prozesswerte (Temperaturen/Sollwerte) priorisieren, damit sie
@@ -293,7 +324,7 @@ class WeishauptAPI:
         # verdrängt werden.
         hk_process_params = [
             p
-            for p in PARAMETERS
+            for p in self._parameters
             if ("bus" in p or "modultyp" in p)
             and " Config " not in p["name"]
             and p.get("page") != "hk_user"
@@ -305,7 +336,7 @@ class WeishauptAPI:
         # damit diese nicht in einem übervollen Prozess-Telegramm untergehen.
         date_params = [
             p
-            for p in PARAMETERS
+            for p in self._parameters
             if not p.get("virtual")
             and (
                 p["name"].startswith("System Date ")
@@ -318,14 +349,14 @@ class WeishauptAPI:
         # vollständig geliefert werden.
         hk_version_params = [
             p
-            for p in PARAMETERS
+            for p in self._parameters
             if p.get("internal")
             and "Version" in p["name"]
         ]
         # HK-Konfig (Pumpen/Spannung/HK-Typ/Ext. Raumfühler etc., inkl. HKx User Betriebsart)
         hk_config_params = [
             p
-            for p in PARAMETERS
+            for p in self._parameters
             if ("bus" in p or "modultyp" in p)
             and p not in hk_process_params
             and p not in hk_version_params
@@ -336,7 +367,7 @@ class WeishauptAPI:
         # in eigenen, kleinen Requests wie in der Original-WebApp abgefragt werden.
         hk_user_params = [
             p
-            for p in PARAMETERS
+            for p in self._parameters
             if p.get("page") == "hk_user"
         ]
 
@@ -498,6 +529,10 @@ class WeishauptAPI:
                 _LOGGER.debug(f"Received data: {result}")
 
                 # Versionen für FS/EM aus den Rohwerten (High/Low) berechnen
+
+                # WTC-OB exposes large counters as separate high/low words.
+                # The original WebUI combines them with high * 1000 + low.
+                combine_wtc_ob_counters(result)
 
                 # Kessel (Bus 0) – nur FS-Version (EM ist bei Manuel N/V)
                 kessel_fs_high = result.get("Kessel Version FS High")
@@ -867,7 +902,7 @@ class WeishauptAPI:
                     0,
                     0,
                 ]
-                for param in PARAMETERS
+                for param in self._parameters
             ],
         }
         headers = "-H 'Content-Type: application/json'"

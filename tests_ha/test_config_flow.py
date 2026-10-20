@@ -29,6 +29,8 @@ from custom_components.weishaupt_wcm_com.const import (
     CONF_EXPOSE_TIME_PROGRAM_CALENDARS,
     CONF_EXTERNAL_GAS_METER_ENTITY,
     CONF_SHOW_TIME_PROGRAM_PANEL,
+    CONF_BOILER_PROFILE,
+    BOILER_PROFILE_WTC_G,
     DOMAIN,
 )
 from custom_components.weishaupt_wcm_com.config_flow import WeishauptConfigFlow
@@ -48,7 +50,7 @@ def _entry(**kwargs) -> MockConfigEntry:
             CONF_PASSWORD: "",
         },
         "unique_id": "wcm-com.local",
-        "version": 6,
+        "version": 7,
     }
     defaults.update(kwargs)
     return MockConfigEntry(
@@ -154,12 +156,16 @@ async def test_migration_moves_legacy_connection_options_to_data(hass) -> None:
 
     assert await async_migrate_entry(hass, entry)
 
-    assert entry.version == 6
+    assert entry.version == 7
     assert entry.unique_id == "wcm-com.local"
     assert entry.data[CONF_HOST] == "wcm-com.local"
     assert entry.data[CONF_USERNAME] == "legacy-user"
     assert entry.data[CONF_PASSWORD] == "legacy-password"
-    assert entry.options == {CONF_SCAN_INTERVAL: 90, CONF_ALLOW_WRITE: True}
+    assert entry.options == {
+        CONF_SCAN_INTERVAL: 90,
+        CONF_ALLOW_WRITE: True,
+        CONF_BOILER_PROFILE: BOILER_PROFILE_WTC_G,
+    }
 
 
 async def test_reauth_updates_credentials_and_schedules_one_reload(hass) -> None:

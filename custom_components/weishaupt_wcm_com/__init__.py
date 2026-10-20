@@ -36,6 +36,14 @@ from .const import (
     DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS,
     CONF_EXTERNAL_GAS_METER_ENTITY,
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
+    CONF_BOILER_PROFILE,
+    DEFAULT_BOILER_PROFILE,
+    BOILER_PROFILE_AUTO,
+    BOILER_PROFILE_WTC_G,
+    BOILER_PROFILE_WTC_OB,
+    PROFILE_DETECTION_PARAMETERS,
+    parameters_for_profile,
+    detected_profile,
     CONNECTION_DATA_KEYS,
     PARAMETERS,
     WRITE_BACKED_PARAMETER_NAMES,
@@ -183,6 +191,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_kwargs["unique_id"] = normalize_host(host)
         hass.config_entries.async_update_entry(entry, **update_kwargs)
 
+    if entry.version < 7:
+        options = dict(entry.options)
+        # Existing installations historically queried the WTC-G set. Keep
+        # that exact behavior until the owner explicitly selects Automatic.
+        options.setdefault(CONF_BOILER_PROFILE, BOILER_PROFILE_WTC_G)
+        hass.config_entries.async_update_entry(entry, version=7, options=options)
+
     return True
 
 
@@ -191,6 +206,7 @@ def _remove_obsolete_entities(
     data: dict,
     *,
     remove_optional_calendars: bool = False,
+    parameters: list[dict] | None = None,
 ) -> None:
     """Remove invalid and unsupported conditional registry entries."""
 
@@ -201,7 +217,7 @@ def _remove_obsolete_entities(
     }
     if remove_optional_calendars:
         unique_ids_by_platform["calendar"].update(OPTIONAL_CALENDAR_UNIQUE_IDS)
-    for parameter in PARAMETERS:
+    for parameter in parameters or PARAMETERS:
         if not parameter.get("conditional") or parameter["name"] in data:
             continue
         slug = parameter["name"].lower().replace(" ", "_")
@@ -261,13 +277,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_EXTERNAL_GAS_METER_ENTITY,
         DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     )
+    requested_profile: str = entry.options.get(
+        CONF_BOILER_PROFILE, DEFAULT_BOILER_PROFILE
+    )
     platforms = [*BASE_PLATFORMS]
     if allow_firmware_check:
         platforms.append("update")
     if expose_time_program_calendars:
         platforms.append("calendar")
 
-    api = WeishauptAPI(host, username, password, advanced_logging=advanced_logging)
+    active_profile = requested_profile
+    if requested_profile == BOILER_PROFILE_AUTO:
+        detector = WeishauptAPI(
+            host,
+            username,
+            password,
+            advanced_logging=advanced_logging,
+            parameters=PROFILE_DETECTION_PARAMETERS,
+        )
+        try:
+            detected = await hass.async_add_executor_job(detector.get_data)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                "Automatic boiler profile detection failed; using WTC-G: %s", err
+            )
+            active_profile = BOILER_PROFILE_WTC_G
+        else:
+            resolved_profile = detected_profile(detected)
+            if resolved_profile is not None:
+                active_profile = resolved_profile
+            else:
+                active_profile = BOILER_PROFILE_WTC_G
+                _LOGGER.warning(
+                    "Automatic boiler profile detection was ambiguous; using WTC-G"
+                )
+
+    parameters = parameters_for_profile(active_profile)
+    api = WeishauptAPI(
+        host,
+        username,
+        password,
+        advanced_logging=advanced_logging,
+        parameters=parameters,
+    )
 
     async def async_update_data() -> dict:
         """Fetch the latest data from the WCM-COM API.
@@ -302,6 +354,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         coordinator.data or {},
         remove_optional_calendars=not expose_time_program_calendars,
+        parameters=parameters,
     )
     if not allow_firmware_check:
         _remove_disabled_firmware_update_entity(hass)
@@ -317,6 +370,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "show_time_program_panel": show_time_program_panel,
         "expose_time_program_calendars": expose_time_program_calendars,
         "external_gas_meter_entity": external_gas_meter_entity,
+        "requested_profile": requested_profile,
+        "active_profile": active_profile,
+        "parameters": parameters,
         "platforms": platforms,
     }
 

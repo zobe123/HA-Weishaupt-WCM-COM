@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PARAMETERS
+from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
@@ -18,6 +18,7 @@ async def async_get_config_entry_diagnostics(
 
     entry_data = hass.data[DOMAIN][entry.entry_id]
     coordinator_data = entry_data["coordinator"].data or {}
+    parameters = entry_data["parameters"]
     bus_parameters = [
         {
             "name": parameter["name"],
@@ -27,7 +28,7 @@ async def async_get_config_entry_diagnostics(
                 "modultyp", parameter.get("destination", 10)
             ),
         }
-        for parameter in PARAMETERS
+        for parameter in parameters
         if "bus" in parameter
         and (
             parameter["name"].startswith("WTC HK1 ")
@@ -38,6 +39,8 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_state": entry.state.value,
+        "requested_boiler_profile": entry_data["requested_profile"],
+        "active_boiler_profile": entry_data["active_profile"],
         "bus_mapping": {
             "0": "WTC-HK1 / FS1",
             "1": "HK2 radiators / FS2 + EM2",

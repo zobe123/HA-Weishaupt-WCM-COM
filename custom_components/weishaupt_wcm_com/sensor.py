@@ -12,7 +12,13 @@ from datetime import datetime
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
-from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
+from homeassistant.const import (
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
+    PERCENTAGE,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
 from homeassistant.core import HomeAssistant
@@ -21,7 +27,6 @@ from homeassistant.config_entries import ConfigEntry
 from .const import (
     DOMAIN,
     NAME_PREFIX,
-    PARAMETERS,
     ERROR_CODE_KEY,
     ERROR_CODE_MAP,
     EXPERT_BOILER_ADDRESS_MAP,
@@ -45,6 +50,20 @@ from .device_model import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def scale_profile_value(param_type: str | None, value):
+    """Apply the display scaling documented by the original WCM-COM WebUI."""
+
+    if param_type in ("value_1000", "hours_1000"):
+        return value * 1000
+    if param_type == "hours_100":
+        return value * 100
+    if param_type == "hours_10":
+        return value * 10
+    if param_type == "power_tenths":
+        return value / 10
+    return value
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -57,7 +76,8 @@ async def async_setup_entry(
     api = entry_data["api"]
 
     sensors: list[WeishauptSensor] = []
-    for param in PARAMETERS:
+    parameters = entry_data["parameters"]
+    for param in parameters:
         # Interne Rohwerte (z. B. High/Low-Bytes für Versionsnummern)
         # sollen keine eigenen Sensoren bekommen.
         if param.get("internal"):
@@ -76,8 +96,12 @@ async def async_setup_entry(
             unit = UnitOfTime.DAYS
         elif p_type == "percent":
             unit = PERCENTAGE
-        elif p_type == "hours_1000":
+        elif p_type in ("hours", "hours_10", "hours_100", "hours_1000"):
             unit = UnitOfTime.HOURS
+        elif p_type == "power_tenths":
+            unit = UnitOfPower.KILO_WATT
+        elif p_type == "liters":
+            unit = UnitOfVolume.LITERS
         elif p_type == "minutes":
             unit = UnitOfTime.MINUTES
 
@@ -591,19 +615,28 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 except (TypeError, ValueError):
                     return None
 
-            param_type = next(
-                (p["type"] for p in PARAMETERS if p["name"] == self._sensor_name),
-                None,
-            )
+            param_type = self._parameter.get("type")
 
             if param_type == "binary":
                 return "on" if value else "off"
 
-            if param_type in ("value", "temperature", "integer_temperature", "ratio_tenths", "days", "percent", "minutes") or param_type is None:
-                return value
-
-            if param_type in ("value_1000", "hours_1000"):
-                return value * 1000
+            if param_type in (
+                "value",
+                "temperature",
+                "integer_temperature",
+                "ratio_tenths",
+                "days",
+                "hours",
+                "percent",
+                "minutes",
+                "liters",
+                "value_1000",
+                "hours_1000",
+                "hours_100",
+                "hours_10",
+                "power_tenths",
+            ) or param_type is None:
+                return scale_profile_value(param_type, value)
 
             # Fallback: return the raw value
             return value
