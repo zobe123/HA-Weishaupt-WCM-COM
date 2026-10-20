@@ -4,35 +4,14 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [1.4.5b4]
-
-### Changed
-
-- Create the firmware update entity only while automatic online firmware checks
-  are enabled, and remove its registry entry when the option is disabled.
-- Remove the redundant installed-firmware diagnostic sensor; the installed
-  version remains available in the WCM-COM device information.
-
-## [1.4.5b3]
-
-### Added
-
-- Show the locally installed WCM-COM firmware in a separate diagnostic sensor,
-  including when online firmware checks are disabled.
-
-## [1.4.5b2]
-
-### Changed
-
-- Shorten the firmware-check option label and state explicitly that enabling it
-  sends a write telegram.
-
-## [1.4.5b1]
+## [1.4.5]
 
 ### Fixed
 
 - Keep online firmware discovery disabled until the user explicitly enables
-  its dedicated option; read only the installed version by default.
+  its dedicated option, so read-only mode sends no firmware-search command.
+- Create the firmware update entity only while online checks are enabled and
+  remove its registry entry when the option is disabled.
 - Release the shared WCM-COM lock between firmware-status polls so regular
   sensor updates can run while the vendor check is waiting.
 - Correct the documented Apache-2.0 license and manual installation path.
@@ -41,10 +20,12 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 
 - Declare the integration as single-config-entry because entity and device
   identifiers intentionally remain stable and unscoped.
+- State explicitly in the firmware-check option that enabling it sends a write
+  telegram.
 
 ### Tests
 
-- Verify that read-only setup sends no firmware-search command, opted-in setup
+- Verify that disabled firmware checks remove the update entity, opted-in setup
   performs the online check, and polling sleeps without holding the API lock.
 
 ## [1.4.4]
