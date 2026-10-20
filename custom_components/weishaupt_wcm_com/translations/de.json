@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "Dieses WCM-COM ist bereits eingerichtet",
+      "single_instance_allowed": "Pro Home-Assistant-Installation kann nur ein WCM-COM eingerichtet werden",
       "reauth_successful": "Authentifizierung erfolgreich aktualisiert",
       "reauth_unsuccessful": "Der Integrationseintrag wurde nicht gefunden"
     },

@@ -64,6 +64,8 @@ If the integration is not yet listed in the default HACS store, add it as a cust
    - optional username and password (if configured on the device).
 4. Confirm to create the integration.
 
+One WCM-COM can be configured per Home Assistant installation.
+
 You can later change IP, username, password and the scan interval via the integration’s **Reconfigure** (wrench) options flow.
 
 ## Parameters and Entities

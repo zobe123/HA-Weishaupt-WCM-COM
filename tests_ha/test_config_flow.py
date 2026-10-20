@@ -31,6 +31,7 @@ from custom_components.weishaupt_wcm_com.const import (
     CONF_SHOW_TIME_PROGRAM_PANEL,
     DOMAIN,
 )
+from custom_components.weishaupt_wcm_com.config_flow import WeishauptConfigFlow
 from custom_components.weishaupt_wcm_com.weishaupt_api import (
     WeishauptAuthenticationError,
 )
@@ -74,6 +75,19 @@ async def test_second_config_entry_is_rejected(hass) -> None:
         hass,
         {CONF_HOST: " WCM-COM.LOCAL. ", CONF_USERNAME: "", CONF_PASSWORD: ""},
     )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_config_flow_itself_rejects_second_entry(hass) -> None:
+    """The flow keeps single-entry behavior on HA versions before 2024.3."""
+
+    _entry().add_to_hass(hass)
+    flow = WeishauptConfigFlow()
+    flow.hass = hass
+
+    result = await flow.async_step_user()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

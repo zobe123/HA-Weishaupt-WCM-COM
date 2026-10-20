@@ -4,6 +4,23 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.6b1]
+
+### Fixed
+
+- Add translated `single_instance_allowed` abort messages in German and English.
+- Enforce the single-entry rule inside the config flow as a compatibility
+  fallback for Home Assistant 2023.12 through 2024.2.
+
+### Changed
+
+- Document that one WCM-COM is supported per Home Assistant installation.
+
+### Tests
+
+- Verify the config-flow fallback independently of the newer manifest-level
+  single-entry enforcement.
+
 ## [1.4.5]
 
 ### Fixed

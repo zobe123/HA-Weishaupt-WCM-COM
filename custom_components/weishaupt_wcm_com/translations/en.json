@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "This WCM-COM is already configured",
+      "single_instance_allowed": "Only one WCM-COM can be configured per Home Assistant installation",
       "reauth_successful": "Authentication updated successfully",
       "reauth_unsuccessful": "The integration entry could not be found"
     },

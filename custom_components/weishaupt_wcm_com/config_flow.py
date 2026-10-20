@@ -85,6 +85,11 @@ class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
 
+        # ``single_config_entry`` is enforced by Home Assistant 2024.3 and
+        # newer. Keep the same behavior on the declared minimum version.
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         if user_input is not None:
             user_input = {
                 **user_input,
