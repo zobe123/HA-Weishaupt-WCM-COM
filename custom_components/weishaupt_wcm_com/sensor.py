@@ -41,6 +41,7 @@ from .device_model import (
     is_hot_water_parameter,
     is_hot_water_readback_duplicate,
 )
+from .firmware import WeishauptInstalledFirmwareSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = entry_data["coordinator"]
     api = entry_data["api"]
 
-    sensors: list[WeishauptSensor] = []
+    sensors: list[SensorEntity] = []
     for param in PARAMETERS:
         # Interne Rohwerte (z. B. High/Low-Bytes für Versionsnummern)
         # sollen keine eigenen Sensoren bekommen.
@@ -82,6 +83,10 @@ async def async_setup_entry(
             unit = UnitOfTime.MINUTES
 
         sensors.append(WeishauptSensor(coordinator, api, param, unit))
+
+    sensors.append(
+        WeishauptInstalledFirmwareSensor(entry_data["firmware_coordinator"])
+    )
 
     async_add_entities(sensors)
 

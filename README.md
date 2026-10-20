@@ -119,6 +119,7 @@ By default the integration runs in a **read-only** mode:
 - All process and expert values are read from the WCM-COM and exposed as entities.
 - Configuration entities (expert sliders and heating-circuit selects) are visible but writes are blocked.
 - The installed WCM-COM firmware version is read without sending a write command.
+  It is shown separately as the diagnostic sensor **Installed WCM-COM firmware**.
 
 Checking Weishaupt's server for a newer firmware version requires one dedicated
 search command (`20116 = 1`) on the WCM-COM. This command does not install

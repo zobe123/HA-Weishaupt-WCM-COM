@@ -78,6 +78,9 @@
   },
   "entity": {
     "sensor": {
+      "wcm_com_installed_firmware": {
+        "name": "Installed WCM-COM firmware"
+      },
       "parameter_b0_m10_p1": {
         "name": "Status",
         "state": {

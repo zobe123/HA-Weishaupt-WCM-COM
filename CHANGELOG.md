@@ -4,6 +4,13 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.4.5b3]
+
+### Added
+
+- Show the locally installed WCM-COM firmware in a separate diagnostic sensor,
+  including when online firmware checks are disabled.
+
 ## [1.4.5b2]
 
 ### Changed
