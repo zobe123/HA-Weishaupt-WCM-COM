@@ -13,15 +13,32 @@ from custom_components.weishaupt_wcm_com.sensor import scale_profile_value
 
 
 def test_read_only_probe_requires_an_unambiguous_profile() -> None:
-    assert detected_profile({"WTC-G Detection": 1}) == BOILER_PROFILE_WTC_G
+    gas = {
+        "WTC-G Burner Cycles Detection": 1,
+        "WTC-G Burner Hours Detection": 2,
+        # These WTC-OB IDs were observed on a real WTC-G and must not count.
+        "WTC-OB Counter Low Detection": 3,
+    }
+    assert detected_profile(gas) == BOILER_PROFILE_WTC_G
     assert (
-        detected_profile({"WTC-OB Detection Low": 2})
+        detected_profile(
+            {
+                "WTC-OB Burner Output Detection": 42,
+                "WTC-OB Burner Hours Low Detection": 2,
+                "WTC-OB Burner Hours High Detection": 3,
+            }
+        )
         == BOILER_PROFILE_WTC_OB
     )
     assert detected_profile({}) is None
     assert (
         detected_profile(
-            {"WTC-G Detection": 1, "WTC-OB Detection Low": 2}
+            {
+                **gas,
+                "WTC-OB Burner Output Detection": 42,
+                "WTC-OB Burner Hours Low Detection": 2,
+                "WTC-OB Burner Hours High Detection": 3,
+            }
         )
         is None
     )

@@ -549,8 +549,20 @@ def parameters_for_profile(profile: str) -> list[dict]:
 def detected_profile(data: dict) -> str | None:
     """Resolve a boiler profile from read-only profile probe results."""
 
-    has_gas = "WTC-G Detection" in data
-    has_oil = any(name.startswith("WTC-OB Detection") for name in data)
+    # WTC-G also returns values for several WTC-OB counter IDs. Only the
+    # complete model-specific groups below are reliable discriminators.
+    has_gas = all(
+        name in data
+        for name in ("WTC-G Burner Cycles Detection", "WTC-G Burner Hours Detection")
+    )
+    has_oil = all(
+        name in data
+        for name in (
+            "WTC-OB Burner Output Detection",
+            "WTC-OB Burner Hours Low Detection",
+            "WTC-OB Burner Hours High Detection",
+        )
+    )
     if has_oil and not has_gas:
         return BOILER_PROFILE_WTC_OB
     if has_gas and not has_oil:
@@ -559,7 +571,9 @@ def detected_profile(data: dict) -> str | None:
 
 
 PROFILE_DETECTION_PARAMETERS = [
-    {"id": 3158, "name": "WTC-G Detection", "type": "value", "internal": True},
-    {"id": 3196, "name": "WTC-OB Detection Low", "type": "value", "internal": True},
-    {"id": 3197, "name": "WTC-OB Detection High", "type": "value", "internal": True},
+    {"id": 3158, "name": "WTC-G Burner Cycles Detection", "type": "value", "internal": True},
+    {"id": 3159, "name": "WTC-G Burner Hours Detection", "type": "value", "internal": True},
+    {"id": 4176, "name": "WTC-OB Burner Output Detection", "type": "value", "internal": True},
+    {"id": 3198, "name": "WTC-OB Burner Hours Low Detection", "type": "value", "internal": True},
+    {"id": 3199, "name": "WTC-OB Burner Hours High Detection", "type": "value", "internal": True},
 ]
