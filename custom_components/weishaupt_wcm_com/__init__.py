@@ -18,7 +18,7 @@ from homeassistant.exceptions import (
     ServiceValidationError,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .const import (
     CONF_SCAN_INTERVAL,
@@ -58,6 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
 
 FIRMWARE_UPDATE_UNIQUE_ID = "weishaupt_wcm_com_firmware"
+PROFILE_DETECTION_ISSUE_ID = "boiler_profile_detection_failed"
 
 OPTIONAL_CALENDAR_UNIQUE_IDS = {
     "weishaupt_hk1_active_heating_program",
@@ -252,6 +253,49 @@ def _remove_disabled_firmware_update_entity(hass: HomeAssistant) -> None:
         registry.async_remove(entity_id)
 
 
+def _remove_inactive_profile_entities(
+    hass: HomeAssistant, active_parameters: list[dict]
+) -> None:
+    """Remove entities that belong exclusively to the inactive profile."""
+
+    registry = er.async_get(hass)
+    active_names = {parameter["name"] for parameter in active_parameters}
+    inactive_names = {
+        parameter["name"]
+        for parameter in PARAMETERS
+        if parameter.get("profile")
+        and not parameter.get("internal")
+        and not parameter.get("virtual")
+        and parameter["name"] not in active_names
+    }
+    for name in inactive_names:
+        slug = name.lower().replace(" ", "_")
+        for platform, unique_id in (
+            ("sensor", f"weishaupt_{slug}"),
+            ("number", f"weishaupt_{slug}_number"),
+        ):
+            entity_id = registry.async_get_entity_id(platform, DOMAIN, unique_id)
+            if entity_id is not None:
+                registry.async_remove(entity_id)
+
+
+def _set_profile_detection_issue(hass: HomeAssistant, *, failed: bool) -> None:
+    """Create or clear the repair for an inconclusive automatic profile probe."""
+
+    if failed:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            PROFILE_DETECTION_ISSUE_ID,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=PROFILE_DETECTION_ISSUE_ID,
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, PROFILE_DETECTION_ISSUE_ID)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
 
@@ -287,6 +331,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         platforms.append("calendar")
 
     active_profile = requested_profile
+    profile_detection_failed = False
     if requested_profile == BOILER_PROFILE_AUTO:
         detector = WeishauptAPI(
             host,
@@ -302,15 +347,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Automatic boiler profile detection failed; using WTC-G: %s", err
             )
             active_profile = BOILER_PROFILE_WTC_G
+            profile_detection_failed = True
         else:
             resolved_profile = detected_profile(detected)
             if resolved_profile is not None:
                 active_profile = resolved_profile
             else:
                 active_profile = BOILER_PROFILE_WTC_G
+                profile_detection_failed = True
                 _LOGGER.warning(
                     "Automatic boiler profile detection was ambiguous; using WTC-G"
                 )
+
+    _set_profile_detection_issue(hass, failed=profile_detection_failed)
 
     parameters = parameters_for_profile(active_profile)
     api = WeishauptAPI(
@@ -356,6 +405,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_optional_calendars=not expose_time_program_calendars,
         parameters=parameters,
     )
+    _remove_inactive_profile_entities(hass, parameters)
     if not allow_firmware_check:
         _remove_disabled_firmware_update_entity(hass)
 

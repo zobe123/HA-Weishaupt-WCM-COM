@@ -55,6 +55,9 @@ def combine_wtc_ob_counters(result: dict) -> None:
         ("WTC-OB Ölzähler High", "WTC-OB Ölzähler Low", "Ölzähler"),
     )
     for high_key, low_key, target_key in parts:
+        # Always clear a previously combined value when either source word is
+        # missing.  A partial device response must never look like fresh data.
+        result.pop(target_key, None)
         high = result.get(high_key)
         low = result.get(low_key)
         if high is not None and low is not None:
@@ -465,6 +468,27 @@ class WeishauptAPI:
                             if param["id"] == 3794 and len(message) >= 7 and isinstance(message[6], str):
                                 value = message[6]
 
+                            elif not isinstance(low_byte, (int, float)) or not isinstance(
+                                high_byte, (int, float)
+                            ):
+                                _LOGGER.warning(
+                                    "Ignoring non-numeric value for %s: low=%r high=%r",
+                                    param["name"],
+                                    low_byte,
+                                    high_byte,
+                                )
+                                value = None
+
+                            # Compare sentinels against the unscaled 16-bit
+                            # wire value.  This is required for 0x8000, which
+                            # would otherwise decode as a signed temperature.
+                            elif (
+                                param.get("no_value") is not None
+                                and int(low_byte) + 256 * int(high_byte)
+                                == param["no_value"]
+                            ):
+                                value = None
+
                             elif param["type"] in ("temperature", "temp_delta", "ratio_tenths"):
                                 raw_value = self.get_temperature(low_byte, high_byte)
                                 value = raw_value
@@ -499,10 +523,6 @@ class WeishauptAPI:
                                 wire_scale = int(param.get("wire_scale", 1))
                                 if wire_scale != 1:
                                     value = value // wire_scale
-                                # Numerische Prüfung für 'value'
-                                if not isinstance(value, (int, float)):
-                                    _LOGGER.warning(f"Nicht-numerischer Wert erkannt: {value}. Setze auf 0.")
-                                    value = 0  # Fallback auf 0 bei nicht-numerischen Werten
 
                             elif param["type"] == "percent":
                                 value = self.get_value(low_byte, high_byte)
@@ -517,7 +537,7 @@ class WeishauptAPI:
                             else:
                                 value = low_byte + 256 * high_byte  # Fallback
 
-                            if value == param.get("no_value"):
+                            if param.get("no_value") is not None and value == param.get("no_value"):
                                 value = None
 
                             # Speichern/Mergen der Werte. Expected no-value

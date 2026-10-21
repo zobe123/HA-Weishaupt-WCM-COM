@@ -8,13 +8,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.const import UnitOfTemperature, UnitOfTime, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, CoordinatorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ServiceValidationError
 
 from .base_entity import WeishauptBaseEntity
 from .const import DOMAIN, PARAMETERS
@@ -64,7 +65,7 @@ async def async_setup_entry(
             max_value=4,
             step=1,
             scale=1.0,
-            unit=UnitOfTemperature.CELSIUS,
+            unit="K",
             allow_write=allow_write,
         )
     )
@@ -517,12 +518,18 @@ async def async_setup_entry(
                     )
                 )
 
+    active_parameter_names = {
+        parameter["name"] for parameter in entry_data["parameters"]
+    }
     async_add_entities(
         [
             number
             for number in numbers
-            if not number._conditional
-            or number._sensor_name in (coordinator.data or {})
+            if number._sensor_name in active_parameter_names
+            and (
+                not number._conditional
+                or number._sensor_name in (coordinator.data or {})
+            )
         ]
     )
 
@@ -594,6 +601,8 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
         # Einheit optional setzen
         if unit is not None:
             self._attr_native_unit_of_measurement = unit
+        if unit == UnitOfTemperature.CELSIUS:
+            self._attr_device_class = NumberDeviceClass.TEMPERATURE
 
         # Icon je nach Parameter leicht variieren
         name = sensor_name
@@ -661,7 +670,14 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
 
             return raw / self._scale
         except (TypeError, ValueError):
+            self._attr_available = False
             return None
+
+    @property
+    def available(self) -> bool:
+        """Return false when the latest response omitted this parameter."""
+
+        return super().available and self.native_value is not None
 
     async def async_set_native_value(self, value: float) -> None:
         """Handle value changes from Home Assistant."""
@@ -673,8 +689,11 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
                 translation_key="read_only",
             )
 
-        # Clamp to allowed range just in case
-        value = max(self._attr_native_min_value, min(self._attr_native_max_value, value))
+        if not self._attr_native_min_value <= value <= self._attr_native_max_value:
+            raise ServiceValidationError(
+                f"Value {value} is outside the allowed range "
+                f"{self._attr_native_min_value}..{self._attr_native_max_value}"
+            )
 
         # In den vom Original-WebUI verwendeten Wire-Wert umrechnen.
         code = encode_value(value, self._write_scale)

@@ -4,6 +4,22 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.0b2]
+
+### Fixed
+
+- Correct P18 and P20 to use whole wire units for reading and writing. Existing
+  P18 history will jump from the incorrectly scaled value (for example 6) to
+  the controller value (for example 60).
+- Keep WTC-G percentage limits separate from the WTC-OB P37 heating-output
+  value; WTC-OB parameter 4148 is exposed read-only and remains hardware-untested.
+- Treat missing telegrams and the buffer-sensor sentinel as unavailable instead
+  of zero, and combine WTC-OB counters only from complete high/low pairs.
+- Remove registry entities belonging exclusively to the inactive boiler profile
+  after a profile change.
+- Create a translated repair when automatic profile detection fails or is
+  ambiguous, with guidance to select the profile manually.
+
 ## [1.5.0b1]
 
 ### Added

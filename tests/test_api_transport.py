@@ -91,6 +91,73 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(result["Betriebsstunden Brenner"], 6789)
         self.assertEqual(result["Ölzähler"], 3210)
 
+    def test_incomplete_wtc_ob_counter_clears_combined_value(self) -> None:
+        result = {
+            "WTC-OB Ölzähler High": 3,
+            "Ölzähler": 9999,
+        }
+
+        api_module.combine_wtc_ob_counters(result)
+
+        self.assertNotIn("Ölzähler", result)
+
+    def test_p18_and_p20_are_read_without_tenths_scaling(self) -> None:
+        parameters = [
+            {"id": 3102, "name": "P18", "type": "integer_temperature"},
+            {"id": 3103, "name": "P20", "type": "integer_temperature"},
+        ]
+        response = json_response(
+            [[10, 0, 1, 3102, 0, 0, 60, 0], [10, 0, 1, 3103, 0, 0, 0, 0]]
+        )
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(api_module.requests, "post", return_value=response),
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        self.assertEqual(data["P18"], 60)
+        self.assertEqual(data["P20"], 0)
+
+    def test_empty_telegram_does_not_create_zero_value(self) -> None:
+        parameters = [
+            {"id": 4148, "name": "P37 OB", "type": "power_tenths"},
+            {"id": 1, "name": "Status", "type": "value"},
+        ]
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(
+                api_module.requests,
+                "post",
+                return_value=json_response([[10, 0, 1, 1, 0, 0, 7, 0]]),
+            ),
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        self.assertNotIn("P37 OB", data)
+        self.assertEqual(data["Status"], 7)
+
+    def test_buffer_sensor_32768_sentinel_is_omitted(self) -> None:
+        parameters = [
+            {
+                "id": 118,
+                "name": "Puffer Oben",
+                "type": "temperature",
+                "no_value": 32768,
+            },
+            {"id": 1, "name": "Status", "type": "value"},
+        ]
+        response = json_response(
+            [[10, 0, 1, 118, 0, 0, 0, 128], [10, 0, 1, 1, 0, 0, 7, 0]]
+        )
+        with (
+            patch.object(api_module, "PARAMETERS", parameters),
+            patch.object(api_module.requests, "post", return_value=response),
+        ):
+            data = api_module.WeishauptAPI("wcm.test").get_data()
+
+        self.assertNotIn("Puffer Oben", data)
+        self.assertEqual(data["Status"], 7)
+
     def test_read_uses_standard_type_and_request_context(self) -> None:
         response = json_response([[6, 1, 1, 274, 0, 0, 11, 0]])
         with patch.object(api_module.requests, "post", return_value=response) as post:

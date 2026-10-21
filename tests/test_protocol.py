@@ -70,6 +70,15 @@ class ProtocolTest(unittest.TestCase):
         self.assertIn((3197, "wtc_ob"), by_id)
         self.assertNotIn((3158, "wtc_ob"), by_id)
         self.assertNotIn((3197, "wtc_g"), by_id)
+        self.assertIn((319, "wtc_g"), by_id)
+        self.assertIn((345, "wtc_g"), by_id)
+        self.assertIn((4148, "wtc_ob"), by_id)
+        oil_p37 = next(item for item in parameters if item["id"] == 4148)
+        self.assertEqual(oil_p37["type"], "power_tenths")
+        self.assertEqual(
+            (oil_p37["min_value"], oil_p37["max_value"], oil_p37["step"]),
+            (5, 70, 1),
+        )
 
     def test_parameter_274_has_one_capability_selected_definition(self) -> None:
         """The WebUI exposes one parameter-274 interpretation per bus."""
@@ -151,8 +160,16 @@ class ProtocolTest(unittest.TestCase):
         self.assertEqual(protocol.encode_value(30, scale), 2)
         self.assertEqual(protocol.display_scale(272), 15.0)
 
-    def test_negative_temperature_uses_signed_bytes(self) -> None:
-        encoded = protocol.encode_value(-4, protocol.write_scale("temp_delta", 3103))
+    def test_p18_and_p20_use_unscaled_signed_wire_values(self) -> None:
+        self.assertEqual(
+            protocol.encode_value(
+                60, protocol.write_scale("integer_temperature", 3102)
+            ),
+            60,
+        )
+        encoded = protocol.encode_value(
+            -4, protocol.write_scale("integer_temperature", 3103)
+        )
         telegram = protocol.build_telegram(
             module_type=10,
             bus=0,
@@ -161,7 +178,12 @@ class ProtocolTest(unittest.TestCase):
             telegram_type=protocol.GENERIC_TELEGRAM,
             value=encoded,
         )
-        self.assertEqual(telegram, [10, 0, 2, 3103, 0, 1, 216, 255])
+        self.assertEqual(telegram, [10, 0, 2, 3103, 0, 1, 252, 255])
+
+        parameters = {item["id"]: item for item in load_parameters() if item["id"] in (3102, 3103)}
+        self.assertEqual(parameters[3102]["type"], "integer_temperature")
+        self.assertEqual(parameters[3103]["type"], "integer_temperature")
+        self.assertEqual(parameters[3103]["unit"], "K")
 
     def test_builder_preserves_explicit_generic_type(self) -> None:
         telegram = protocol.build_telegram(

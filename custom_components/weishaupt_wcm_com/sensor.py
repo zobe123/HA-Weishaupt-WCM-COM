@@ -88,7 +88,9 @@ async def async_setup_entry(
         sensor_name = param["name"]
         p_type = param["type"]
         unit = None
-        if p_type in ("temperature", "integer_temperature"):
+        if param.get("unit") == "K":
+            unit = "K"
+        elif p_type in ("temperature", "integer_temperature"):
             unit = UnitOfTemperature.CELSIUS
         elif p_type == "temp_delta":
             unit = "K"
@@ -136,6 +138,8 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         self._attr_translation_key = parameter_translation_key(parameter)
         self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = unit
+        if unit == UnitOfTemperature.CELSIUS:
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
         enum_options: list[str] | None = None
         if self._sensor_name == ERROR_CODE_KEY:
@@ -647,4 +651,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 self._sensor_name,
                 err,
             )
+            self._attr_available = False
             return None
+
+    @property
+    def available(self) -> bool:
+        """Return false when the latest response omitted this measurement."""
+
+        return super().available and self.native_value is not None

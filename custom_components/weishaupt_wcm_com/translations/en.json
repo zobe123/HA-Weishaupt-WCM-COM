@@ -86,6 +86,12 @@
       }
     }
   },
+  "issues": {
+    "boiler_profile_detection_failed": {
+      "title": "WTC boiler profile could not be detected",
+      "description": "Automatic detection was unsuccessful or ambiguous, so the integration is temporarily using the WTC-G profile. Open the integration options and select WTC-G (gas) or WTC-OB (oil) manually."
+    }
+  },
   "entity": {
     "sensor": {
       "parameter_b0_m10_p1": {
@@ -383,6 +389,9 @@
       },
       "parameter_b0_m10_p345": {
         "name": "Max. power DHW (P38)"
+      },
+      "parameter_b0_m10_p4148": {
+        "name": "Max. heating output (P37, untested)"
       },
       "parameter_b0_m10_p384": {
         "name": "Max. DHW charge time (P52)"
@@ -841,6 +850,9 @@
       },
       "parameter_b0_m10_p345": {
         "name": "Max. power DHW (P38)"
+      },
+      "parameter_b0_m10_p4148": {
+        "name": "Max. heating output (P37, untested)"
       },
       "parameter_b0_m10_p384": {
         "name": "Max. DHW charge time (P52)"
