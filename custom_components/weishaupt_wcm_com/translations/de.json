@@ -60,7 +60,6 @@
   "selector": {
     "boiler_profile": {
       "options": {
-        "auto": "Automatisch erkennen",
         "wtc_g": "WTC-G (Gas)",
         "wtc_ob": "WTC-OB (Öl)"
       }
@@ -86,12 +85,7 @@
       }
     }
   },
-  "issues": {
-    "boiler_profile_detection_failed": {
-      "title": "WTC-Kesselprofil konnte nicht erkannt werden",
-      "description": "Die automatische Erkennung war erfolglos oder mehrdeutig. Die Integration verwendet daher vorläufig das WTC-G-Profil. Öffne die Integrationsoptionen und wähle WTC-G (Gas) oder WTC-OB (Öl) manuell aus."
-    }
-  },
+  "issues": {},
   "entity": {
     "sensor": {
       "parameter_b0_m10_p1": {

@@ -222,6 +222,38 @@ class ProtocolTest(unittest.TestCase):
                 )
                 self.assertEqual(telegram[5], protocol.STANDARD_TELEGRAM)
 
+    def test_request_groups_are_chunked_at_controller_limit(self) -> None:
+        for count, expected_sizes in (
+            (20, [20]),
+            (21, [20, 1]),
+            (24, [20, 4]),
+            (40, [20, 20]),
+            (41, [20, 20, 1]),
+        ):
+            parameters = [
+                {"id": item, "name": str(item), "type": "value"}
+                for item in range(count)
+            ]
+            with self.subTest(count=count):
+                groups = protocol.split_request_groups(parameters)
+                self.assertEqual([len(group) for group in groups], expected_sizes)
+                self.assertEqual(
+                    [item["id"] for group in groups for item in group],
+                    list(range(count)),
+                )
+
+    def test_probe_can_batch_multiple_buses(self) -> None:
+        parameters = [
+            {
+                "id": 409,
+                "name": f"bus-{bus}",
+                "bus": bus,
+                "batch_across_buses": True,
+            }
+            for bus in range(3)
+        ]
+        self.assertEqual(len(protocol.split_request_groups(parameters)), 1)
+
     def test_original_webui_parameters_are_modelled(self) -> None:
         identities = {(item["id"], item.get("bus", 0)) for item in load_parameters()}
         for circuit in (1, 2):

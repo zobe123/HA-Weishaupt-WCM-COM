@@ -4,6 +4,25 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.0b3]
+
+### Added
+
+- Discover the installed WCM-FS heating circuits and create entities only for
+  circuits that answer the read-only version probe.
+
+### Changed
+
+- Require an explicit WTC-G or WTC-OB heat-generator choice during setup and
+  keep it editable in the integration options.
+- Stop polling parameters whose registered Home Assistant entities are all
+  disabled; enabling or disabling an entity rebuilds the polling plan.
+
+### Fixed
+
+- Split every WCM-COM read group into requests of at most 20 telegrams, so
+  WTC-OB values are no longer lost at the controller's response limit.
+
 ## [1.5.0b2]
 
 ### Fixed

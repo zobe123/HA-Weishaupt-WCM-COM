@@ -8,20 +8,22 @@ import pytest
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.weishaupt_wcm_com import (
-    PROFILE_DETECTION_ISSUE_ID,
+    _filter_disabled_entity_parameters,
+    _remove_inactive_heating_circuit_entities,
     _remove_inactive_profile_entities,
-    _set_profile_detection_issue,
 )
 
 from custom_components.weishaupt_wcm_com.const import (
     BOILER_PROFILE_WTC_G,
     BOILER_PROFILE_WTC_OB,
-    detected_profile,
+    BOILER_PROFILES,
+    HEATING_CIRCUIT_PROBE_PARAMETERS,
+    detected_heating_circuit_buses,
     parameters_for_profile,
     DOMAIN,
     PARAMETERS,
@@ -36,36 +38,20 @@ from custom_components.weishaupt_wcm_com.sensor import (
 )
 
 
-def test_read_only_probe_requires_an_unambiguous_profile() -> None:
-    gas = {
-        "WTC-G Burner Cycles Detection": 1,
-        "WTC-G Burner Hours Detection": 2,
-        # These WTC-OB IDs were observed on a real WTC-G and must not count.
-        "WTC-OB Counter Low Detection": 3,
-    }
-    assert detected_profile(gas) == BOILER_PROFILE_WTC_G
-    assert (
-        detected_profile(
-            {
-                "WTC-OB Burner Output Detection": 42,
-                "WTC-OB Burner Hours Low Detection": 2,
-                "WTC-OB Burner Hours High Detection": 3,
-            }
-        )
-        == BOILER_PROFILE_WTC_OB
-    )
-    assert detected_profile({}) is None
-    assert (
-        detected_profile(
-            {
-                **gas,
-                "WTC-OB Burner Output Detection": 42,
-                "WTC-OB Burner Hours Low Detection": 2,
-                "WTC-OB Burner Hours High Detection": 3,
-            }
-        )
-        is None
-    )
+def test_only_documented_heat_generator_profiles_are_offered() -> None:
+    assert BOILER_PROFILES == (BOILER_PROFILE_WTC_G, BOILER_PROFILE_WTC_OB)
+
+
+def test_heating_circuit_probe_detects_only_answering_fs_buses() -> None:
+    assert len(HEATING_CIRCUIT_PROBE_PARAMETERS) == 6
+    assert detected_heating_circuit_buses(
+        {
+            "Heating Circuit 0 Version High": 1,
+            "Heating Circuit 0 Version Low": 2,
+            "Heating Circuit 2 Version High": 0,
+        }
+    ) == {0, 2}
+    assert detected_heating_circuit_buses({}) == set()
 
 
 def test_profile_parameter_sets_do_not_cross_poll() -> None:
@@ -76,6 +62,14 @@ def test_profile_parameter_sets_do_not_cross_poll() -> None:
     assert 3197 in oil_ids and 3158 not in oil_ids
     assert 319 in gas_ids and 345 in gas_ids and 4148 not in gas_ids
     assert 4148 in oil_ids and 319 not in oil_ids and 345 not in oil_ids
+
+
+def test_detected_heating_circuits_filter_parameter_set() -> None:
+    parameters = parameters_for_profile("wtc_ob", {0, 2})
+    names = {parameter["name"] for parameter in parameters}
+    assert any(name.startswith("WTC HK1 ") for name in names)
+    assert not any(name.startswith("HK1 ") for name in names)
+    assert any(name.startswith("HK2 ") for name in names)
 
 
 def test_oil_high_low_words_match_original_webui() -> None:
@@ -141,16 +135,44 @@ async def test_profile_switch_removes_only_inactive_registry_entities(hass) -> N
     assert registry.async_get(oil_sensor.entity_id) is not None
 
 
-async def test_profile_detection_repair_is_created_and_cleared(hass) -> None:
-    registry = ir.async_get(hass)
+async def test_disabled_entity_parameters_are_not_polled(hass) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, title="WCM-COM")
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    flame = registry.async_get_or_create(
+        "sensor", DOMAIN, "weishaupt_flamme", config_entry=entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    pump = registry.async_get_or_create(
+        "sensor", DOMAIN, "weishaupt_pumpe", config_entry=entry,
+    )
+    parameters = [
+        next(item for item in PARAMETERS if item["name"] == name)
+        for name in ("Status", "Flamme", "Pumpe")
+    ]
 
-    _set_profile_detection_issue(hass, failed=True)
-    issue = registry.async_get_issue(DOMAIN, PROFILE_DETECTION_ISSUE_ID)
-    assert issue is not None
-    assert issue.translation_key == PROFILE_DETECTION_ISSUE_ID
+    filtered = _filter_disabled_entity_parameters(hass, entry, parameters)
 
-    _set_profile_detection_issue(hass, failed=False)
-    assert registry.async_get_issue(DOMAIN, PROFILE_DETECTION_ISSUE_ID) is None
+    assert {item["name"] for item in filtered} == {"Status", "Pumpe"}
+    assert registry.async_get(flame.entity_id) is not None
+    assert registry.async_get(pump.entity_id) is not None
+
+
+async def test_inactive_heating_circuit_registry_entries_are_removed(hass) -> None:
+    entry = MockConfigEntry(domain=DOMAIN, title="WCM-COM")
+    entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    hk1 = registry.async_get_or_create(
+        "sensor", DOMAIN, "weishaupt_hk1_raumtemperatur", config_entry=entry
+    )
+    hk2 = registry.async_get_or_create(
+        "sensor", DOMAIN, "weishaupt_hk2_raumtemperatur", config_entry=entry
+    )
+
+    _remove_inactive_heating_circuit_entities(hass, {0, 2})
+
+    assert registry.async_get(hk1.entity_id) is None
+    assert registry.async_get(hk2.entity_id) is not None
 
 
 @pytest.mark.parametrize(

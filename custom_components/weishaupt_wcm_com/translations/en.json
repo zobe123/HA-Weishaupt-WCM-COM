@@ -60,7 +60,6 @@
   "selector": {
     "boiler_profile": {
       "options": {
-        "auto": "Detect automatically",
         "wtc_g": "WTC-G (gas)",
         "wtc_ob": "WTC-OB (oil)"
       }
@@ -86,12 +85,7 @@
       }
     }
   },
-  "issues": {
-    "boiler_profile_detection_failed": {
-      "title": "WTC boiler profile could not be detected",
-      "description": "Automatic detection was unsuccessful or ambiguous, so the integration is temporarily using the WTC-G profile. Open the integration options and select WTC-G (gas) or WTC-OB (oil) manually."
-    }
-  },
+  "issues": {},
   "entity": {
     "sensor": {
       "parameter_b0_m10_p1": {

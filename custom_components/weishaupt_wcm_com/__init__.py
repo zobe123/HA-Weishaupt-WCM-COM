@@ -11,14 +11,15 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_SCAN_INTERVAL,
@@ -38,12 +39,11 @@ from .const import (
     DEFAULT_EXTERNAL_GAS_METER_ENTITY,
     CONF_BOILER_PROFILE,
     DEFAULT_BOILER_PROFILE,
-    BOILER_PROFILE_AUTO,
     BOILER_PROFILE_WTC_G,
     BOILER_PROFILE_WTC_OB,
-    PROFILE_DETECTION_PARAMETERS,
+    HEATING_CIRCUIT_PROBE_PARAMETERS,
     parameters_for_profile,
-    detected_profile,
+    detected_heating_circuit_buses,
     CONNECTION_DATA_KEYS,
     PARAMETERS,
     WRITE_BACKED_PARAMETER_NAMES,
@@ -58,8 +58,6 @@ _LOGGER = logging.getLogger(__name__)
 BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
 
 FIRMWARE_UPDATE_UNIQUE_ID = "weishaupt_wcm_com_firmware"
-PROFILE_DETECTION_ISSUE_ID = "boiler_profile_detection_failed"
-
 OPTIONAL_CALENDAR_UNIQUE_IDS = {
     "weishaupt_hk1_active_heating_program",
     "weishaupt_hk2_active_heating_program",
@@ -195,9 +193,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version < 7:
         options = dict(entry.options)
         # Existing installations historically queried the WTC-G set. Keep
-        # that exact behavior until the owner explicitly selects Automatic.
+        # that exact behavior until the owner explicitly selects a profile.
         options.setdefault(CONF_BOILER_PROFILE, BOILER_PROFILE_WTC_G)
         hass.config_entries.async_update_entry(entry, version=7, options=options)
+
+    if entry.version < 8:
+        options = dict(entry.options)
+        # 1.5.0b1/b2 offered an unreliable automatic profile. Existing
+        # installations historically used WTC-G, so migrate that legacy
+        # value deterministically while preserving an explicit WTC-OB choice.
+        if options.get(CONF_BOILER_PROFILE) not in (
+            BOILER_PROFILE_WTC_G,
+            BOILER_PROFILE_WTC_OB,
+        ):
+            options[CONF_BOILER_PROFILE] = BOILER_PROFILE_WTC_G
+        hass.config_entries.async_update_entry(entry, version=8, options=options)
 
     return True
 
@@ -279,21 +289,118 @@ def _remove_inactive_profile_entities(
                 registry.async_remove(entity_id)
 
 
-def _set_profile_detection_issue(hass: HomeAssistant, *, failed: bool) -> None:
-    """Create or clear the repair for an inconclusive automatic profile probe."""
+def _parameter_unique_ids(parameter: dict) -> set[tuple[str, str]]:
+    """Return registry entities whose state depends on one wire parameter."""
 
-    if failed:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            PROFILE_DETECTION_ISSUE_ID,
-            is_fixable=False,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=PROFILE_DETECTION_ISSUE_ID,
+    if parameter.get("internal"):
+        return set()
+    name = str(parameter["name"])
+    slug = name.lower().replace(" ", "_")
+    unique_ids = {
+        ("sensor", f"weishaupt_{slug}"),
+        ("number", f"weishaupt_{slug}_number"),
+    }
+    select_suffixes = {
+        "Config HK Type": "config_hk_type",
+        "Config Regelvariante": "config_regelvariante",
+        "Config Ext Room Sensor": "config_ext_room_sensor",
+        "User Betriebsart": "user_op_mode",
+        "Expert Reduziertbetrieb": "expert_reduced_mode",
+        "Expert Raumthermostat": "expert_room_thermostat",
+        "Urlaubstemperaturniveau": "urlaubstemperaturniveau",
+    }
+    for suffix, select_suffix in select_suffixes.items():
+        if not name.endswith(suffix):
+            continue
+        if name.startswith("WTC HK1 "):
+            prefix = "wtc_hk1"
+        elif name.startswith("HK1 "):
+            prefix = "hk1"
+        elif name.startswith("HK2 "):
+            prefix = "hk2"
+        else:
+            break
+        unique_ids.add(("select", f"weishaupt_{prefix}_{select_suffix}_select"))
+        break
+    return unique_ids
+
+
+def _filter_disabled_entity_parameters(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    parameters: list[dict],
+) -> list[dict]:
+    """Skip wire reads only when every registered consumer is disabled."""
+
+    registry = er.async_get(hass)
+    result = []
+    for parameter in parameters:
+        if parameter.get("internal") or parameter["name"] == "Status":
+            result.append(parameter)
+            continue
+        consumers = []
+        for platform, unique_id in _parameter_unique_ids(parameter):
+            entity_id = registry.async_get_entity_id(platform, DOMAIN, unique_id)
+            if entity_id is None:
+                continue
+            registry_entry = registry.async_get(entity_id)
+            if registry_entry is not None and registry_entry.config_entry_id == entry.entry_id:
+                consumers.append(registry_entry)
+        # Unknown/new entities must be read once so their registry entries can
+        # be created. A parameter is dropped only when all known consumers are
+        # explicitly disabled.
+        if not consumers or any(item.disabled_by is None for item in consumers):
+            result.append(parameter)
+    return result
+
+
+def _remove_inactive_heating_circuit_entities(
+    hass: HomeAssistant, active_buses: set[int]
+) -> None:
+    """Remove registry entries for heating circuits absent from the appliance."""
+
+    registry = er.async_get(hass)
+    inactive_prefixes = {
+        0: ("weishaupt_wtc_hk1_", "weishaupt_kessel_config_version_fs"),
+        1: ("weishaupt_hk1_",),
+        2: ("weishaupt_hk2_",),
+    }
+    for registry_entry in list(registry.entities.values()):
+        if registry_entry.platform != DOMAIN:
+            continue
+        for bus, prefixes in inactive_prefixes.items():
+            if bus not in active_buses and registry_entry.unique_id.startswith(prefixes):
+                registry.async_remove(registry_entry.entity_id)
+                break
+        if 1 not in active_buses and registry_entry.unique_id in (
+            "weishaupt_hot_water_time_program",
+            "weishaupt_circulation_time_program",
+        ):
+            registry.async_remove(registry_entry.entity_id)
+
+
+def _register_entity_registry_reload_listener(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Rebuild the read plan when an entity is enabled or disabled."""
+
+    @callback
+    def _handle_registry_update(event) -> None:
+        if event.data.get("action") != "update":
+            return
+        if "disabled_by" not in event.data.get("changes", {}):
+            return
+        registry_entry = er.async_get(hass).async_get(event.data.get("entity_id"))
+        if registry_entry is None or registry_entry.config_entry_id != entry.entry_id:
+            return
+        hass.async_create_task(
+            hass.config_entries.async_reload(entry.entry_id),
+            f"Reload {DOMAIN} after entity registry polling change",
         )
-    else:
-        ir.async_delete_issue(hass, DOMAIN, PROFILE_DETECTION_ISSUE_ID)
+
+    entry.async_on_unload(
+        hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, _handle_registry_update)
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -330,38 +437,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if expose_time_program_calendars:
         platforms.append("calendar")
 
-    active_profile = requested_profile
-    profile_detection_failed = False
-    if requested_profile == BOILER_PROFILE_AUTO:
-        detector = WeishauptAPI(
-            host,
-            username,
-            password,
-            advanced_logging=advanced_logging,
-            parameters=PROFILE_DETECTION_PARAMETERS,
-        )
-        try:
-            detected = await hass.async_add_executor_job(detector.get_data)
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.warning(
-                "Automatic boiler profile detection failed; using WTC-G: %s", err
-            )
-            active_profile = BOILER_PROFILE_WTC_G
-            profile_detection_failed = True
-        else:
-            resolved_profile = detected_profile(detected)
-            if resolved_profile is not None:
-                active_profile = resolved_profile
-            else:
-                active_profile = BOILER_PROFILE_WTC_G
-                profile_detection_failed = True
-                _LOGGER.warning(
-                    "Automatic boiler profile detection was ambiguous; using WTC-G"
-                )
+    active_profile = (
+        requested_profile
+        if requested_profile in (BOILER_PROFILE_WTC_G, BOILER_PROFILE_WTC_OB)
+        else BOILER_PROFILE_WTC_G
+    )
+    circuit_detector = WeishauptAPI(
+        host,
+        username,
+        password,
+        advanced_logging=advanced_logging,
+        parameters=HEATING_CIRCUIT_PROBE_PARAMETERS,
+    )
+    try:
+        circuit_probe = await hass.async_add_executor_job(circuit_detector.get_data)
+    except WeishauptAuthenticationError as err:
+        raise ConfigEntryAuthFailed(
+            "WCM-COM rejected the configured credentials"
+        ) from err
+    except Exception as err:  # pylint: disable=broad-except
+        raise ConfigEntryNotReady(
+            f"Could not discover WCM-COM heating circuits: {err}"
+        ) from err
+    active_heating_circuits = detected_heating_circuit_buses(circuit_probe)
+    if not active_heating_circuits:
+        raise ConfigEntryNotReady("WCM-COM returned no heating-circuit version")
 
-    _set_profile_detection_issue(hass, failed=profile_detection_failed)
-
-    parameters = parameters_for_profile(active_profile)
+    profile_parameters = parameters_for_profile(
+        active_profile, active_heating_circuits
+    )
+    parameters = _filter_disabled_entity_parameters(
+        hass, entry, profile_parameters
+    )
     api = WeishauptAPI(
         host,
         username,
@@ -405,7 +512,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_optional_calendars=not expose_time_program_calendars,
         parameters=parameters,
     )
-    _remove_inactive_profile_entities(hass, parameters)
+    _remove_inactive_profile_entities(hass, profile_parameters)
+    _remove_inactive_heating_circuit_entities(hass, active_heating_circuits)
     if not allow_firmware_check:
         _remove_disabled_firmware_update_entity(hass)
 
@@ -422,6 +530,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "external_gas_meter_entity": external_gas_meter_entity,
         "requested_profile": requested_profile,
         "active_profile": active_profile,
+        "active_heating_circuits": active_heating_circuits,
         "parameters": parameters,
         "platforms": platforms,
     }
@@ -431,6 +540,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _register_services(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    _register_entity_registry_reload_listener(hass, entry)
     await async_register_frontend(
         hass,
         entry.entry_id,

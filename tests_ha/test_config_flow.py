@@ -50,7 +50,7 @@ def _entry(**kwargs) -> MockConfigEntry:
             CONF_PASSWORD: "",
         },
         "unique_id": "wcm-com.local",
-        "version": 7,
+        "version": 8,
     }
     defaults.update(kwargs)
     return MockConfigEntry(
@@ -156,7 +156,7 @@ async def test_migration_moves_legacy_connection_options_to_data(hass) -> None:
 
     assert await async_migrate_entry(hass, entry)
 
-    assert entry.version == 7
+    assert entry.version == 8
     assert entry.unique_id == "wcm-com.local"
     assert entry.data[CONF_HOST] == "wcm-com.local"
     assert entry.data[CONF_USERNAME] == "legacy-user"
@@ -166,6 +166,16 @@ async def test_migration_moves_legacy_connection_options_to_data(hass) -> None:
         CONF_ALLOW_WRITE: True,
         CONF_BOILER_PROFILE: BOILER_PROFILE_WTC_G,
     }
+
+
+async def test_migration_replaces_legacy_automatic_profile(hass) -> None:
+    entry = _entry(version=7, options={CONF_BOILER_PROFILE: "auto"})
+    entry.add_to_hass(hass)
+
+    assert await async_migrate_entry(hass, entry)
+
+    assert entry.version == 8
+    assert entry.options[CONF_BOILER_PROFILE] == BOILER_PROFILE_WTC_G
 
 
 async def test_reauth_updates_credentials_and_schedules_one_reload(hass) -> None:

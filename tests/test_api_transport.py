@@ -136,6 +136,30 @@ class ApiTransportTest(unittest.TestCase):
         self.assertNotIn("P37 OB", data)
         self.assertEqual(data["Status"], 7)
 
+    def test_more_than_twenty_values_are_split_and_merged(self) -> None:
+        parameters = [
+            {"id": 1000 + offset, "name": f"P{offset}", "type": "value"}
+            for offset in range(24)
+        ]
+
+        def respond(*args, **kwargs):
+            request = json.loads(kwargs["data"])["telegramm"]
+            return json_response(
+                [
+                    [telegram[0], telegram[1], 1, telegram[3], 0, 0,
+                     telegram[3] - 1000, 0]
+                    for telegram in request
+                ]
+            )
+
+        with patch.object(api_module.requests, "post", side_effect=respond) as post:
+            data = api_module.WeishauptAPI(
+                "wcm.test", parameters=parameters
+            ).get_data()
+
+        self.assertEqual(post.call_count, 2)
+        self.assertEqual(data, {f"P{offset}": offset for offset in range(24)})
+
     def test_buffer_sensor_32768_sentinel_is_omitted(self) -> None:
         parameters = [
             {

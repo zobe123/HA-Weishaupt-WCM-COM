@@ -42,18 +42,18 @@ DEFAULT_EXPOSE_TIME_PROGRAM_CALENDARS = True
 CONF_EXTERNAL_GAS_METER_ENTITY = "external_gas_meter_entity"
 DEFAULT_EXTERNAL_GAS_METER_ENTITY = ""
 
-# Boiler profile. Automatic detection only reads profile-specific process
-# parameters; it never writes to the WCM-COM.
+# Boiler profile. The original WCM-COM menu describes exactly two heat
+# generator families. Profile selection is therefore explicit; heating
+# circuits are discovered independently during setup.
 CONF_BOILER_PROFILE = "boiler_profile"
-BOILER_PROFILE_AUTO = "auto"
 BOILER_PROFILE_WTC_G = "wtc_g"
 BOILER_PROFILE_WTC_OB = "wtc_ob"
-DEFAULT_BOILER_PROFILE = BOILER_PROFILE_AUTO
+DEFAULT_BOILER_PROFILE = BOILER_PROFILE_WTC_G
 BOILER_PROFILES = (
-    BOILER_PROFILE_AUTO,
     BOILER_PROFILE_WTC_G,
     BOILER_PROFILE_WTC_OB,
 )
+SUPPORTED_HEATING_CIRCUIT_BUSES = (0, 1, 2)
 
 
 # Sensor Keys
@@ -535,46 +535,68 @@ WARNING_CODE_MAP = {
 }
 
 
-def parameters_for_profile(profile: str) -> list[dict]:
-    """Return the parameter set for one boiler profile."""
+def parameter_heating_circuit(parameter: dict) -> int | None:
+    """Return the physical heating-circuit bus used by one parameter."""
 
-    if profile not in (BOILER_PROFILE_WTC_G, BOILER_PROFILE_WTC_OB):
-        profile = BOILER_PROFILE_WTC_G
-    return [
-        parameter
-        for parameter in PARAMETERS
-        if parameter.get("profile", profile) == profile
-    ]
-
-
-def detected_profile(data: dict) -> str | None:
-    """Resolve a boiler profile from read-only profile probe results."""
-
-    # WTC-G also returns values for several WTC-OB counter IDs. Only the
-    # complete model-specific groups below are reliable discriminators.
-    has_gas = all(
-        name in data
-        for name in ("WTC-G Burner Cycles Detection", "WTC-G Burner Hours Detection")
-    )
-    has_oil = all(
-        name in data
-        for name in (
-            "WTC-OB Burner Output Detection",
-            "WTC-OB Burner Hours Low Detection",
-            "WTC-OB Burner Hours High Detection",
-        )
-    )
-    if has_oil and not has_gas:
-        return BOILER_PROFILE_WTC_OB
-    if has_gas and not has_oil:
-        return BOILER_PROFILE_WTC_G
+    name = str(parameter["name"])
+    if name.startswith("WTC HK1 ") or name == "Kessel Config Version FS":
+        return 0
+    if name.startswith("HK1 "):
+        return 1
+    if name.startswith("HK2 "):
+        return 2
+    if name in ("System Date", "System Time", "DST Start", "DST End"):
+        return 1
+    if "bus" in parameter and int(parameter.get("modultyp", 0)) in (6, 12):
+        return int(parameter["bus"])
     return None
 
 
-PROFILE_DETECTION_PARAMETERS = [
-    {"id": 3158, "name": "WTC-G Burner Cycles Detection", "type": "value", "internal": True},
-    {"id": 3159, "name": "WTC-G Burner Hours Detection", "type": "value", "internal": True},
-    {"id": 4176, "name": "WTC-OB Burner Output Detection", "type": "value", "internal": True},
-    {"id": 3198, "name": "WTC-OB Burner Hours Low Detection", "type": "value", "internal": True},
-    {"id": 3199, "name": "WTC-OB Burner Hours High Detection", "type": "value", "internal": True},
+def parameters_for_profile(
+    profile: str,
+    heating_circuit_buses: set[int] | None = None,
+) -> list[dict]:
+    """Return parameters for one profile and the detected heating circuits."""
+
+    if profile not in (BOILER_PROFILE_WTC_G, BOILER_PROFILE_WTC_OB):
+        profile = BOILER_PROFILE_WTC_G
+    result = []
+    for parameter in PARAMETERS:
+        if parameter.get("profile", profile) != profile:
+            continue
+        circuit = parameter_heating_circuit(parameter)
+        if heating_circuit_buses is not None and circuit is not None:
+            if circuit not in heating_circuit_buses:
+                continue
+        result.append(parameter)
+    return result
+
+
+HEATING_CIRCUIT_PROBE_PARAMETERS = [
+    {
+        "id": parameter_id,
+        "name": f"Heating Circuit {bus} Version {word}",
+        "type": "value",
+        "bus": bus,
+        "modultyp": 6,
+        "page": "heating_circuit_probe",
+        "internal": True,
+        "no_value": 32768,
+        "batch_across_buses": True,
+    }
+    for bus in SUPPORTED_HEATING_CIRCUIT_BUSES
+    for parameter_id, word in ((409, "High"), (410, "Low"))
 ]
+
+
+def detected_heating_circuit_buses(data: dict) -> set[int]:
+    """Return buses whose WCM-FS version probe produced a real telegram."""
+
+    return {
+        bus
+        for bus in SUPPORTED_HEATING_CIRCUIT_BUSES
+        if any(
+            f"Heating Circuit {bus} Version {word}" in data
+            for word in ("High", "Low")
+        )
+    }

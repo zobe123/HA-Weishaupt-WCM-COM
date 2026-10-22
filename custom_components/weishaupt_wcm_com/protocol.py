@@ -11,6 +11,7 @@ READ_COMMAND = 1
 WRITE_COMMAND = 2
 STANDARD_TELEGRAM = 0
 GENERIC_TELEGRAM = 1
+MAX_READ_TELEGRAMS_PER_REQUEST = 20
 
 
 def parameter_group(parameter: Mapping[str, Any]) -> int:
@@ -27,17 +28,23 @@ def parameter_group(parameter: Mapping[str, Any]) -> int:
 def split_request_groups(
     parameters: Sequence[Mapping[str, Any]],
 ) -> list[list[Mapping[str, Any]]]:
-    """Split parameters like the original WebUI: page, bus, then group."""
+    """Split parameters like the WebUI and honor the controller's hard limit."""
 
     groups: OrderedDict[tuple[str, int, int], list[Mapping[str, Any]]] = OrderedDict()
     for parameter in parameters:
         key = (
             str(parameter.get("page", "default")),
-            int(parameter.get("bus", 0)),
+            -1
+            if parameter.get("batch_across_buses")
+            else int(parameter.get("bus", 0)),
             parameter_group(parameter),
         )
         groups.setdefault(key, []).append(parameter)
-    return list(groups.values())
+    return [
+        group[offset : offset + MAX_READ_TELEGRAMS_PER_REQUEST]
+        for group in groups.values()
+        for offset in range(0, len(group), MAX_READ_TELEGRAMS_PER_REQUEST)
+    ]
 
 
 def resolve_response_parameter(

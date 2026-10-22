@@ -58,6 +58,7 @@ async def _async_validate_connection(hass, connection_data: dict[str, Any]) -> N
         connection_data[CONF_HOST],
         connection_data.get(CONF_USERNAME),
         connection_data.get(CONF_PASSWORD),
+        parameters=[{"id": 1, "name": "Status", "type": "code"}],
     )
     data = await hass.async_add_executor_job(api.get_data)
     if not data:
@@ -84,7 +85,7 @@ def _host_is_configured(hass, host: str, *, exclude_entry_id: str) -> bool:
 class WeishauptConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Weishaupt WCM-COM."""
 
-    VERSION = 7
+    VERSION = 8
 
     def __init__(self) -> None:
         """Initialize the config flow."""

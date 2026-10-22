@@ -41,6 +41,9 @@ async def async_get_config_entry_diagnostics(
         "entry_state": entry.state.value,
         "requested_boiler_profile": entry_data["requested_profile"],
         "active_boiler_profile": entry_data["active_profile"],
+        "detected_heating_circuit_buses": sorted(
+            entry_data["active_heating_circuits"]
+        ),
         "bus_mapping": {
             "0": "WTC-HK1 / FS1",
             "1": "HK2 radiators / FS2 + EM2",

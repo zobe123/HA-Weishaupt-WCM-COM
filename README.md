@@ -62,8 +62,8 @@ If the integration is not yet listed in the default HACS store, add it as a cust
 3. Enter:
    - the IP address of your WCM-COM,
    - optional username and password (if configured on the device),
-   - the heat-generator profile. **Automatic** uses read-only model-specific
-     parameters; WTC-G or WTC-OB can be selected manually as a fallback.
+   - the heat-generator profile: **WTC-G** or **WTC-OB**. Heating circuits are
+     detected independently and only installed circuits create entities.
 4. Confirm to create the integration.
 
 One WCM-COM can be configured per Home Assistant installation.

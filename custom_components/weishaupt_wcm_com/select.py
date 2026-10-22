@@ -256,7 +256,12 @@ async def async_setup_entry(
         )
     )
 
-    async_add_entities(selects)
+    active_parameter_names = {
+        parameter["name"] for parameter in entry_data.get("parameters", PARAMETERS)
+    }
+    async_add_entities(
+        [select for select in selects if select._data_name in active_parameter_names]
+    )
 
 
 class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEntity):

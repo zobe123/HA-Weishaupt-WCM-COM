@@ -36,5 +36,5 @@ jobs:
           python-version: "3.13"
       - name: Install Home Assistant test dependencies
         run: python -m pip install -r requirements-test.txt
-      - name: Run Home Assistant config-flow tests
-        run: python -m pytest -q tests_ha/test_config_flow.py
+      - name: Run Home Assistant behavior tests
+        run: python -m pytest -q tests_ha

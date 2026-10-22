@@ -29,29 +29,32 @@ async def async_setup_entry(
     entry_data = hass.data[DOMAIN][entry.entry_id]
     manager = entry_data["time_program_manager"]
     coordinator = entry_data["coordinator"]
+    active_buses = entry_data.get("active_heating_circuits", {0, 1, 2})
     entities: list[CalendarEntity] = [
         WeishauptActiveHeatingCalendar(manager, coordinator, circuit)
         for circuit in (1, 2)
+        if circuit in active_buses
     ]
-    entities.append(
-        WeishauptTimeProgramCalendar(
-            manager,
-            1,
-            "hot_water",
-            translation_key="hot_water_program",
-            unique_id="weishaupt_hot_water_time_program",
-        )
-    )
-    if circulation_supported(coordinator.data or {}):
+    if 1 in active_buses:
         entities.append(
             WeishauptTimeProgramCalendar(
                 manager,
                 1,
-                "circulation",
-                translation_key="circulation_program",
-                unique_id="weishaupt_circulation_time_program",
+                "hot_water",
+                translation_key="hot_water_program",
+                unique_id="weishaupt_hot_water_time_program",
             )
         )
+        if circulation_supported(coordinator.data or {}):
+            entities.append(
+                WeishauptTimeProgramCalendar(
+                    manager,
+                    1,
+                    "circulation",
+                    translation_key="circulation_program",
+                    unique_id="weishaupt_circulation_time_program",
+                )
+            )
     async_add_entities(entities)
 
 
