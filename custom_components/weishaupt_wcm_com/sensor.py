@@ -46,6 +46,7 @@ from .device_model import (
     is_hot_water_parameter,
     is_hot_water_readback_duplicate,
 )
+from .protocol import apply_display_scale
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -608,16 +609,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             ):
                 return value
 
-            # Fachmann / Heizung – Ein Opti MAX (ID 272): Rohwert = 15-Minuten-Blöcke
-            # Die Sensoransicht soll – genau wie die Number-Entity – echte Minuten anzeigen.
-            if self._sensor_name in (
-                "HK1 Expert Ein Opti MAX",
-                "HK2 Expert Ein Opti MAX",
-            ):
-                try:
-                    return float(value) * 15.0
-                except (TypeError, ValueError):
-                    return None
+            # Parameter-specific read scaling from the original WCM-COM UI.
+            # Keeping this in metadata covers every bus without broad ID-only
+            # assumptions and stays independent from the write encoder.
+            if display_scale := self._parameter.get("display_scale"):
+                return apply_display_scale(value, display_scale)
 
             param_type = self._parameter.get("type")
 

@@ -4,6 +4,18 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.0b4]
+
+### Fixed
+
+- Correct the cyclic heating-circuit configuration assignment so heating-circuit
+  type, control variant and external room sensor use parameters 2419, 321 and
+  16 respectively on every FS bus.
+- Show WTC-HK1 switch-on optimisation maximum in real minutes, including the
+  same 15-minute conversion already used by the writable control.
+- Keep the existing entity IDs while aligning German and English labels,
+  options, readbacks and write destinations with the original WCM-COM UI.
+
 ## [1.5.0b3]
 
 ### Added

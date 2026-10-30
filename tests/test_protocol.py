@@ -159,6 +159,9 @@ class ProtocolTest(unittest.TestCase):
         scale = protocol.write_scale("minutes", 272)
         self.assertEqual(protocol.encode_value(30, scale), 2)
         self.assertEqual(protocol.display_scale(272), 15.0)
+        self.assertEqual(protocol.apply_display_scale(8, 15), 120.0)
+        self.assertEqual(protocol.apply_display_scale(3, 15), 45.0)
+        self.assertIsNone(protocol.apply_display_scale(None, 15))
 
     def test_p18_and_p20_use_unscaled_signed_wire_values(self) -> None:
         self.assertEqual(
@@ -288,7 +291,7 @@ class ProtocolTest(unittest.TestCase):
     def test_live_no_value_markers_are_parameter_specific(self) -> None:
         parameters = {item["name"]: item for item in load_parameters()}
         self.assertEqual(
-            parameters["WTC HK1 Config HK Type"]["wire_scale"],
+            parameters["WTC HK1 Config Ext Room Sensor"]["wire_scale"],
             256,
         )
         self.assertEqual(
@@ -308,6 +311,25 @@ class ProtocolTest(unittest.TestCase):
                 parameters[f"HK{circuit} Expert Max Charge Time WW"]["no_value"],
                 0,
             )
+
+    def test_heating_circuit_configuration_addresses_match_webui(self) -> None:
+        parameters = {item["name"]: item for item in load_parameters()}
+        expected = {
+            "Config HK Type": 2419,
+            "Config Regelvariante": 321,
+            "Config Ext Room Sensor": 16,
+        }
+        for prefix in ("WTC HK1", "HK1", "HK2"):
+            for suffix, parameter_id in expected.items():
+                with self.subTest(prefix=prefix, suffix=suffix):
+                    parameter = parameters[f"{prefix} {suffix}"]
+                    self.assertEqual(parameter["id"], parameter_id)
+                    self.assertEqual(parameter["modultyp"], 6)
+
+        for prefix in ("WTC HK1", "HK1", "HK2"):
+            parameter = parameters[f"{prefix} Expert Ein Opti MAX"]
+            self.assertEqual(parameter["id"], 272)
+            self.assertEqual(parameter["display_scale"], 15)
 
     def test_voltage_codes_match_original_webui(self) -> None:
         self.assertEqual(

@@ -139,6 +139,15 @@ def display_scale(parameter_id: int) -> float:
     return 1.0
 
 
+def apply_display_scale(value: Any, scale: float) -> float | None:
+    """Apply a parameter-specific read scale without hiding invalid data."""
+
+    try:
+        return float(value) * float(scale)
+    except (TypeError, ValueError):
+        return None
+
+
 def encode_value(value: float, scale: float = 1.0) -> int:
     """Encode a Home Assistant value as the signed 16-bit wire integer."""
 

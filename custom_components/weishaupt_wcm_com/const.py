@@ -143,15 +143,15 @@ PARAMETERS = [
     # Pumpen-/Spannungs- und Regelungsparameter (abgeleitet aus WTC WebApp Dumps)
     {"id": 857,   "name": "HK1 Config Pump",              "type": "value", "bus": 1, "modultyp": 12},
     {"id": 65019, "name": "HK1 Config Voltage",           "type": "value", "bus": 1, "modultyp": 12},
-    {"id": 16,    "name": "HK1 Config HK Type",           "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 2419,  "name": "HK1 Config Regelvariante",     "type": "value", "bus": 1, "modultyp": 6},
-    {"id": 321,   "name": "HK1 Config Ext Room Sensor",   "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 2419,  "name": "HK1 Config HK Type",           "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 321,   "name": "HK1 Config Regelvariante",     "type": "value", "bus": 1, "modultyp": 6},
+    {"id": 16,    "name": "HK1 Config Ext Room Sensor",   "type": "value", "bus": 1, "modultyp": 6},
 
     {"id": 857,   "name": "HK2 Config Pump",              "type": "value", "bus": 2, "modultyp": 12},
     {"id": 65019, "name": "HK2 Config Voltage",           "type": "value", "bus": 2, "modultyp": 12},
-    {"id": 16,    "name": "HK2 Config HK Type",           "type": "value", "bus": 2, "modultyp": 6},
-    {"id": 2419,  "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
-    {"id": 321,   "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 2419,  "name": "HK2 Config HK Type",           "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 321,   "name": "HK2 Config Regelvariante",     "type": "value", "bus": 2, "modultyp": 6},
+    {"id": 16,    "name": "HK2 Config Ext Room Sensor",   "type": "value", "bus": 2, "modultyp": 6},
 
     # Benutzerseite: Die Zahl nach u16Data im WebUI-Konstruktor ist eine
     # interne Abrufgruppe, kein TEL_PROT. ID 104 entscheidet, ob ID 274 als
@@ -236,13 +236,13 @@ PARAMETERS = [
     # Fachmann / Heizung – Frostheizgrenze / Ein Opti MAX (bus-spezifisch)
     {"id": 306,  "name": "HK1 Expert Reduziertbetrieb",    "type": "value",               "bus": 1, "modultyp": 6, "page": "hk_expert"},
     {"id": 702,  "name": "HK1 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 10},
-    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert"},
+    {"id": 272,  "name": "HK1 Expert Ein Opti MAX",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert", "display_scale": 15},
     {"id": 2414, "name": "HK1 Expert Ein Opti IST",        "type": "minutes",     "bus": 1, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
     {"id": 2588, "name": "HK1 Expert Raumthermostat",      "type": "value",       "bus": 1, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
     {"id": 384,  "name": "HK1 Expert Max Charge Time WW",  "type": "minutes",     "bus": 1, "modultyp": 12, "page": "hk_expert", "conditional": True, "no_value": 0},
     {"id": 306,  "name": "HK2 Expert Reduziertbetrieb",    "type": "value",               "bus": 2, "modultyp": 6, "page": "hk_expert"},
     {"id": 702,  "name": "HK2 Expert Frostheizgrenze",     "type": "integer_temperature", "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 10},
-    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert"},
+    {"id": 272,  "name": "HK2 Expert Ein Opti MAX",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert", "display_scale": 15},
     {"id": 2414, "name": "HK2 Expert Ein Opti IST",        "type": "minutes",     "bus": 2, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
     {"id": 2588, "name": "HK2 Expert Raumthermostat",      "type": "value",       "bus": 2, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
     {"id": 384,  "name": "HK2 Expert Max Charge Time WW",  "type": "minutes",     "bus": 2, "modultyp": 12, "page": "hk_expert", "conditional": True, "no_value": 0},
@@ -296,9 +296,9 @@ PARAMETERS = [
 PARAMETERS.extend(
     [
         # Configuration
-        {"id": 16, "name": "WTC HK1 Config HK Type", "type": "value", "bus": 0, "modultyp": 6, "wire_scale": 256},
-        {"id": 2419, "name": "WTC HK1 Config Regelvariante", "type": "value", "bus": 0, "modultyp": 6},
-        {"id": 321, "name": "WTC HK1 Config Ext Room Sensor", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 2419, "name": "WTC HK1 Config HK Type", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 321, "name": "WTC HK1 Config Regelvariante", "type": "value", "bus": 0, "modultyp": 6},
+        {"id": 16, "name": "WTC HK1 Config Ext Room Sensor", "type": "value", "bus": 0, "modultyp": 6, "wire_scale": 256},
 
         # Process values
         {"id": 2586, "name": "WTC HK1 Gemischte Außentemperatur", "type": "temperature", "bus": 0, "modultyp": 6},
@@ -321,7 +321,7 @@ PARAMETERS.extend(
         # Expert values
         {"id": 306, "name": "WTC HK1 Expert Reduziertbetrieb", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert"},
         {"id": 702, "name": "WTC HK1 Expert Frostheizgrenze", "type": "integer_temperature", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 10},
-        {"id": 272, "name": "WTC HK1 Expert Ein Opti MAX", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert"},
+        {"id": 272, "name": "WTC HK1 Expert Ein Opti MAX", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert", "display_scale": 15},
         {"id": 2414, "name": "WTC HK1 Expert Ein Opti IST", "type": "minutes", "bus": 0, "modultyp": 6, "page": "hk_expert", "no_value": 32768},
         {"id": 2588, "name": "WTC HK1 Expert Raumthermostat", "type": "value", "bus": 0, "modultyp": 6, "page": "hk_expert", "conditional": True, "no_value": 32768},
 
@@ -395,27 +395,27 @@ HK_CONFIG_VOLTAGE_MAP = {
 }
 
 HK_CONFIG_HK_TYPE_MAP = {
-    0: "HK-Typ: n/v",
-    1: "HK-Typ: ext. Raumfühler",
-    2: "HK-Typ: int. Raumfühler",
-    3: "HK-Typ: n/v",
-    4: "HK-Typ: Im Kessel",
+    0: "HK-Typ: Fußbodenerwärmung",
+    1: "HK-Typ: Fußbodenheizung",
+    2: "HK-Typ: Radiator 60°C",
+    3: "HK-Typ: Radiator 75°C",
+    4: "HK-Typ: Konvektor",
+    5: "HK-Typ: Universal",
 }
 
 HK_CONFIG_REGELVARIANTE_MAP = {
-    0: "Regelvariante: Fußbodenerwärmung",
-    1: "Regelvariante: Fußbodenheizung",
-    2: "Regelvariante: Radiator 60°C",
-    3: "Regelvariante: Radiator 75°C",
-    4: "Regelvariante: Konvektor",
-    5: "Regelvariante: Universal",
+    0: "Regelvariante: Konstantvorlauf",
+    1: "Regelvariante: Witterungsführung",
+    2: "Regelvariante: Witterungs-/Raumführung",
+    3: "Regelvariante: Raumführung",
 }
 
 HK_CONFIG_EXT_ROOM_SENSOR_MAP = {
-    0: "Externer Raumfühler: Konstantvorlauf",
-    1: "Externer Raumfühler: Witterungsführung",
-    2: "Externer Raumfühler: Witterungs-/Raumführung",
-    3: "Externer Raumfühler: Raumführung",
+    0: "Externer Raumfühler: n/v",
+    1: "Externer Raumfühler: ext. Raumfühler",
+    2: "Externer Raumfühler: int. Raumfühler",
+    3: "Externer Raumfühler: n/v",
+    4: "Externer Raumfühler: Im Kessel",
 }
 
 # Benutzer-Betriebsarten (Form_Heizung_Benutzer)

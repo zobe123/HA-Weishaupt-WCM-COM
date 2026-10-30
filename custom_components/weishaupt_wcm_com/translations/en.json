@@ -406,7 +406,7 @@
         }
       },
       "parameter_b1_m6_p16": {
-        "name": "Heating-circuit type",
+        "name": "External room sensor",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -415,7 +415,7 @@
         }
       },
       "parameter_b1_m6_p2419": {
-        "name": "Control variant",
+        "name": "Heating-circuit type",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -426,7 +426,7 @@
         }
       },
       "parameter_b1_m6_p321": {
-        "name": "External room sensor",
+        "name": "Control variant",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -450,7 +450,7 @@
         }
       },
       "parameter_b2_m6_p16": {
-        "name": "Heating-circuit type",
+        "name": "External room sensor",
         "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
@@ -459,7 +459,7 @@
         }
       },
       "parameter_b2_m6_p2419": {
-        "name": "Control variant",
+        "name": "Heating-circuit type",
         "state": {
           "floor_warming": "Floor warming",
           "underfloor_heating": "Underfloor heating",
@@ -470,7 +470,7 @@
         }
       },
       "parameter_b2_m6_p321": {
-        "name": "External room sensor",
+        "name": "Control variant",
         "state": {
           "constant_flow": "Constant flow",
           "weather_compensated": "Weather-compensated",
@@ -858,13 +858,13 @@
         "name": "Pump output"
       },
       "parameter_b1_m6_p16": {
-        "name": "Heating-circuit type"
+        "name": "External room sensor"
       },
       "parameter_b1_m6_p2419": {
-        "name": "Control variant"
+        "name": "Heating-circuit type"
       },
       "parameter_b1_m6_p321": {
-        "name": "External room sensor"
+        "name": "Control variant"
       },
       "parameter_b2_m12_p857": {
         "name": "Pump configuration"
@@ -873,13 +873,13 @@
         "name": "Pump output"
       },
       "parameter_b2_m6_p16": {
-        "name": "Heating-circuit type"
+        "name": "External room sensor"
       },
       "parameter_b2_m6_p2419": {
-        "name": "Control variant"
+        "name": "Heating-circuit type"
       },
       "parameter_b2_m6_p321": {
-        "name": "External room sensor"
+        "name": "Control variant"
       },
       "parameter_b0_m6_p274": {
         "name": "operating mode"
@@ -1078,59 +1078,59 @@
       "hc1_type": {
         "name": "type",
         "state": {
-          "not_available": "Not available",
-          "external_room_sensor": "External room sensor",
-          "internal_room_sensor": "Internal room sensor",
-          "inside_boiler": "Inside boiler"
+          "floor_warming": "Floor warming",
+          "underfloor_heating": "Underfloor heating",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Convector",
+          "universal": "Universal"
         }
       },
       "hc2_type": {
         "name": "type",
         "state": {
+          "floor_warming": "Floor warming",
+          "underfloor_heating": "Underfloor heating",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Convector",
+          "universal": "Universal"
+        }
+      },
+      "hc1_control_variant": {
+        "name": "control variant",
+        "state": {
+          "constant_flow": "Constant flow",
+          "weather_compensated": "Weather-compensated",
+          "weather_and_room_compensated": "Weather and room-compensated",
+          "room_compensated": "Room-compensated"
+        }
+      },
+      "hc2_control_variant": {
+        "name": "control variant",
+        "state": {
+          "constant_flow": "Constant flow",
+          "weather_compensated": "Weather-compensated",
+          "weather_and_room_compensated": "Weather and room-compensated",
+          "room_compensated": "Room-compensated"
+        }
+      },
+      "hc1_external_room_sensor": {
+        "name": "external room sensor",
+        "state": {
           "not_available": "Not available",
           "external_room_sensor": "External room sensor",
           "internal_room_sensor": "Internal room sensor",
           "inside_boiler": "Inside boiler"
         }
       },
-      "hc1_control_variant": {
-        "name": "control variant",
-        "state": {
-          "floor_warming": "Floor warming",
-          "underfloor_heating": "Underfloor heating",
-          "radiator_60": "Radiator 60 °C",
-          "radiator_75": "Radiator 75 °C",
-          "convector": "Convector",
-          "universal": "Universal"
-        }
-      },
-      "hc2_control_variant": {
-        "name": "control variant",
-        "state": {
-          "floor_warming": "Floor warming",
-          "underfloor_heating": "Underfloor heating",
-          "radiator_60": "Radiator 60 °C",
-          "radiator_75": "Radiator 75 °C",
-          "convector": "Convector",
-          "universal": "Universal"
-        }
-      },
-      "hc1_external_room_sensor": {
-        "name": "external room sensor",
-        "state": {
-          "constant_flow": "Constant flow",
-          "weather_compensated": "Weather-compensated",
-          "weather_and_room_compensated": "Weather and room-compensated",
-          "room_compensated": "Room-compensated"
-        }
-      },
       "hc2_external_room_sensor": {
         "name": "external room sensor",
         "state": {
-          "constant_flow": "Constant flow",
-          "weather_compensated": "Weather-compensated",
-          "weather_and_room_compensated": "Weather and room-compensated",
-          "room_compensated": "Room-compensated"
+          "not_available": "Not available",
+          "external_room_sensor": "External room sensor",
+          "internal_room_sensor": "Internal room sensor",
+          "inside_boiler": "Inside boiler"
         }
       },
       "wtc_hc1_operating_mode": {

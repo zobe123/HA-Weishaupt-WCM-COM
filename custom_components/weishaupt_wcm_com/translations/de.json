@@ -406,7 +406,7 @@
         }
       },
       "parameter_b1_m6_p16": {
-        "name": "Heizkreistyp",
+        "name": "Externer Raumfühler",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -415,7 +415,7 @@
         }
       },
       "parameter_b1_m6_p2419": {
-        "name": "Regelvariante",
+        "name": "Heizkreistyp",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -426,7 +426,7 @@
         }
       },
       "parameter_b1_m6_p321": {
-        "name": "Externer Raumfühler",
+        "name": "Regelvariante",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -450,7 +450,7 @@
         }
       },
       "parameter_b2_m6_p16": {
-        "name": "Heizkreistyp",
+        "name": "Externer Raumfühler",
         "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
@@ -459,7 +459,7 @@
         }
       },
       "parameter_b2_m6_p2419": {
-        "name": "Regelvariante",
+        "name": "Heizkreistyp",
         "state": {
           "floor_warming": "Fußbodenerwärmung",
           "underfloor_heating": "Fußbodenheizung",
@@ -470,7 +470,7 @@
         }
       },
       "parameter_b2_m6_p321": {
-        "name": "Externer Raumfühler",
+        "name": "Regelvariante",
         "state": {
           "constant_flow": "Konstantvorlauf",
           "weather_compensated": "Witterungsführung",
@@ -858,13 +858,13 @@
         "name": "Pumpenausgang"
       },
       "parameter_b1_m6_p16": {
-        "name": "Heizkreistyp"
+        "name": "Externer Raumfühler"
       },
       "parameter_b1_m6_p2419": {
-        "name": "Regelvariante"
+        "name": "Heizkreistyp"
       },
       "parameter_b1_m6_p321": {
-        "name": "Externer Raumfühler"
+        "name": "Regelvariante"
       },
       "parameter_b2_m12_p857": {
         "name": "Pumpenkonfiguration"
@@ -873,13 +873,13 @@
         "name": "Pumpenausgang"
       },
       "parameter_b2_m6_p16": {
-        "name": "Heizkreistyp"
+        "name": "Externer Raumfühler"
       },
       "parameter_b2_m6_p2419": {
-        "name": "Regelvariante"
+        "name": "Heizkreistyp"
       },
       "parameter_b2_m6_p321": {
-        "name": "Externer Raumfühler"
+        "name": "Regelvariante"
       },
       "parameter_b0_m6_p274": {
         "name": "Betriebsart"
@@ -1078,59 +1078,59 @@
       "hc1_type": {
         "name": "Heizkreistyp",
         "state": {
-          "not_available": "Nicht verfügbar",
-          "external_room_sensor": "Externer Raumfühler",
-          "internal_room_sensor": "Interner Raumfühler",
-          "inside_boiler": "Im Kessel"
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
         }
       },
       "hc2_type": {
         "name": "Heizkreistyp",
         "state": {
+          "floor_warming": "Fußbodenerwärmung",
+          "underfloor_heating": "Fußbodenheizung",
+          "radiator_60": "Radiator 60 °C",
+          "radiator_75": "Radiator 75 °C",
+          "convector": "Konvektor",
+          "universal": "Universal"
+        }
+      },
+      "hc1_control_variant": {
+        "name": "Regelvariante",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "hc2_control_variant": {
+        "name": "Regelvariante",
+        "state": {
+          "constant_flow": "Konstantvorlauf",
+          "weather_compensated": "Witterungsführung",
+          "weather_and_room_compensated": "Witterungs-/Raumführung",
+          "room_compensated": "Raumführung"
+        }
+      },
+      "hc1_external_room_sensor": {
+        "name": "Externer Raumfühler",
+        "state": {
           "not_available": "Nicht verfügbar",
           "external_room_sensor": "Externer Raumfühler",
           "internal_room_sensor": "Interner Raumfühler",
           "inside_boiler": "Im Kessel"
         }
       },
-      "hc1_control_variant": {
-        "name": "Regelvariante",
-        "state": {
-          "floor_warming": "Fußbodenerwärmung",
-          "underfloor_heating": "Fußbodenheizung",
-          "radiator_60": "Radiator 60 °C",
-          "radiator_75": "Radiator 75 °C",
-          "convector": "Konvektor",
-          "universal": "Universal"
-        }
-      },
-      "hc2_control_variant": {
-        "name": "Regelvariante",
-        "state": {
-          "floor_warming": "Fußbodenerwärmung",
-          "underfloor_heating": "Fußbodenheizung",
-          "radiator_60": "Radiator 60 °C",
-          "radiator_75": "Radiator 75 °C",
-          "convector": "Konvektor",
-          "universal": "Universal"
-        }
-      },
-      "hc1_external_room_sensor": {
-        "name": "Externer Raumfühler",
-        "state": {
-          "constant_flow": "Konstantvorlauf",
-          "weather_compensated": "Witterungsführung",
-          "weather_and_room_compensated": "Witterungs-/Raumführung",
-          "room_compensated": "Raumführung"
-        }
-      },
       "hc2_external_room_sensor": {
         "name": "Externer Raumfühler",
         "state": {
-          "constant_flow": "Konstantvorlauf",
-          "weather_compensated": "Witterungsführung",
-          "weather_and_room_compensated": "Witterungs-/Raumführung",
-          "room_compensated": "Raumführung"
+          "not_available": "Nicht verfügbar",
+          "external_room_sensor": "Externer Raumfühler",
+          "internal_room_sensor": "Interner Raumfühler",
+          "inside_boiler": "Im Kessel"
         }
       },
       "wtc_hc1_operating_mode": {

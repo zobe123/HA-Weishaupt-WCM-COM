@@ -171,16 +171,16 @@ class SelectPlatformTest(unittest.TestCase):
         api.write_parameter.assert_called_once_with(274, 0, 6, 5)
         coordinator.async_request_refresh.assert_awaited_once()
 
-    def test_wtc_hk1_high_byte_enum_write_preserves_wire_encoding(self) -> None:
-        coordinator = Mock(data={"WTC HK1 Config HK Type": 4})
+    def test_wtc_hk1_high_byte_room_sensor_write_preserves_wire_encoding(self) -> None:
+        coordinator = Mock(data={"WTC HK1 Config Ext Room Sensor": 4})
         coordinator.async_request_refresh = AsyncMock()
         api = Mock()
         entity = select_module.WeishauptHKConfigSelect(
             coordinator,
             api,
-            "WTC HK1 Config HK Type",
-            "wtc_hk1_config_hk_type",
-            select_module.HK_CONFIG_HK_TYPE_MAP,
+            "WTC HK1 Config Ext Room Sensor",
+            "wtc_hk1_config_ext_room_sensor",
+            select_module.HK_CONFIG_EXT_ROOM_SENSOR_MAP,
             parameter_id=16,
             bus=0,
             modultyp=6,
@@ -196,6 +196,54 @@ class SelectPlatformTest(unittest.TestCase):
 
         api.write_parameter.assert_called_once_with(16, 0, 6, 1024)
         coordinator.async_request_refresh.assert_awaited_once()
+
+    def test_every_fs_configuration_select_writes_its_correct_address(self) -> None:
+        expected = {
+            "config_hk_type": (2419, "universal", 5),
+            "config_regelvariante": (321, "weather_and_room_compensated", 2),
+            "config_ext_room_sensor": (16, "internal_room_sensor", 2),
+        }
+
+        async def run_executor(function, *args):
+            return function(*args)
+
+        for bus, prefix, slug_prefix in (
+            (0, "WTC HK1", "wtc_hk1"),
+            (1, "HK1", "hk1"),
+            (2, "HK2", "hk2"),
+        ):
+            for suffix, (parameter_id, option, raw_code) in expected.items():
+                labels = {
+                    "config_hk_type": ("Config HK Type", select_module.HK_CONFIG_HK_TYPE_MAP),
+                    "config_regelvariante": ("Config Regelvariante", select_module.HK_CONFIG_REGELVARIANTE_MAP),
+                    "config_ext_room_sensor": ("Config Ext Room Sensor", select_module.HK_CONFIG_EXT_ROOM_SENSOR_MAP),
+                }
+                name_suffix, value_map = labels[suffix]
+                name = f"{prefix} {name_suffix}"
+                coordinator = Mock(data={name: raw_code})
+                coordinator.async_request_refresh = AsyncMock()
+                api = Mock()
+                entity = select_module.WeishauptHKConfigSelect(
+                    coordinator,
+                    api,
+                    name,
+                    f"{slug_prefix}_{suffix}",
+                    value_map,
+                    parameter_id=parameter_id,
+                    bus=bus,
+                    modultyp=6,
+                    allow_write=True,
+                )
+                entity.hass = Mock()
+                entity.hass.async_add_executor_job = run_executor
+
+                with self.subTest(bus=bus, suffix=suffix):
+                    self.assertEqual(entity.current_option, option)
+                    asyncio.run(entity.async_select_option(option))
+                    wire_code = raw_code * (256 if bus == 0 and parameter_id == 16 else 1)
+                    api.write_parameter.assert_called_once_with(
+                        parameter_id, bus, 6, wire_code
+                    )
 
     def test_wtc_hk1_mirrors_supported_fs_selects_on_bus_zero(self) -> None:
         coordinator = Mock()

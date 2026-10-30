@@ -1,11 +1,9 @@
 """Select platform for Weishaupt WCM-COM HK1 configuration.
 
-This exposes read/write dropdowns for:
-- HK1 Config HK Type (id 16)
-- HK1 Config Regelvariante (id 2419)
-- HK1 Config Ext Room Sensor (id 321)
-
-Initially only HK1 is supported; HK2 can be added later using the same pattern.
+This exposes read/write dropdowns for every detected FS heating circuit:
+- Config HK Type (id 2419)
+- Config Regelvariante (id 321)
+- Config Ext Room Sensor (id 16)
 """
 
 from __future__ import annotations
@@ -74,9 +72,9 @@ async def async_setup_entry(
     # Mirror the FS configuration and expert controls on physical bus 0.
     # Only parameters actually returned by this appliance are exposed.
     for name, slug, mapping, parameter_id in (
-        ("WTC HK1 Config HK Type", "wtc_hk1_config_hk_type", HK_CONFIG_HK_TYPE_MAP, 16),
-        ("WTC HK1 Config Regelvariante", "wtc_hk1_config_regelvariante", HK_CONFIG_REGELVARIANTE_MAP, 2419),
-        ("WTC HK1 Config Ext Room Sensor", "wtc_hk1_config_ext_room_sensor", HK_CONFIG_EXT_ROOM_SENSOR_MAP, 321),
+        ("WTC HK1 Config HK Type", "wtc_hk1_config_hk_type", HK_CONFIG_HK_TYPE_MAP, 2419),
+        ("WTC HK1 Config Regelvariante", "wtc_hk1_config_regelvariante", HK_CONFIG_REGELVARIANTE_MAP, 321),
+        ("WTC HK1 Config Ext Room Sensor", "wtc_hk1_config_ext_room_sensor", HK_CONFIG_EXT_ROOM_SENSOR_MAP, 16),
         ("WTC HK1 Expert Reduziertbetrieb", "wtc_hk1_expert_reduced_mode", HK_REDUCED_MODE_MAP, 306),
         ("WTC HK1 Expert Raumthermostat", "wtc_hk1_expert_room_thermostat", HK_ROOM_THERMOSTAT_MAP, 2588),
     ):
@@ -119,7 +117,7 @@ async def async_setup_entry(
             "HK1 Config HK Type",
             "hk1_config_hk_type",
             HK_CONFIG_HK_TYPE_MAP,
-            parameter_id=16,
+            parameter_id=2419,
             bus=1,
             modultyp=6,
             allow_write=allow_write,
@@ -133,7 +131,7 @@ async def async_setup_entry(
             "HK1 Config Regelvariante",
             "hk1_config_regelvariante",
             HK_CONFIG_REGELVARIANTE_MAP,
-            parameter_id=2419,
+            parameter_id=321,
             bus=1,
             modultyp=6,
             allow_write=allow_write,
@@ -147,7 +145,7 @@ async def async_setup_entry(
             "HK1 Config Ext Room Sensor",
             "hk1_config_ext_room_sensor",
             HK_CONFIG_EXT_ROOM_SENSOR_MAP,
-            parameter_id=321,
+            parameter_id=16,
             bus=1,
             modultyp=6,
             allow_write=allow_write,
@@ -162,7 +160,7 @@ async def async_setup_entry(
             "HK2 Config HK Type",
             "hk2_config_hk_type",
             HK_CONFIG_HK_TYPE_MAP,
-            parameter_id=16,
+            parameter_id=2419,
             bus=2,
             modultyp=6,
             allow_write=allow_write,
@@ -176,7 +174,7 @@ async def async_setup_entry(
             "HK2 Config Regelvariante",
             "hk2_config_regelvariante",
             HK_CONFIG_REGELVARIANTE_MAP,
-            parameter_id=2419,
+            parameter_id=321,
             bus=2,
             modultyp=6,
             allow_write=allow_write,
@@ -190,7 +188,7 @@ async def async_setup_entry(
             "HK2 Config Ext Room Sensor",
             "hk2_config_ext_room_sensor",
             HK_CONFIG_EXT_ROOM_SENSOR_MAP,
-            parameter_id=321,
+            parameter_id=16,
             bus=2,
             modultyp=6,
             allow_write=allow_write,

@@ -77,13 +77,6 @@ SELECT_TRANSLATION_KEYS = {
 
 SELECT_OPTION_KEYS = {
     "hc_type": {
-        0: "not_available",
-        1: "external_room_sensor",
-        2: "internal_room_sensor",
-        3: "not_available",
-        4: "inside_boiler",
-    },
-    "control_variant": {
         0: "floor_warming",
         1: "underfloor_heating",
         2: "radiator_60",
@@ -91,11 +84,18 @@ SELECT_OPTION_KEYS = {
         4: "convector",
         5: "universal",
     },
-    "external_room_sensor": {
+    "control_variant": {
         0: "constant_flow",
         1: "weather_compensated",
         2: "weather_and_room_compensated",
         3: "room_compensated",
+    },
+    "external_room_sensor": {
+        0: "not_available",
+        1: "external_room_sensor",
+        2: "internal_room_sensor",
+        3: "not_available",
+        4: "inside_boiler",
     },
     "heating_operating_mode": {
         11: "program_1",
