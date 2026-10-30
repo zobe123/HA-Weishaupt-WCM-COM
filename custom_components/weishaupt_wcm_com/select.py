@@ -33,6 +33,7 @@ from .base_entity import WeishauptBaseEntity
 from .protocol import resolve_parameter_metadata
 from .localization import SELECT_TRANSLATION_KEYS, select_option_map
 from .device_model import device_info
+from .entity_help import coordinator_language, entity_help_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -340,6 +341,23 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._attr_icon = "mdi:snowflake"
 
         self._attr_options = list(dict.fromkeys(self._option_map.values()))
+        language = coordinator_language(coordinator)
+        if language.lower().startswith("de"):
+            help_options = list(
+                dict.fromkeys(
+                    self._extract_option_label(label)
+                    for label in self._value_map.values()
+                )
+            )
+        else:
+            help_options = [option.replace("_", " ") for option in self._attr_options]
+        self._attr_extra_state_attributes.update(
+            entity_help_attributes(
+                sensor_name,
+                language=language,
+                value_range=", ".join(help_options),
+            )
+        )
 
     @property
     def device_info(self):

@@ -103,6 +103,15 @@ The integration queries various parameters from the WCM-COM interface and expose
 
 Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
 
+### Context help for configuration entities
+
+Verified expert numbers and heating-circuit selects expose short state
+attributes with the original WCM menu parameter, its meaning and the valid
+range. Home Assistant shows these details in the entity dialog where supported
+and always under **Developer tools → States**. The text follows Home Assistant's
+configured core language (German or English). Parameters without verified
+documentation deliberately receive no guessed help text.
+
 FS1, FS2 and FS3 use the same device-relative entity names and expose the same
 supported heating-circuit core. Pump, voltage, dedicated flow/circulation and
 EM firmware entities remain exclusive to circuits that physically have an EM

@@ -22,6 +22,7 @@ from .const import DOMAIN, PARAMETERS
 from .protocol import encode_value, write_scale
 from .localization import parameter_translation_key
 from .device_model import device_info, is_duplicate_hot_water_control
+from .entity_help import coordinator_language, entity_help_attributes
 
 
 async def async_setup_entry(
@@ -603,6 +604,19 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             self._attr_native_unit_of_measurement = unit
         if unit == UnitOfTemperature.CELSIUS:
             self._attr_device_class = NumberDeviceClass.TEMPERATURE
+
+        language = coordinator_language(coordinator)
+        unit_suffix = f" {unit}" if unit else ""
+        step_label = "Schrittweite" if language.lower().startswith("de") else "step"
+        value_range = (
+            f"{min_value:g}–{max_value:g}{unit_suffix}; "
+            f"{step_label} {step:g}{unit_suffix}"
+        )
+        self._attr_extra_state_attributes = entity_help_attributes(
+            sensor_name,
+            language=language,
+            value_range=value_range,
+        )
 
         # Icon je nach Parameter leicht variieren
         name = sensor_name

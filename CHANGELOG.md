@@ -4,6 +4,20 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.0b5]
+
+### Added
+
+- Show concise German or English context help on verified expert numbers and
+  heating-circuit selects, including the original WCM menu parameter, meaning
+  and valid value range.
+- Explain the 15-minute wire conversion on switch-on optimisation controls.
+
+### Compatibility
+
+- Keep entity IDs, states, polling and read/write telegrams unchanged.
+- Leave undocumented entities without guessed help text.
+
 ## [1.5.0b4]
 
 ### Fixed

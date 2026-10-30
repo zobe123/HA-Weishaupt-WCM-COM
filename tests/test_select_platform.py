@@ -192,6 +192,9 @@ class SelectPlatformTest(unittest.TestCase):
 
         entity.hass = Mock()
         entity.hass.async_add_executor_job = run_executor
+        self.assertEqual(entity._attr_extra_state_attributes["parameter"], "P414")
+        self.assertIn("room sensor", entity._attr_extra_state_attributes["description"])
+        self.assertIn("internal room sensor", entity._attr_extra_state_attributes["value_range"])
         asyncio.run(entity.async_select_option("inside_boiler"))
 
         api.write_parameter.assert_called_once_with(16, 0, 6, 1024)
