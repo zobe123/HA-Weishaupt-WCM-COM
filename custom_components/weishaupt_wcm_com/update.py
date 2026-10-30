@@ -70,6 +70,29 @@ class WeishauptFirmwareUpdateEntity(CoordinatorEntity, UpdateEntity):
     _attr_icon = "mdi:update"
     _attr_supported_features = UpdateEntityFeature(0)
 
+    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+        """Initialize the read-only firmware information entity."""
+
+        super().__init__(coordinator)
+        german = coordinator.hass.config.language.lower().startswith("de")
+        self._attr_extra_state_attributes = {
+            "description": (
+                "Vergleicht die installierte WCM-COM-Firmware mit der vom Weishaupt-Dienst gemeldeten Version."
+                if german
+                else "Compares the installed WCM-COM firmware with the version reported by the Weishaupt service."
+            ),
+            "notice": (
+                "Nur Information; eine Firmware-Installation wird nicht angeboten."
+                if german
+                else "Information only; firmware installation is not offered."
+            ),
+            "documentation_basis": (
+                "WCM-COM-Firmwaredienst"
+                if german
+                else "WCM-COM firmware service"
+            ),
+        }
+
     @property
     def available(self) -> bool:
         """Keep a vendor-server failure isolated to this one entity."""

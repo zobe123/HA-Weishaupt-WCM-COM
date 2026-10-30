@@ -105,12 +105,22 @@ Expert sensors are marked as diagnostic entities in Home Assistant and may be `u
 
 ### Context help for configuration entities
 
-Verified expert numbers and heating-circuit selects expose short state
-attributes with the original WCM menu parameter, its meaning and the valid
-range. Home Assistant shows these details in the entity dialog where supported
-and always under **Developer tools → States**. The text follows Home Assistant's
-configured core language (German or English). Parameters without verified
-documentation deliberately receive no guessed help text.
+All public sensors, numbers, selects, calendars and firmware entities with a
+documented meaning expose concise context as state attributes. Depending on the
+entity this includes the original WCM menu reference, exact telegram ID, bus,
+module, meaning, valid range, conversion notes and whether a value is derived.
+Home Assistant shows these details in the entity dialog where supported and
+always under **Developer tools → States**. The text follows Home Assistant's
+configured core language (German or English).
+
+Descriptions and menu references are derived from the original WCM-COM WebUI
+and the official Weishaupt manuals for the
+[WCM-FS/EM](https://www.weishaupt.de/uploads/tx_weishaupt_documents/documents/de/83277501.pdf),
+[WCM-FS user controls](https://www.weishaupt.de/uploads/tx_weishaupt_documents/documents/83277701.pdf),
+[WTC-G](https://www.weishaupt.de/uploads/tx_weishaupt_documents/documents/83053001_07_05.pdf)
+and [WCM-COM](https://www.weishaupt.de/uploads/tx_weishaupt_documents/documents/83279301.pdf).
+Model-dependent factory defaults are deliberately omitted unless they can be
+proven for every supported appliance.
 
 FS1, FS2 and FS3 use the same device-relative entity names and expose the same
 supported heating-circuit core. Pump, voltage, dedicated flow/circulation and

@@ -252,9 +252,13 @@ async def test_p18_p20_sensor_units_and_device_classes(hass) -> None:
     assert p18.native_value == 60
     assert p18.native_unit_of_measurement == UnitOfTemperature.CELSIUS
     assert p18.device_class == "temperature"
+    assert p18.extra_state_attributes["parameter"] == "P18"
+    assert p18.extra_state_attributes["wcm_parameter"] == 3102
+    assert p18.extra_state_attributes["description"]
     assert p20.native_value == 0
     assert p20.native_unit_of_measurement == "K"
     assert p20.device_class is None
+    assert p20.extra_state_attributes["parameter"] == "P20"
 
 
 async def test_missing_sensor_value_is_unavailable(hass) -> None:

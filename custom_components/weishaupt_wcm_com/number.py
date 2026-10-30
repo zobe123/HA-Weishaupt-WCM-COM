@@ -616,6 +616,7 @@ class WeishauptExpertNumber(CoordinatorEntity, WeishauptBaseEntity, NumberEntity
             sensor_name,
             language=language,
             value_range=value_range,
+            parameter=parameter,
         )
 
         # Icon je nach Parameter leicht variieren

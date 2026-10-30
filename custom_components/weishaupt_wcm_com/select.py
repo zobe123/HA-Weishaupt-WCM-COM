@@ -356,6 +356,7 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
                 sensor_name,
                 language=language,
                 value_range=", ".join(help_options),
+                parameter=parameter,
             )
         )
 

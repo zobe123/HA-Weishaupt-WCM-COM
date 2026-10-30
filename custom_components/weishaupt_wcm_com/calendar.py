@@ -31,7 +31,9 @@ async def async_setup_entry(
     coordinator = entry_data["coordinator"]
     active_buses = entry_data.get("active_heating_circuits", {0, 1, 2})
     entities: list[CalendarEntity] = [
-        WeishauptActiveHeatingCalendar(manager, coordinator, circuit)
+        WeishauptActiveHeatingCalendar(
+            manager, coordinator, circuit, language=hass.config.language
+        )
         for circuit in (1, 2)
         if circuit in active_buses
     ]
@@ -43,6 +45,7 @@ async def async_setup_entry(
                 "hot_water",
                 translation_key="hot_water_program",
                 unique_id="weishaupt_hot_water_time_program",
+                language=hass.config.language,
             )
         )
         if circulation_supported(coordinator.data or {}):
@@ -53,6 +56,7 @@ async def async_setup_entry(
                     "circulation",
                     translation_key="circulation_program",
                     unique_id="weishaupt_circulation_time_program",
+                    language=hass.config.language,
                 )
             )
     async_add_entities(entities)
@@ -72,6 +76,7 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
         *,
         translation_key: str | None = None,
         unique_id: str | None = None,
+        language: str = "en",
     ) -> None:
         self._manager = manager
         self._heating_circuit = heating_circuit
@@ -83,6 +88,34 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
         self._attr_unique_id = unique_id or (
             f"weishaupt_hk{heating_circuit}_{program}_time_program"
         )
+        german = language.lower().startswith("de")
+        descriptions = {
+            "hot_water": (
+                "Wöchentliches Zeitprogramm für die Warmwasserbereitung.",
+                "Weekly time program for domestic-hot-water heating.",
+            ),
+            "circulation": (
+                "Wöchentliches Zeitprogramm für die Warmwasser-Zirkulation.",
+                "Weekly time program for domestic-hot-water circulation.",
+            ),
+        }
+        description = descriptions.get(
+            program,
+            (
+                "Wöchentliches Zeitprogramm des Heizkreises.",
+                "Weekly time program of the heating circuit.",
+            ),
+        )
+        self._attr_extra_state_attributes = {
+            "description": description[0] if german else description[1],
+            "program_type": program,
+            "wcm_heating_circuit": heating_circuit,
+            "documentation_basis": (
+                "Weishaupt-Handbuch / originale WCM-COM-WebUI"
+                if german
+                else "Weishaupt manual / original WCM-COM WebUI"
+            ),
+        }
         self._event: CalendarEvent | None = None
 
     @property
@@ -179,13 +212,27 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
 class WeishauptActiveHeatingCalendar(WeishauptTimeProgramCalendar):
     """Expose only the heating program currently selected on one circuit."""
 
-    def __init__(self, manager, coordinator, heating_circuit: int) -> None:
+    def __init__(
+        self,
+        manager,
+        coordinator,
+        heating_circuit: int,
+        *,
+        language: str = "en",
+    ) -> None:
         super().__init__(
             manager,
             heating_circuit,
             "heating_1",
             translation_key=f"hc{heating_circuit}_active_heating_program",
             unique_id=f"weishaupt_hk{heating_circuit}_active_heating_program",
+            language=language,
+        )
+        german = language.lower().startswith("de")
+        self._attr_extra_state_attributes["description"] = (
+            "Aktuell wirksames Heizprogramm; die Auswahl folgt der Betriebsart des Heizkreises."
+            if german
+            else "Currently effective heating program; selection follows the circuit operating mode."
         )
         self._coordinator = coordinator
 

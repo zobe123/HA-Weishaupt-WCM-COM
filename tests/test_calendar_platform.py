@@ -176,6 +176,10 @@ class CalendarPlatformTest(unittest.TestCase):
         self.assertEqual(events[0].start.isoformat(), "2026-10-05T06:00:00+02:00")
         self.assertEqual(events[0].end.isoformat(), "2026-10-05T08:00:00+02:00")
         self.assertEqual(events[0].summary, "hc1_heating_1")
+        self.assertIn("description", entity._attr_extra_state_attributes)
+        self.assertEqual(
+            entity._attr_extra_state_attributes["wcm_heating_circuit"], 1
+        )
 
     def test_active_calendar_follows_selected_program(self) -> None:
         manager = Mock()

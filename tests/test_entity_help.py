@@ -1,6 +1,7 @@
 """Regression tests for user-facing entity help attributes."""
 
 from importlib.util import module_from_spec, spec_from_file_location
+import ast
 from pathlib import Path
 import sys
 import unittest
@@ -38,6 +39,7 @@ class EntityHelpTest(unittest.TestCase):
                 "parameter": "P316",
                 "description": "Legt den angeschlossenen Heizkreistyp fest.",
                 "value_range": "Fußbodenheizung, Radiator",
+                "documentation_basis": "Weishaupt-Handbuch / originale WCM-COM-WebUI",
             },
         )
 
@@ -73,6 +75,55 @@ class EntityHelpTest(unittest.TestCase):
         """Unsupported entities must not receive guessed documentation."""
 
         self.assertEqual(entity_help_attributes("Unknown", language="de"), {})
+
+    def test_every_public_catalog_entity_has_documented_help(self) -> None:
+        """Every entity produced from PARAMETERS has a description."""
+
+        const_path = MODULE_PATH.with_name("const.py")
+        tree = ast.parse(const_path.read_text(encoding="utf-8"))
+        parameters: list[dict] = []
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                isinstance(target, ast.Name) and target.id == "PARAMETERS"
+                for target in node.targets
+            ):
+                parameters.extend(ast.literal_eval(node.value))
+            if (
+                isinstance(node, ast.Expr)
+                and isinstance(node.value, ast.Call)
+                and isinstance(node.value.func, ast.Attribute)
+                and isinstance(node.value.func.value, ast.Name)
+                and node.value.func.value.id == "PARAMETERS"
+                and node.value.func.attr == "extend"
+            ):
+                parameters.extend(ast.literal_eval(node.value.args[0]))
+
+        missing = sorted(
+            {
+                parameter["name"]
+                for parameter in parameters
+                if not parameter.get("internal")
+                and not entity_help_attributes(
+                    parameter["name"],
+                    language="de",
+                    parameter=parameter,
+                ).get("description")
+            }
+        )
+        self.assertEqual(missing, [])
+
+    def test_transport_identity_is_exposed(self) -> None:
+        """Physical WCM identity accompanies the human menu reference."""
+
+        attributes = entity_help_attributes(
+            "HK2 Config HK Type",
+            language="de",
+            parameter={"id": 2419, "bus": 2, "modultyp": 6},
+        )
+        self.assertEqual(attributes["parameter"], "P316")
+        self.assertEqual(attributes["wcm_parameter"], 2419)
+        self.assertEqual(attributes["wcm_bus"], 2)
+        self.assertEqual(attributes["wcm_module"], 6)
 
 
 if __name__ == "__main__":

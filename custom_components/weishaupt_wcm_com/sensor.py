@@ -47,6 +47,7 @@ from .device_model import (
     is_hot_water_readback_duplicate,
 )
 from .protocol import apply_display_scale
+from .entity_help import coordinator_language, entity_help_attributes
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,6 +140,11 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
         self._attr_translation_key = parameter_translation_key(parameter)
         self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = unit
+        self._attr_extra_state_attributes = entity_help_attributes(
+            self._sensor_name,
+            language=coordinator_language(coordinator),
+            parameter=parameter,
+        )
         if unit == UnitOfTemperature.CELSIUS:
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 

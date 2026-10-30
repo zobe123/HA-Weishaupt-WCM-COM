@@ -154,6 +154,8 @@ class UpdatePlatformTest(unittest.TestCase):
         self.assertEqual(entity._attr_unique_id, "weishaupt_wcm_com_firmware")
         self.assertEqual(entity._attr_supported_features, UpdateEntityFeature(0))
         self.assertTrue(entity.available)
+        self.assertIn("description", entity._attr_extra_state_attributes)
+        self.assertIn("notice", entity._attr_extra_state_attributes)
         self.assertEqual(entity.coordinator.update_interval, timedelta(hours=24))
         self.assertEqual(
             entity.device_info["identifiers"],

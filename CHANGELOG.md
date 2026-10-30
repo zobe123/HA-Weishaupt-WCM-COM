@@ -4,6 +4,47 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.1]
+
+### Added
+
+- Add explicit WTC-G and WTC-OB heat-generator profiles and automatically
+  discover the installed WCM-FS heating circuits.
+- Add WTC-OB burner output, burner cycles, operating hours and oil-meter
+  entities.
+- Add concise German or English context help to every public sensor, number,
+  select, calendar and firmware entity whose meaning is documented by the
+  Weishaupt manuals or the original WCM-COM WebUI.
+- Expose the original menu reference where available together with the exact
+  WCM telegram ID, bus and module identity for physical parameters.
+- Mark virtual and combined states as derived values and document scaled wire
+  representations such as the 15-minute switch-on-optimisation blocks.
+- Add a completeness test that rejects future public catalog entities without
+  a documented description.
+
+### Changed
+
+- Require an explicit WTC-G or WTC-OB choice during setup and keep it editable
+  in the integration options.
+- Poll only parameters needed by enabled entities and rebuild the polling plan
+  when entity-registry settings change.
+
+### Fixed
+
+- Split WCM-COM reads into requests of at most 20 telegrams so controller
+  response limits no longer hide trailing values.
+- Correct heating-circuit type, control variant and external-room-sensor
+  assignments on every supported FS bus.
+- Correct scaling for P18, P20, burner operating hours, maintenance time and
+  switch-on optimisation, including unavailable and combined-value handling.
+- Keep WTC-G and WTC-OB parameter sets separate and clean obsolete
+  profile-specific registry entities after a profile change.
+
+### Compatibility
+
+- Keep entity IDs, states, units, polling and read/write telegrams unchanged.
+- Do not publish model-dependent factory defaults as universal values.
+
 ## [1.5.0b5]
 
 ### Added
