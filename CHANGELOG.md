@@ -4,6 +4,27 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.2b1]
+
+### Added
+
+- Expose WTC-HK1/FS1 time programs on physical bus 0 in the editor, calendar
+  platform and time-program services.
+- Add bus-0 regression coverage using the WCM-COM response captured on a real
+  WTC-OB installation.
+
+### Changed
+
+- Route hot-water and circulation programs to the detected owning FS bus
+  instead of assuming bus 1.
+- Show only detected heating circuits in the time-program editor and keep the
+  existing FS2/FS3 entity IDs unchanged.
+
+### Fixed
+
+- Keep reads, writes, verification and rollback on the same physical FS bus so
+  integrated WTC-HK1 schedules can be loaded and safely edited.
+
 ## [1.5.1]
 
 ### Added

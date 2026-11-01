@@ -1224,6 +1224,9 @@
       }
     },
     "calendar": {
+      "wtc_hk1_active_heating_program": {
+        "name": "WTC-HK1 / FS1 aktives Heizprogramm"
+      },
       "hc1_active_heating_program": {
         "name": "HK2 Radiatoren aktives Heizprogramm"
       },
@@ -1248,7 +1251,7 @@
       "message": "Die WCM-COM-Integration befindet sich im Nur-Lese-Modus."
     },
     "invalid_heating_circuit": {
-      "message": "Ungültiger Heizkreis {value}; erwartet wird 1 oder 2."
+      "message": "Ungültiger Heizkreis {value}; erwartet wird Bus 0, 1 oder 2."
     },
     "invalid_holiday_target": {
       "message": "Ungültiges Urlaubsziel {value}; erwartet wird start oder end."

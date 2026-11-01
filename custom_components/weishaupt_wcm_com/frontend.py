@@ -14,7 +14,11 @@ from .const import DOMAIN
 from .localization import SELECT_OPTION_KEYS
 from .time_program import (
     active_heating_program,
+    circulation_program_bus,
     circulation_supported,
+    domestic_hot_water_program_bus,
+    heating_circuit_prefix,
+    resolve_time_program_bus,
     validate_program,
 )
 
@@ -77,14 +81,16 @@ async def websocket_time_program_info(
             "state": state.state,
             "unit": state.attributes.get("unit_of_measurement"),
         }
+    active_buses = entry_data.get("active_heating_circuits", {0, 1, 2})
     circuits = {}
-    for circuit in (1, 2):
-        raw_mode = data.get(f"HK{circuit} User Betriebsart")
-        circuits[str(circuit)] = {
+    for bus in sorted(active_buses):
+        prefix = heating_circuit_prefix(bus)
+        raw_mode = data.get(f"{prefix} User Betriebsart")
+        circuits[str(bus)] = {
             "mode": SELECT_OPTION_KEYS["heating_operating_mode"].get(
                 raw_mode, f"code_{raw_mode}"
             ),
-            "active_program": active_heating_program(data, circuit),
+            "active_program": active_heating_program(data, bus),
         }
 
     connection.send_result(
@@ -93,6 +99,10 @@ async def websocket_time_program_info(
             "entry_id": entry_id,
             "allow_write": bool(entry_data.get("allow_write", False)),
             "circulation_supported": circulation_supported(data),
+            "program_buses": {
+                "hot_water": domestic_hot_water_program_bus(active_buses, data),
+                "circulation": circulation_program_bus(active_buses, data),
+            },
             "external_gas_meter": gas_meter,
             "circuits": circuits,
         },
@@ -104,7 +114,9 @@ async def websocket_time_program_info(
     {
         vol.Required("type"): f"{DOMAIN}/time_programs/get",
         vol.Optional("entry_id"): str,
-        vol.Required("heating_circuit"): vol.All(vol.Coerce(int), vol.In((1, 2))),
+        vol.Required("heating_circuit"): vol.All(
+            vol.Coerce(int), vol.In((0, 1, 2))
+        ),
         vol.Required("program"): str,
     }
 )
@@ -119,9 +131,12 @@ async def websocket_time_program_get(
     try:
         entry_id, entry_data = _resolve_entry(hass, msg.get("entry_id"))
         program = validate_program(msg["program"])
-        circuit = int(msg["heating_circuit"])
-        if program in ("hot_water", "circulation"):
-            circuit = 1
+        circuit = resolve_time_program_bus(
+            entry_data.get("active_heating_circuits", {0, 1, 2}),
+            entry_data["coordinator"].data or {},
+            int(msg["heating_circuit"]),
+            program,
+        )
         schedule = await entry_data["time_program_manager"].async_get(
             circuit, program
         )

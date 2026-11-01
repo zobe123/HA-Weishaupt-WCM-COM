@@ -2,7 +2,7 @@
 
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 import json
 import sys
 import types
@@ -463,6 +463,31 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(schedule["monday"], (("06:00", "08:00"),))
         self.assertEqual(schedule["sunday"], ())
 
+    def test_wtc_hk1_time_program_read_uses_bus_zero_and_holger_capture(self) -> None:
+        captured = (24 << 8) | 89  # 06:00-22:15, bytes 89/24
+
+        def respond(*args, **kwargs):
+            payload = json.loads(kwargs["data"])
+            response = []
+            for telegram in payload["telegramm"]:
+                parameter_id = telegram[3]
+                value = captured if parameter_id in (5136, 5152) else 32896
+                response.append(
+                    [6, 0, 1, parameter_id, 0, 0, value & 0xFF, value >> 8]
+                )
+            return json_response(response)
+
+        with patch.object(api_module.requests, "post", side_effect=respond) as post:
+            schedule = api_module.WeishauptAPI("wcm.test").read_time_program(
+                0, "heating_1"
+            )
+
+        self.assertEqual(schedule["monday"], (("06:00", "22:15"),))
+        self.assertEqual(schedule["tuesday"], (("06:00", "22:15"),))
+        for call in post.call_args_list:
+            payload = json.loads(call.kwargs["data"])
+            self.assertTrue(all(telegram[1] == 0 for telegram in payload["telegramm"]))
+
     def test_time_program_day_write_is_read_write_verify_transaction(self) -> None:
         ids = (5136, 5137, 5138)
         state = {parameter_id: 32896 for parameter_id in ids}
@@ -504,6 +529,35 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(commands, [1, 2, 2, 2, 1])
         self.assertEqual(write_types, [protocol.STANDARD_TELEGRAM] * 3)
         self.assertEqual(tuple(state[parameter_id] for parameter_id in ids), values)
+
+    def test_wtc_hk1_time_program_write_keeps_bus_zero_for_full_transaction(self) -> None:
+        ids = (5136, 5137, 5138)
+        original = dict.fromkeys(ids, 32896)
+        values = ((24 << 8) | 89, 32896, 32896)
+        verified = dict(zip(ids, values))
+        api = api_module.WeishauptAPI("wcm.test")
+
+        with (
+            patch.object(
+                api,
+                "_read_raw_parameters_unlocked",
+                side_effect=[original, verified],
+            ) as read,
+            patch.object(api, "_write_parameter_unlocked") as write,
+        ):
+            api.write_time_program_day(0, "heating_1", "monday", values)
+
+        self.assertEqual(
+            read.call_args_list,
+            [
+                call(ids, bus=0, modultyp=6),
+                call(ids, bus=0, modultyp=6),
+            ],
+        )
+        self.assertEqual(
+            [call.args for call in write.call_args_list],
+            list(zip(ids, (0,) * 3, (6,) * 3, values)),
+        )
 
     def test_time_program_write_rejects_invalid_original_before_writing(self) -> None:
         ids = (5136, 5137, 5138)

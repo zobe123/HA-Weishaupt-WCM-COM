@@ -1224,6 +1224,9 @@
       }
     },
     "calendar": {
+      "wtc_hk1_active_heating_program": {
+        "name": "WTC-HC1 / FS1 active heating program"
+      },
       "hc1_active_heating_program": {
         "name": "HC2 radiators active heating program"
       },
@@ -1248,7 +1251,7 @@
       "message": "The WCM-COM integration is in read-only mode."
     },
     "invalid_heating_circuit": {
-      "message": "Invalid heating circuit {value}; expected 1 or 2."
+      "message": "Invalid heating circuit {value}; expected bus 0, 1 or 2."
     },
     "invalid_holiday_target": {
       "message": "Invalid holiday target {value}; expected start or end."

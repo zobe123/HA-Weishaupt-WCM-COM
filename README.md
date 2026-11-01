@@ -87,9 +87,10 @@ The integration queries various parameters from the WCM-COM interface and expose
   that do not belong to one heating circuit; technical FS2/FS3 hot-water
   setpoint duplicates stay compatible but hidden
 - **Expert …** – diagnostic values from the WTC expert menu (P10/P12/P18/P20/P23/P30/P31/P32/P34/P37/P38/P52)
-- Active-program calendars expose the effective HC2/HC3 heating schedules plus
-  one global hot-water schedule. Circulation is added only when the controller
-  reports a usable circulation signal.
+- Active-program calendars expose the effective schedules for every detected
+  WTC-HC1/FS1, HC2/FS2 and HC3/FS3 circuit plus one global hot-water schedule.
+  Circulation is added only when the controller reports a usable circulation
+  signal.
 - The integration adds a **Weishaupt Time Programs** panel for editing all three
   stored heating programs, hot water and optional circulation in a compact
   weekly view. Schedules are loaded one at a time and cached so they do not
@@ -167,6 +168,10 @@ The integration provides these time-program actions when write mode is enabled:
   heating circuits or programs.
 - `weishaupt_wcm_com.clear_time_program_days` disables all windows on the
   selected days.
+
+The heating-circuit field is the physical WCM-FS bus: `0` for integrated
+WTC-HC1/FS1, `1` for HC2/FS2 and `2` for HC3/FS3. Hot-water and circulation
+actions are automatically routed to the owning detected bus.
 
 Every changed day is written under the shared device lock, read back and
 verified. If verification fails, the integration restores the previous day.

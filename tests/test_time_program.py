@@ -83,6 +83,12 @@ class TimeProgramTest(unittest.TestCase):
     def test_active_heating_program_mapping(self) -> None:
         self.assertEqual(
             time_program.active_heating_program(
+                {"WTC HK1 User Betriebsart": 11}, 0
+            ),
+            "heating_1",
+        )
+        self.assertEqual(
+            time_program.active_heating_program(
                 {"HK1 User Betriebsart": 12}, 1
             ),
             "heating_2",
@@ -113,6 +119,44 @@ class TimeProgramTest(unittest.TestCase):
                 {"HK2 Zirkulationstemperatur": 42.0}
             )
         )
+
+    def test_program_bus_routing_uses_detected_wtc_and_circulation_buses(self) -> None:
+        data = {
+            "WTC HK1 User Mode Kind": "hk",
+            "HK1 User Mode Kind": "hk",
+            "HK1 Zirkulationstemperatur": 41.5,
+        }
+
+        self.assertEqual(
+            time_program.resolve_time_program_bus({0, 1}, data, 0, "heating_1"),
+            0,
+        )
+        self.assertEqual(
+            time_program.resolve_time_program_bus({0, 1}, data, 1, "hot_water"),
+            0,
+        )
+        self.assertEqual(
+            time_program.resolve_time_program_bus(
+                {0, 1}, data, 0, "circulation"
+            ),
+            1,
+        )
+
+    def test_explicit_hot_water_controller_wins_over_wtc_fallback(self) -> None:
+        data = {
+            "WTC HK1 User Mode Kind": "hk",
+            "HK1 User Mode Kind": "ww",
+        }
+        self.assertEqual(
+            time_program.domestic_hot_water_program_bus({0, 1}, data),
+            1,
+        )
+
+    def test_inactive_or_unknown_heating_bus_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "was not detected"):
+            time_program.resolve_time_program_bus({0}, {}, 1, "heating_1")
+        with self.assertRaisesRegex(ValueError, "0, 1 or 2"):
+            time_program.resolve_time_program_bus({0}, {}, 3, "heating_1")
 
 
 if __name__ == "__main__":

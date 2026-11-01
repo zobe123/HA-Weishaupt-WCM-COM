@@ -15,7 +15,10 @@ from .device_model import device_info
 from .time_program import (
     WEEKDAYS,
     active_heating_program,
+    circulation_program_bus,
     circulation_supported,
+    domestic_hot_water_program_bus,
+    heating_circuit_prefix,
 )
 
 
@@ -32,33 +35,32 @@ async def async_setup_entry(
     active_buses = entry_data.get("active_heating_circuits", {0, 1, 2})
     entities: list[CalendarEntity] = [
         WeishauptActiveHeatingCalendar(
-            manager, coordinator, circuit, language=hass.config.language
+            manager, coordinator, bus, language=hass.config.language
         )
-        for circuit in (1, 2)
-        if circuit in active_buses
+        for bus in sorted(active_buses)
     ]
-    if 1 in active_buses:
+    data = coordinator.data or {}
+    entities.append(
+        WeishauptTimeProgramCalendar(
+            manager,
+            domestic_hot_water_program_bus(active_buses, data),
+            "hot_water",
+            translation_key="hot_water_program",
+            unique_id="weishaupt_hot_water_time_program",
+            language=hass.config.language,
+        )
+    )
+    if circulation_supported(data):
         entities.append(
             WeishauptTimeProgramCalendar(
                 manager,
-                1,
-                "hot_water",
-                translation_key="hot_water_program",
-                unique_id="weishaupt_hot_water_time_program",
+                circulation_program_bus(active_buses, data),
+                "circulation",
+                translation_key="circulation_program",
+                unique_id="weishaupt_circulation_time_program",
                 language=hass.config.language,
             )
         )
-        if circulation_supported(coordinator.data or {}):
-            entities.append(
-                WeishauptTimeProgramCalendar(
-                    manager,
-                    1,
-                    "circulation",
-                    translation_key="circulation_program",
-                    unique_id="weishaupt_circulation_time_program",
-                    language=hass.config.language,
-                )
-            )
     async_add_entities(entities)
 
 
@@ -130,7 +132,9 @@ class WeishauptTimeProgramCalendar(CalendarEntity):
 
         if self._program in {"hot_water", "circulation"}:
             return device_info("Warmwasser-Zeitprogramm")
-        return device_info(f"HK{self._heating_circuit} Zeitprogramm")
+        return device_info(
+            f"{heating_circuit_prefix(self._heating_circuit)} Zeitprogramm"
+        )
 
     async def async_get_events(
         self,
@@ -220,12 +224,18 @@ class WeishauptActiveHeatingCalendar(WeishauptTimeProgramCalendar):
         *,
         language: str = "en",
     ) -> None:
+        if heating_circuit == 0:
+            translation_key = "wtc_hk1_active_heating_program"
+            unique_id = "weishaupt_wtc_hk1_active_heating_program"
+        else:
+            translation_key = f"hc{heating_circuit}_active_heating_program"
+            unique_id = f"weishaupt_hk{heating_circuit}_active_heating_program"
         super().__init__(
             manager,
             heating_circuit,
             "heating_1",
-            translation_key=f"hc{heating_circuit}_active_heating_program",
-            unique_id=f"weishaupt_hk{heating_circuit}_active_heating_program",
+            translation_key=translation_key,
+            unique_id=unique_id,
             language=language,
         )
         german = language.lower().startswith("de")

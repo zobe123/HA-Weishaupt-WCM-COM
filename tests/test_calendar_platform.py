@@ -95,6 +95,7 @@ class CalendarPlatformTest(unittest.TestCase):
     def test_platform_creates_active_heating_and_global_hot_water(self) -> None:
         manager = Mock()
         coordinator = Mock(data={
+            "WTC HK1 User Betriebsart": 11,
             "HK1 User Betriebsart": 11,
             "HK2 User Betriebsart": 15,
             "HK1 Zirkulationstemperatur": None,
@@ -106,6 +107,7 @@ class CalendarPlatformTest(unittest.TestCase):
                 "entry-1": {
                     "time_program_manager": manager,
                     "coordinator": coordinator,
+                    "active_heating_circuits": {0, 1, 2},
                 }
             }
         }
@@ -118,11 +120,12 @@ class CalendarPlatformTest(unittest.TestCase):
             )
         )
 
-        self.assertEqual(len(added), 3)
-        self.assertEqual(len({entity._attr_unique_id for entity in added}), 3)
+        self.assertEqual(len(added), 4)
+        self.assertEqual(len({entity._attr_unique_id for entity in added}), 4)
         self.assertEqual(
             [entity._attr_translation_key for entity in added],
             [
+                "wtc_hk1_active_heating_program",
                 "hc1_active_heating_program",
                 "hc2_active_heating_program",
                 "hot_water_program",
@@ -132,6 +135,11 @@ class CalendarPlatformTest(unittest.TestCase):
             added[-1].device_info["identifiers"],
             {("weishaupt_wcm_com", "weishaupt_kessel")},
         )
+        self.assertEqual(
+            added[0].device_info["identifiers"],
+            {("weishaupt_wcm_com", "weishaupt_wtc_hk1")},
+        )
+        self.assertEqual(added[-1]._heating_circuit, 0)
 
     def test_platform_adds_circulation_only_with_a_real_signal(self) -> None:
         manager = Mock()
@@ -142,6 +150,7 @@ class CalendarPlatformTest(unittest.TestCase):
                 "entry-1": {
                     "time_program_manager": manager,
                     "coordinator": coordinator,
+                    "active_heating_circuits": {0, 1},
                 }
             }
         }
@@ -155,6 +164,35 @@ class CalendarPlatformTest(unittest.TestCase):
 
         self.assertEqual(len(added), 4)
         self.assertEqual(added[-1]._attr_translation_key, "circulation_program")
+        self.assertEqual(added[-1]._heating_circuit, 1)
+
+    def test_bus_zero_active_calendar_uses_wtc_operating_mode(self) -> None:
+        manager = Mock()
+        manager.async_get = AsyncMock(
+            return_value={
+                day: (("06:00", "22:15"),) if day == "monday" else ()
+                for day in calendar_module.WEEKDAYS
+            }
+        )
+        coordinator = Mock(data={"WTC HK1 User Betriebsart": 11})
+        entity = calendar_module.WeishauptActiveHeatingCalendar(
+            manager, coordinator, 0
+        )
+
+        events = asyncio.run(
+            entity.async_get_events(
+                Mock(),
+                datetime.fromisoformat("2026-10-05T00:00:00+02:00"),
+                datetime.fromisoformat("2026-10-12T00:00:00+02:00"),
+            )
+        )
+
+        manager.async_get.assert_awaited_with(0, "heating_1")
+        self.assertEqual(len(events), 1)
+        self.assertEqual(
+            entity._attr_unique_id,
+            "weishaupt_wtc_hk1_active_heating_program",
+        )
 
     def test_calendar_expands_weekly_intervals(self) -> None:
         manager = Mock()

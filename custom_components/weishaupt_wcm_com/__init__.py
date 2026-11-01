@@ -51,6 +51,7 @@ from .const import (
 )
 from .weishaupt_api import WeishauptAPI, WeishauptAuthenticationError
 from .time_program_manager import TimeProgramManager
+from .time_program import resolve_time_program_bus
 from .frontend import async_register_frontend, async_unregister_frontend
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +60,7 @@ BASE_PLATFORMS: list[str] = ["sensor", "select", "number"]
 
 FIRMWARE_UPDATE_UNIQUE_ID = "weishaupt_wcm_com_firmware"
 OPTIONAL_CALENDAR_UNIQUE_IDS = {
+    "weishaupt_wtc_hk1_active_heating_program",
     "weishaupt_hk1_active_heating_program",
     "weishaupt_hk2_active_heating_program",
     "weishaupt_hot_water_time_program",
@@ -700,9 +702,16 @@ def _register_services(hass: HomeAssistant) -> None:
                 intervals.append((start, end))
 
         try:
-            await entry_data["time_program_manager"].async_set_day(
+            program = str(call.data["program"])
+            bus = resolve_time_program_bus(
+                entry_data.get("active_heating_circuits", {0, 1, 2}),
+                entry_data["coordinator"].data or {},
                 int(call.data["heating_circuit"]),
-                str(call.data["program"]),
+                program,
+            )
+            await entry_data["time_program_manager"].async_set_day(
+                bus,
+                program,
                 str(call.data["day"]),
                 intervals,
             )
@@ -717,12 +726,28 @@ def _register_services(hass: HomeAssistant) -> None:
         if isinstance(target_days, str):
             target_days = [target_days]
         try:
-            await entry_data["time_program_manager"].async_copy_day(
+            source_program = str(call.data["source_program"])
+            target_program = str(call.data["target_program"])
+            active_buses = entry_data.get("active_heating_circuits", {0, 1, 2})
+            data = entry_data["coordinator"].data or {}
+            source_bus = resolve_time_program_bus(
+                active_buses,
+                data,
                 int(call.data["source_heating_circuit"]),
-                str(call.data["source_program"]),
-                str(call.data["source_day"]),
+                source_program,
+            )
+            target_bus = resolve_time_program_bus(
+                active_buses,
+                data,
                 int(call.data["target_heating_circuit"]),
-                str(call.data["target_program"]),
+                target_program,
+            )
+            await entry_data["time_program_manager"].async_copy_day(
+                source_bus,
+                source_program,
+                str(call.data["source_day"]),
+                target_bus,
+                target_program,
                 list(target_days),
             )
         except (ValueError, KeyError) as err:
@@ -736,10 +761,17 @@ def _register_services(hass: HomeAssistant) -> None:
         if isinstance(days, str):
             days = [days]
         try:
+            program = str(call.data["program"])
+            bus = resolve_time_program_bus(
+                entry_data.get("active_heating_circuits", {0, 1, 2}),
+                entry_data["coordinator"].data or {},
+                int(call.data["heating_circuit"]),
+                program,
+            )
             for day in days:
                 await entry_data["time_program_manager"].async_set_day(
-                    int(call.data["heating_circuit"]),
-                    str(call.data["program"]),
+                    bus,
+                    program,
                     str(day),
                     [],
                 )

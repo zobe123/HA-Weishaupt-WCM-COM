@@ -19,6 +19,7 @@ from .protocol import (
 )
 from .temperature import normalize_temperature_value
 from .time_program import (
+    HEATING_CIRCUIT_BUSES,
     WEEKDAYS,
     decode_day,
     parameter_ids as time_program_parameter_ids,
@@ -663,8 +664,8 @@ class WeishauptAPI:
     ) -> dict[str, tuple[tuple[str, str], ...]]:
         """Read one complete weekly program using the original WebUI groups."""
 
-        if int(heating_circuit) not in (1, 2):
-            raise ValueError("Heating circuit must be 1 or 2")
+        if int(heating_circuit) not in HEATING_CIRCUIT_BUSES:
+            raise ValueError("Heating-circuit bus must be 0, 1 or 2")
         program = validate_program(program)
 
         with _lock:
@@ -702,8 +703,8 @@ class WeishauptAPI:
         three values are restored before the error is surfaced.
         """
 
-        if int(heating_circuit) not in (1, 2):
-            raise ValueError("Heating circuit must be 1 or 2")
+        if int(heating_circuit) not in HEATING_CIRCUIT_BUSES:
+            raise ValueError("Heating-circuit bus must be 0, 1 or 2")
         ids = time_program_parameter_ids(program, day)
         values = tuple(int(value) for value in encoded_intervals)
         if len(values) != 3:

@@ -32,6 +32,9 @@ class FrontendContractTest(unittest.TestCase):
         )
         self.assertIn("frontend.add_extra_js_url", backend)
         self.assertIn("frontend.remove_extra_js_url", backend)
+        self.assertIn('vol.In((0, 1, 2))', backend)
+        self.assertIn('circuit_0: "WTC-HC1 / FS1"', panel)
+        self.assertIn("this._info.program_buses.hot_water", panel)
         self.assertIn('sidebar_title="WCM-COM"', backend)
         self.assertNotIn('sidebar_title="Weishaupt Zeitprogramme"', backend)
 

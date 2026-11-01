@@ -4,7 +4,7 @@ const STRINGS = {
   en: {
     title: "Weishaupt time programs", loading_info: "Loading weekly programs", querying: "Querying WCM-COM …",
     load_failed: "Loading failed: {error}", schedule_failed: "The time program could not be loaded: {error}",
-    heating_program: "{circuit} · Heating program {number}{active}", circuit_1: "HC2 radiators", circuit_2: "HC3 underfloor heating", active: " · active", hot_water: "Hot water",
+    heating_program: "{circuit} · Heating program {number}{active}", circuit_0: "WTC-HC1 / FS1", circuit_1: "HC2 radiators / FS2", circuit_2: "HC3 underfloor heating / FS3", active: " · active", hot_water: "Hot water",
     circulation: "Circulation", circulation_missing: "Circulation · not detected", time_program: "Time program",
     read_only_title: "Read only:", read_only: "Enable writes in the integration options to apply changes.",
     optional: "Optional", show_circulation: "Show circulation", loading_schedule: "Loading weekly program …",
@@ -24,7 +24,7 @@ const STRINGS = {
   de: {
     title: "Weishaupt Zeitprogramme", loading_info: "Wochenprogramme werden geladen", querying: "WCM-COM wird abgefragt …",
     load_failed: "Laden fehlgeschlagen: {error}", schedule_failed: "Zeitprogramm konnte nicht geladen werden: {error}",
-    heating_program: "{circuit} · Heizprogramm {number}{active}", circuit_1: "HK2 Radiatoren", circuit_2: "HK3 FBH", active: " · aktiv", hot_water: "Warmwasser",
+    heating_program: "{circuit} · Heizprogramm {number}{active}", circuit_0: "WTC-HK1 / FS1", circuit_1: "HK2 Radiatoren / FS2", circuit_2: "HK3 FBH / FS3", active: " · aktiv", hot_water: "Warmwasser",
     circulation: "Zirkulation", circulation_missing: "Zirkulation · nicht erkannt", time_program: "Zeitprogramm",
     read_only_title: "Nur Lesen:", read_only: "Zum Übernehmen muss in den Integrationsoptionen „Schreibzugriffe erlauben“ aktiviert sein.",
     optional: "Optional", show_circulation: "Zirkulation anzeigen", loading_schedule: "Lade Wochenplan …",
@@ -96,8 +96,12 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       };
       if (this._config?.entry_id) request.entry_id = this._config.entry_id;
       this._info = await this._hass.callWS(request);
-      const active = this._info.circuits["1"].active_program || "heating_1";
-      this._target = { circuit: 1, program: active };
+      const firstCircuit = Object.keys(this._info.circuits)
+        .map(Number)
+        .sort((a, b) => a - b)[0];
+      if (firstCircuit === undefined) throw new Error("No heating circuit detected");
+      const active = this._info.circuits[String(firstCircuit)].active_program || "heating_1";
+      this._target = { circuit: firstCircuit, program: active };
       await this._loadSchedule();
     } catch (error) {
       this._status = this._t("load_failed", { error: error.message || error });
@@ -136,7 +140,10 @@ class WeishauptTimeProgramPanel extends HTMLElement {
   _targets() {
     if (!this._info) return [];
     const targets = [];
-    for (const circuit of [1, 2]) {
+    const circuits = Object.keys(this._info.circuits)
+      .map(Number)
+      .sort((a, b) => a - b);
+    for (const circuit of circuits) {
       for (let number = 1; number <= 3; number += 1) {
         const program = `heating_${number}`;
         const active = this._info.circuits[String(circuit)].active_program === program;
@@ -151,10 +158,14 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         });
       }
     }
-    targets.push({ circuit: 1, program: "hot_water", label: this._t("hot_water") });
+    targets.push({
+      circuit: this._info.program_buses.hot_water,
+      program: "hot_water",
+      label: this._t("hot_water"),
+    });
     if (this._info.circulation_supported || this._showOptional) {
       targets.push({
-        circuit: 1,
+        circuit: this._info.program_buses.circulation,
         program: "circulation",
         label: this._info.circulation_supported
           ? this._t("circulation")
@@ -176,7 +187,9 @@ class WeishauptTimeProgramPanel extends HTMLElement {
 
   _modeSummary() {
     if (!this._info) return "";
-    return [1, 2]
+    return Object.keys(this._info.circuits)
+      .map(Number)
+      .sort((a, b) => a - b)
       .map((circuit) => {
         const mode = this._info.circuits[String(circuit)].mode;
         const label = this._t(`circuit_${circuit}`);

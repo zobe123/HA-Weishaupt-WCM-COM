@@ -38,14 +38,32 @@ ACTIVE_HEATING_PROGRAMS = {
     "Programm 3": "heating_3",
 }
 
+HEATING_CIRCUIT_BUSES = (0, 1, 2)
+
 DISABLED_QUARTER = 128
 DISABLED_INTERVAL = (DISABLED_QUARTER << 8) | DISABLED_QUARTER
+
+
+def validate_heating_circuit_bus(heating_circuit: int) -> int:
+    """Return a physical WCM-FS bus or raise a useful error."""
+
+    bus = int(heating_circuit)
+    if bus not in HEATING_CIRCUIT_BUSES:
+        raise ValueError("Heating-circuit bus must be 0, 1 or 2")
+    return bus
+
+
+def heating_circuit_prefix(heating_circuit: int) -> str:
+    """Return the coordinator-data prefix for one physical WCM-FS bus."""
+
+    bus = validate_heating_circuit_bus(heating_circuit)
+    return "WTC HK1" if bus == 0 else f"HK{bus}"
 
 
 def active_heating_program(data: dict, heating_circuit: int) -> str | None:
     """Return the selected weekly heating program, if one is active."""
 
-    value = data.get(f"HK{int(heating_circuit)} User Betriebsart")
+    value = data.get(f"{heating_circuit_prefix(heating_circuit)} User Betriebsart")
     return ACTIVE_HEATING_PROGRAMS.get(value)
 
 
@@ -58,9 +76,71 @@ def circulation_supported(data: dict) -> bool:
     """
 
     return any(
-        data.get(f"HK{heating_circuit} Zirkulationstemperatur") is not None
-        for heating_circuit in (1, 2)
+        data.get(f"{heating_circuit_prefix(bus)} Zirkulationstemperatur")
+        is not None
+        for bus in HEATING_CIRCUIT_BUSES
     )
+
+
+def _active_buses(active_buses) -> tuple[int, ...]:
+    """Normalize discovered buses without silently accepting unknown values."""
+
+    buses = tuple(
+        sorted({validate_heating_circuit_bus(bus) for bus in active_buses})
+    )
+    if not buses:
+        raise ValueError("No active heating-circuit bus is available")
+    return buses
+
+
+def domestic_hot_water_program_bus(active_buses, data: dict) -> int:
+    """Return the FS bus that owns the domestic-hot-water program.
+
+    An FS explicitly configured as the hot-water controller wins.  Otherwise
+    the integrated WTC-HK1/FS1 on bus 0 is authoritative when present, matching
+    the original WCM-COM WebUI and the canonical hot-water controls.
+    """
+
+    buses = _active_buses(active_buses)
+    for bus in buses:
+        prefix = heating_circuit_prefix(bus)
+        if data.get(f"{prefix} User Mode Kind") == "ww":
+            return bus
+    if 0 in buses:
+        return 0
+    return buses[0]
+
+
+def circulation_program_bus(active_buses, data: dict) -> int:
+    """Return the FS bus with the detected circulation installation."""
+
+    buses = _active_buses(active_buses)
+    for bus in buses:
+        prefix = heating_circuit_prefix(bus)
+        if data.get(f"{prefix} Zirkulationstemperatur") is not None:
+            return bus
+    return domestic_hot_water_program_bus(buses, data)
+
+
+def resolve_time_program_bus(
+    active_buses,
+    data: dict,
+    requested_bus: int,
+    program: str,
+) -> int:
+    """Resolve one program to its detected physical FS bus."""
+
+    buses = _active_buses(active_buses)
+    program = validate_program(program)
+    if program == "hot_water":
+        return domestic_hot_water_program_bus(buses, data)
+    if program == "circulation":
+        return circulation_program_bus(buses, data)
+
+    bus = validate_heating_circuit_bus(requested_bus)
+    if bus not in buses:
+        raise ValueError(f"Heating-circuit bus {bus} was not detected")
+    return bus
 
 
 def validate_program(program: str) -> str:

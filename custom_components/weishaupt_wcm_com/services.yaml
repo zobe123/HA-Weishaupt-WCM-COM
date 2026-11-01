@@ -59,6 +59,8 @@ set_time_program_day:
       selector:
         select:
           options:
+            - label: WTC-HC1 / FS1 (bus 0)
+              value: "0"
             - label: HC2 radiators (bus 1)
               value: "1"
             - label: HC3 underfloor heating (bus 2)
@@ -135,7 +137,7 @@ copy_time_program_day:
       required: true
       selector:
         number:
-          min: 1
+          min: 0
           max: 2
           step: 1
     source_program:
@@ -157,7 +159,7 @@ copy_time_program_day:
       required: true
       selector:
         number:
-          min: 1
+          min: 0
           max: 2
           step: 1
     target_program:
@@ -191,7 +193,7 @@ clear_time_program_days:
       required: true
       selector:
         number:
-          min: 1
+          min: 0
           max: 2
           step: 1
     program:
