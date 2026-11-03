@@ -4,7 +4,7 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [1.5.2b1]
+## [1.5.2]
 
 ### Added
 
@@ -24,6 +24,11 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 
 - Keep reads, writes, verification and rollback on the same physical FS bus so
   integrated WTC-HK1 schedules can be loaded and safely edited.
+
+### Validation
+
+- Confirmed correct time-program display and writing on a real WTC-OB system
+  with an integrated WTC-HK1 on bus 0.
 
 ## [1.5.1]
 
