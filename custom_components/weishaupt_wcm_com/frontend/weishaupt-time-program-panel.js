@@ -237,6 +237,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
           subtitle: program
             ? this._t(`mode_${circuitInfo.mode}`)
             : this._t("inactive_program"),
+          mode: circuitInfo.mode,
           kind: "heating",
         };
       });
@@ -463,11 +464,6 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         .view-tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 16px; background:var(--secondary-background-color); border-radius:12px; }
         .view-tab { background:transparent; color:var(--secondary-text-color); }
         .view-tab.active { background:var(--card-background-color); color:var(--primary-text-color); box-shadow:0 1px 3px rgba(0,0,0,.18); font-weight:600; }
-        .mode-pills { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 14px; }
-        .mode-pill { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--divider-color); border-radius:999px; padding:6px 10px; font-size:12px; }
-        .mode-pill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--success-color, #39c978); }
-        .mode-pill.inactive { color:var(--secondary-text-color); }
-        .mode-pill.inactive::before { background:var(--disabled-text-color, #777); }
         .overview-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; }
         .overview-toolbar button { white-space:nowrap; }
         .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:12px; }
@@ -477,6 +473,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         .overview-title { font-size:17px; font-weight:600; }
         .overview-subtitle { color:var(--secondary-text-color); font-size:12px; margin-top:3px; }
         .program-badge { display:inline-block; margin-left:5px; padding:3px 6px; border-radius:6px; background:color-mix(in srgb, var(--primary-color) 22%, transparent); color:var(--primary-color); font-size:10px; vertical-align:2px; }
+        .program-badge.summer { background:rgba(255, 166, 0, .18); color:var(--warning-color, #ffa600); }
         .overview-open { min-width:36px; padding:7px 10px; font-size:20px; }
         .overview-progress { color:var(--secondary-text-color); font-size:11px; margin-top:8px; }
         .overview-error { color:var(--error-color); font-size:12px; margin-top:8px; }
@@ -531,9 +528,9 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         <div class="header">
           <div>
             <h1>${escapeHtml(title)}</h1>
-            <div class="subtle">${escapeHtml(this._info ? this._modeSummary() : this._t("loading_info"))}</div>
+            ${this._view === "editor" ? `<div class="subtle">${escapeHtml(this._info ? this._modeSummary() : this._t("loading_info"))}</div>` : ""}
           </div>
-          <div class="subtle">${escapeHtml(this._busy ? this._t("querying") : this._gasMeterSummary())}</div>
+          ${this._view === "editor" ? `<div class="subtle">${escapeHtml(this._busy ? this._t("querying") : this._gasMeterSummary())}</div>` : ""}
         </div>
         <div class="view-tabs">
           <button class="view-tab ${this._view === "overview" ? "active" : ""}" data-view="overview">${this._t("overview")}</button>
@@ -548,19 +545,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     if (!this._info) {
       return `<div class="card"><div class="spinner">${this._t("loading_info")}</div></div>`;
     }
-    const pills = Object.keys(this._info.circuits)
-      .map(Number)
-      .sort((a, b) => a - b)
-      .map((circuit) => {
-        const info = this._info.circuits[String(circuit)];
-        const mode = info.active_program
-          ? `P${info.active_program.slice(-1)}`
-          : this._t(`mode_${info.mode}`);
-        const text = `HK${circuit + 1} ${mode}`;
-        return `<span class="mode-pill ${info.active_program ? "" : "inactive"}">${escapeHtml(text)}</span>`;
-      }).join("") + `<span class="mode-pill">${this._t("hot_water")}</span>`;
     return `
-      <div class="mode-pills">${pills}</div>
       <div class="overview-toolbar">
         <span class="subtle">${escapeHtml(this._overviewUpdatedLabel())}</span>
         <button id="refresh-overview" ${this._overviewLoading ? "disabled" : ""}>${this._overviewLoading ? this._t("refreshing") : this._t("refresh")}</button>
@@ -570,11 +555,16 @@ class WeishauptTimeProgramPanel extends HTMLElement {
           const inactive = !item.program;
           const badge = item.program?.startsWith("heating_")
             ? `P${item.program.slice(-1)} ${this._t("active_program_badge")}`
-            : item.program === "hot_water" ? this._t("active_program_badge") : "";
+            : item.program === "hot_water"
+              ? this._t("active_program_badge")
+              : item.mode === "summer"
+                ? `${this._t("mode_summer")} ⛱️`
+                : item.mode ? this._t(`mode_${item.mode}`) : "";
+          const badgeClass = item.mode === "summer" && !item.program ? "summer" : "";
           return `<section class="overview-card ${inactive ? "inactive" : ""} ${item.kind === "hot_water" ? "hot-water" : ""}">
             <div class="overview-head">
               <div>
-                <div class="overview-title">${escapeHtml(item.label)}${badge ? ` <span class="program-badge">${escapeHtml(badge)}</span>` : ""}</div>
+                <div class="overview-title">${escapeHtml(item.label)}${badge ? ` <span class="program-badge ${badgeClass}">${escapeHtml(badge)}</span>` : ""}</div>
                 <div class="overview-subtitle">${escapeHtml(item.subtitle)}</div>
               </div>
               <button class="overview-open" data-overview-index="${index}" aria-label="${escapeHtml(this._t("all_programs"))}">›</button>

@@ -211,7 +211,11 @@ class FrontendContractTest(unittest.TestCase):
                 "2": { active_program: "heating_1", mode: "program_1" },
               },
               program_buses: { hot_water: 0, circulation: 0 },
-              external_gas_meter: null,
+              external_gas_meter: {
+                name: "HIDDEN GAS METER",
+                state: "1234",
+                unit: "m³",
+              },
             };
 
             (async () => {
@@ -219,9 +223,12 @@ class FrontendContractTest(unittest.TestCase):
               const html = element.shadowRoot.innerHTML;
               for (const text of [
                 "WTC-HK1 / FS1", "HK2 Radiatoren / FS2", "HK3 FBH / FS3",
-                "Warmwasser", "Mo–So", "06:00–22:00",
+                "Warmwasser", "Sommer ⛱️", "Mo–So", "06:00–22:00",
               ]) {
                 if (!html.includes(text)) throw new Error(`overview misses ${text}`);
+              }
+              if (html.includes("HIDDEN GAS METER") || html.includes("mode-pills")) {
+                throw new Error("overview still renders removed summary content");
               }
               if (requests.length !== 3 || requests.some((request) => !request.cache_only)) {
                 throw new Error(`unexpected overview requests: ${JSON.stringify(requests)}`);

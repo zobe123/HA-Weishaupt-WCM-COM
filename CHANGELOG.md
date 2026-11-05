@@ -4,6 +4,15 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3b3]
+
+### Changed
+
+- Simplify the overview header by removing the repeated operating-mode summary,
+  gas-meter value and status-chip row.
+- Show an explicit "Summer ⛱️" badge directly on an inactive heating-circuit
+  card when that circuit is in summer mode.
+
 ## [1.5.3b2]
 
 ### Added
