@@ -553,13 +553,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       <div class="overview-grid">
         ${this._overview.map((item, index) => {
           const inactive = !item.program;
-          const badge = item.program?.startsWith("heating_")
-            ? `P${item.program.slice(-1)} ${this._t("active_program_badge")}`
-            : item.program === "hot_water"
-              ? this._t("active_program_badge")
-              : item.mode === "summer"
-                ? `${this._t("mode_summer")} ⛱️`
-                : item.mode ? this._t(`mode_${item.mode}`) : "";
+          const badge = this._overviewBadge(item);
           const badgeClass = item.mode === "summer" && !item.program ? "summer" : "";
           return `<section class="overview-card ${inactive ? "inactive" : ""} ${item.kind === "hot_water" ? "hot-water" : ""}">
             <div class="overview-head">
@@ -579,6 +573,38 @@ class WeishauptTimeProgramPanel extends HTMLElement {
           </section>`;
         }).join("")}
       </div>`;
+  }
+
+  _overviewBadge(item, now = new Date()) {
+    if (item.program?.startsWith("heating_")) {
+      const symbol = this._heatingProgramSymbol(item.schedule, now);
+      return `P${item.program.slice(-1)} ${this._t("active_program_badge")}${symbol ? ` ${symbol}` : ""}`;
+    }
+    if (item.program === "hot_water") return this._t("active_program_badge");
+    if (!item.mode) return "";
+
+    const symbols = {
+      normal: "☀️",
+      reduced: "🌙",
+      standby: "⏻",
+      summer: "⛱️",
+    };
+    const symbol = symbols[item.mode] || "";
+    return `${this._t(`mode_${item.mode}`)}${symbol ? ` ${symbol}` : ""}`;
+  }
+
+  _heatingProgramSymbol(schedule, now = new Date()) {
+    if (!schedule) return "";
+    const day = DAYS[(now.getDay() + 6) % 7];
+    const minute = now.getHours() * 60 + now.getMinutes();
+    const heating = (schedule[day] || []).some(([start, end]) => {
+      const toMinute = (value) => {
+        const [hour, minutes] = String(value).split(":").map(Number);
+        return hour * 60 + minutes;
+      };
+      return minute >= toMinute(start) && minute < toMinute(end);
+    });
+    return heating ? "☀️" : "🌙";
   }
 
   _renderEditor() {

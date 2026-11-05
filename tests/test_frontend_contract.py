@@ -227,6 +227,24 @@ class FrontendContractTest(unittest.TestCase):
               ]) {
                 if (!html.includes(text)) throw new Error(`overview misses ${text}`);
               }
+              const mondayNoon = new Date(2026, 10, 2, 12, 0);
+              const mondayNight = new Date(2026, 10, 2, 23, 0);
+              const program = { program: "heating_1", mode: "program_1", schedule };
+              if (element._overviewBadge(program, mondayNoon) !== "P1 aktiv ☀️") {
+                throw new Error("active heating interval misses sun symbol");
+              }
+              if (element._overviewBadge(program, mondayNight) !== "P1 aktiv 🌙") {
+                throw new Error("reduced heating interval misses moon symbol");
+              }
+              for (const [mode, expected] of [
+                ["normal", "Normal ☀️"], ["reduced", "Absenk 🌙"],
+                ["standby", "Standby ⏻"], ["summer", "Sommer ⛱️"],
+                ["control_center", "Wie Leitstelle"],
+              ]) {
+                if (element._overviewBadge({ program: null, mode }, mondayNoon) !== expected) {
+                  throw new Error(`wrong badge for ${mode}`);
+                }
+              }
               if (html.includes("HIDDEN GAS METER") || html.includes("mode-pills")) {
                 throw new Error("overview still renders removed summary content");
               }

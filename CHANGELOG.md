@@ -4,6 +4,16 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3b4]
+
+### Changed
+
+- Add the operating symbols from the WCM-FS manual to overview badges: sun for
+  normal/heating operation, moon for reduced operation, power for standby and
+  parasol for summer. Active heating programs derive sun or moon from the
+  current time-program interval; modes without a documented symbol remain
+  unchanged.
+
 ## [1.5.3b3]
 
 ### Changed
