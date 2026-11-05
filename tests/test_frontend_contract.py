@@ -3,6 +3,9 @@
 import ast
 import json
 from pathlib import Path
+import shutil
+import subprocess
+import textwrap
 import unittest
 
 
@@ -61,6 +64,88 @@ class FrontendContractTest(unittest.TestCase):
             set(manifest["dependencies"]),
             {"http", "panel_custom", "websocket_api"},
         )
+
+    def test_panel_and_card_escape_hostile_rendered_values(self) -> None:
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Node.js is required for the frontend test")
+        panel = COMPONENT / "frontend" / "weishaupt-time-program-panel.js"
+        script = textwrap.dedent(
+            r"""
+            const fs = require("node:fs");
+            const vm = require("node:vm");
+
+            const registry = new Map();
+            globalThis.HTMLElement = class {
+              attachShadow() {
+                this.shadowRoot = {
+                  innerHTML: "",
+                  querySelector: () => null,
+                  querySelectorAll: () => [],
+                };
+              }
+            };
+            globalThis.customElements = {
+              define: (name, constructor) => registry.set(name, constructor),
+              get: (name) => registry.get(name),
+            };
+            globalThis.window = {};
+
+            const panelPath = process.argv[1];
+            vm.runInThisContext(fs.readFileSync(panelPath, "utf8"), {
+              filename: panelPath,
+            });
+
+            const hostile = '$&<img src=x onerror="globalThis.xss=1">\'&';
+            const escaped =
+              "$&amp;&lt;img src=x onerror=&quot;globalThis.xss=1&quot;&gt;&#39;&amp;";
+
+            for (const elementName of [
+              "weishaupt-time-program-panel",
+              "weishaupt-time-program-card",
+            ]) {
+              const Element = customElements.get(elementName);
+              const element = new Element();
+              element.localName = elementName;
+              element._config = { title: hostile };
+              element._info = {
+                allow_write: true,
+                circuits: { "0": { active_program: "heating_1", mode: hostile } },
+                program_buses: { hot_water: 0, circulation: 0 },
+                circulation_supported: true,
+                external_gas_meter: {
+                  name: hostile,
+                  state: hostile,
+                  unit: hostile,
+                },
+              };
+              element._target = { circuit: 0, program: "heating_1" };
+              element._status = hostile;
+              element._targets = () => [
+                { circuit: 0, program: hostile, label: hostile },
+              ];
+
+              if (element._t("load_failed", { error: hostile }) !== `Loading failed: ${hostile}`) {
+                throw new Error(`${elementName} changed replacement-like message text`);
+              }
+
+              element._render();
+              const html = element.shadowRoot.innerHTML;
+              if (html.includes(hostile) || html.includes("<img")) {
+                throw new Error(`${elementName} rendered hostile markup`);
+              }
+              if (!html.includes(escaped)) {
+                throw new Error(`${elementName} did not render escaped hostile text`);
+              }
+            }
+            """
+        )
+        result = subprocess.run(
+            [node, "-e", script, str(panel)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":

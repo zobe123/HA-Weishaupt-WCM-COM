@@ -4,6 +4,20 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3b1]
+
+### Fixed
+
+- Escape dashboard-configured titles, device-provided gas-meter values, program
+  labels and status messages before rendering the bundled time-program panel
+  and card.
+- Preserve replacement-like text such as `$&` in translated error messages.
+
+### Validation
+
+- Add a runtime rendering test that feeds hostile values through both custom
+  elements and verifies that they are emitted as text rather than markup.
+
 ## [1.5.2]
 
 ### Added

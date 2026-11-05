@@ -43,6 +43,14 @@ const STRINGS = {
   },
 };
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+
 class WeishauptTimeProgramPanel extends HTMLElement {
   constructor() {
     super();
@@ -78,7 +86,9 @@ class WeishauptTimeProgramPanel extends HTMLElement {
   _t(key, values = {}) {
     const language = (this._hass?.language || "en").split("-")[0];
     let text = (STRINGS[language] || STRINGS.en)[key] || STRINGS.en[key] || key;
-    for (const [name, value] of Object.entries(values)) text = text.replaceAll(`{${name}}`, value);
+    for (const [name, value] of Object.entries(values)) {
+      text = text.replaceAll(`{${name}}`, () => String(value));
+    }
     return text;
   }
 
@@ -273,23 +283,23 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       <div class="page ${cardMode ? "dashboard-card" : ""}">
         <div class="header">
           <div>
-            <h1>${title}</h1>
-            <div class="subtle">${this._info ? this._modeSummary() : this._t("loading_info")}</div>
+            <h1>${escapeHtml(title)}</h1>
+            <div class="subtle">${escapeHtml(this._info ? this._modeSummary() : this._t("loading_info"))}</div>
           </div>
-          <div class="subtle">${this._busy ? this._t("querying") : this._gasMeterSummary()}</div>
+          <div class="subtle">${escapeHtml(this._busy ? this._t("querying") : this._gasMeterSummary())}</div>
         </div>
         <div class="card">
           ${!writable && this._info ? `<div class="warning"><b>${this._t("read_only_title")}</b> ${this._t("read_only")}</div>` : ""}
           <div class="toolbar">
             <label>${this._t("time_program")}
               <select id="target" ${this._busy ? "disabled" : ""}>
-                ${targets.map((target) => `<option value="${this._targetKey(target)}" ${this._targetKey(target) === selectedKey ? "selected" : ""}>${target.label}</option>`).join("")}
+                ${targets.map((target) => `<option value="${escapeHtml(this._targetKey(target))}" ${this._targetKey(target) === selectedKey ? "selected" : ""}>${escapeHtml(target.label)}</option>`).join("")}
               </select>
             </label>
             ${!this._info?.circulation_supported ? `<label><span>${this._t("optional")}</span><span><input id="optional" type="checkbox" ${this._showOptional ? "checked" : ""}> ${this._t("show_circulation")}</span></label>` : ""}
           </div>
           ${this._schedule ? this._renderSchedule() : `<div class="spinner">${this._busy ? this._t("loading_schedule") : this._t("no_schedule")}</div>`}
-          <div class="status ${this._statusIsError ? "error" : ""}">${this._status}</div>
+          <div class="status ${this._statusIsError ? "error" : ""}">${escapeHtml(this._status)}</div>
         </div>
       </div>`;
     this._bindEvents();
