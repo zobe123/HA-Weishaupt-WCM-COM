@@ -118,6 +118,8 @@ async def websocket_time_program_info(
             vol.Coerce(int), vol.In((0, 1, 2))
         ),
         vol.Required("program"): str,
+        vol.Optional("cache_only", default=False): bool,
+        vol.Optional("refresh", default=False): bool,
     }
 )
 @websocket_api.async_response
@@ -137,9 +139,17 @@ async def websocket_time_program_get(
             int(msg["heating_circuit"]),
             program,
         )
-        schedule = await entry_data["time_program_manager"].async_get(
-            circuit, program
-        )
+        manager = entry_data["time_program_manager"]
+        snapshot = manager.cached(circuit, program)
+        if msg["cache_only"]:
+            schedule = snapshot["schedule"] if snapshot else None
+        else:
+            schedule = await manager.async_get(
+                circuit,
+                program,
+                force_refresh=msg["refresh"],
+            )
+            snapshot = manager.cached(circuit, program)
     except (ValueError, KeyError) as err:
         connection.send_error(msg["id"], "invalid_format", str(err))
         return
@@ -153,10 +163,18 @@ async def websocket_time_program_get(
             "entry_id": entry_id,
             "heating_circuit": circuit,
             "program": program,
-            "schedule": {
-                day: [list(interval) for interval in intervals]
-                for day, intervals in schedule.items()
-            },
+            "schedule": (
+                {
+                    day: [list(interval) for interval in intervals]
+                    for day, intervals in schedule.items()
+                }
+                if schedule is not None
+                else None
+            ),
+            "cache_age_seconds": (
+                round(snapshot["age_seconds"], 3) if snapshot else None
+            ),
+            "cache_fresh": bool(snapshot and snapshot["fresh"]),
         },
     )
 

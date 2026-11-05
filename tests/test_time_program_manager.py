@@ -84,6 +84,85 @@ class TimeProgramManagerTest(unittest.TestCase):
             asyncio.run(manager.async_get(1, "heating_1"))
         self.assertEqual(api.calls, 1)
 
+    def test_stale_schedule_remains_available_without_device_io(self) -> None:
+        clock = [100.0]
+        original_monotonic = manager_module.monotonic
+        manager_module.monotonic = lambda: clock[0]
+
+        class Api:
+            calls = 0
+
+            def read_time_program(self, _circuit, _program):
+                self.calls += 1
+                return {"monday": (("06:00", "22:00"),)}
+
+        try:
+            api = Api()
+            manager = manager_module.TimeProgramManager(
+                FakeHass(), api, cache_seconds=300
+            )
+            asyncio.run(manager.async_get(0, "heating_1"))
+            clock[0] = 700.0
+
+            snapshot = manager.cached(0, "heating_1")
+
+            self.assertIsNotNone(snapshot)
+            assert snapshot is not None
+            self.assertFalse(snapshot["fresh"])
+            self.assertEqual(snapshot["age_seconds"], 600.0)
+            self.assertEqual(
+                snapshot["schedule"]["monday"], (("06:00", "22:00"),)
+            )
+            self.assertEqual(api.calls, 1)
+        finally:
+            manager_module.monotonic = original_monotonic
+
+    def test_force_refresh_replaces_a_fresh_cache_entry(self) -> None:
+        class Api:
+            calls = 0
+
+            def read_time_program(self, _circuit, _program):
+                self.calls += 1
+                return {"revision": self.calls}
+
+        api = Api()
+        manager = manager_module.TimeProgramManager(FakeHass(), api)
+
+        first = asyncio.run(manager.async_get(1, "heating_1"))
+        refreshed = asyncio.run(
+            manager.async_get(1, "heating_1", force_refresh=True)
+        )
+
+        self.assertEqual(first["revision"], 1)
+        self.assertEqual(refreshed["revision"], 2)
+        self.assertEqual(api.calls, 2)
+
+    def test_concurrent_refreshes_share_one_controller_read(self) -> None:
+        class YieldingHass:
+            async def async_add_executor_job(self, function, *args):
+                await asyncio.sleep(0)
+                return function(*args)
+
+        class Api:
+            calls = 0
+
+            def read_time_program(self, _circuit, _program):
+                self.calls += 1
+                return {"revision": self.calls}
+
+        async def refresh_twice(manager):
+            return await asyncio.gather(
+                manager.async_get(1, "heating_1", force_refresh=True),
+                manager.async_get(1, "heating_1", force_refresh=True),
+            )
+
+        api = Api()
+        manager = manager_module.TimeProgramManager(YieldingHass(), api)
+        results = asyncio.run(refresh_twice(manager))
+
+        self.assertEqual(results, [{"revision": 1}, {"revision": 1}])
+        self.assertEqual(api.calls, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -38,6 +38,8 @@ class FrontendContractTest(unittest.TestCase):
         self.assertIn('vol.In((0, 1, 2))', backend)
         self.assertIn('circuit_0: "WTC-HC1 / FS1"', panel)
         self.assertIn("this._info.program_buses.hot_water", panel)
+        self.assertIn('vol.Optional("cache_only"', backend)
+        self.assertIn('"cache_age_seconds"', backend)
         self.assertIn('sidebar_title="WCM-COM"', backend)
         self.assertNotIn('sidebar_title="Weishaupt Zeitprogramme"', backend)
 
@@ -137,6 +139,100 @@ class FrontendContractTest(unittest.TestCase):
                 throw new Error(`${elementName} did not render escaped hostile text`);
               }
             }
+            """
+        )
+        result = subprocess.run(
+            [node, "-e", script, str(panel)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_overview_loads_active_programs_from_cache_and_groups_days(self) -> None:
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Node.js is required for the frontend test")
+        panel = COMPONENT / "frontend" / "weishaupt-time-program-panel.js"
+        script = textwrap.dedent(
+            r"""
+            const fs = require("node:fs");
+            const vm = require("node:vm");
+
+            const registry = new Map();
+            globalThis.HTMLElement = class {
+              attachShadow() {
+                this.shadowRoot = {
+                  innerHTML: "",
+                  querySelector: () => null,
+                  querySelectorAll: () => [],
+                };
+              }
+            };
+            globalThis.customElements = {
+              define: (name, constructor) => registry.set(name, constructor),
+              get: (name) => registry.get(name),
+            };
+            globalThis.window = {};
+
+            const panelPath = process.argv[1];
+            vm.runInThisContext(fs.readFileSync(panelPath, "utf8"), {
+              filename: panelPath,
+            });
+
+            const schedule = Object.fromEntries([
+              "monday", "tuesday", "wednesday", "thursday", "friday",
+              "saturday", "sunday",
+            ].map((day) => [day, [["06:00", "22:00"]]]));
+            const requests = [];
+            const Element = customElements.get("weishaupt-time-program-panel");
+            const element = new Element();
+            element.localName = "weishaupt-time-program-panel";
+            element._hass = {
+              language: "de",
+              callWS: async (request) => {
+                requests.push(request);
+                if (!request.cache_only) {
+                  throw new Error("fresh cache entries must not trigger live reads");
+                }
+                return {
+                  schedule,
+                  cache_age_seconds: 12,
+                  cache_fresh: true,
+                };
+              },
+            };
+            element._info = {
+              entry_id: "entry",
+              allow_write: true,
+              circulation_supported: false,
+              circuits: {
+                "0": { active_program: null, mode: "summer" },
+                "1": { active_program: "heating_1", mode: "program_1" },
+                "2": { active_program: "heating_1", mode: "program_1" },
+              },
+              program_buses: { hot_water: 0, circulation: 0 },
+              external_gas_meter: null,
+            };
+
+            (async () => {
+              await element._loadOverview();
+              const html = element.shadowRoot.innerHTML;
+              for (const text of [
+                "WTC-HK1 / FS1", "HK2 Radiatoren / FS2", "HK3 FBH / FS3",
+                "Warmwasser", "Mo–So", "06:00–22:00",
+              ]) {
+                if (!html.includes(text)) throw new Error(`overview misses ${text}`);
+              }
+              if (requests.length !== 3 || requests.some((request) => !request.cache_only)) {
+                throw new Error(`unexpected overview requests: ${JSON.stringify(requests)}`);
+              }
+              if (requests.some((request) => request.heating_circuit === 0 && request.program?.startsWith("heating_"))) {
+                throw new Error("inactive heating circuit was queried");
+              }
+            })().catch((error) => {
+              console.error(error);
+              process.exitCode = 1;
+            });
             """
         )
         result = subprocess.run(

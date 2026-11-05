@@ -20,6 +20,11 @@ const STRINGS = {
     mode_program_1: "Program 1", mode_program_2: "Program 2", mode_program_3: "Program 3", mode_standby: "Standby",
     mode_summer: "Summer", mode_reduced: "Reduced", mode_normal: "Normal", mode_control_center: "Control center",
     mode_hot_water_program: "Hot-water program",
+    overview: "Overview", all_programs: "All programs", refresh: "Refresh", refreshing: "Refreshing …",
+    not_loaded: "Not loaded yet", updated: "Updated {time}", inactive_program: "No heating program active",
+    active_program_badge: "active", loading_program: "Loading time program …", program_load_failed: "Loading failed",
+    monday_short: "Mon", tuesday_short: "Tue", wednesday_short: "Wed", thursday_short: "Thu",
+    friday_short: "Fri", saturday_short: "Sat", sunday_short: "Sun", all_week: "Mon–Sun",
   },
   de: {
     title: "Weishaupt Zeitprogramme", loading_info: "Wochenprogramme werden geladen", querying: "WCM-COM wird abgefragt …",
@@ -40,6 +45,11 @@ const STRINGS = {
     mode_program_1: "Programm 1", mode_program_2: "Programm 2", mode_program_3: "Programm 3", mode_standby: "Standby",
     mode_summer: "Sommer", mode_reduced: "Absenk", mode_normal: "Normal", mode_control_center: "Wie Leitstelle",
     mode_hot_water_program: "Warmwasserprogramm",
+    overview: "Übersicht", all_programs: "Alle Programme", refresh: "Aktualisieren", refreshing: "Wird aktualisiert …",
+    not_loaded: "Noch nicht geladen", updated: "Aktualisiert {time}", inactive_program: "Kein Heizprogramm aktiv",
+    active_program_badge: "aktiv", loading_program: "Zeitprogramm wird geladen …", program_load_failed: "Laden fehlgeschlagen",
+    monday_short: "Mo", tuesday_short: "Di", wednesday_short: "Mi", thursday_short: "Do",
+    friday_short: "Fr", saturday_short: "Sa", sunday_short: "So", all_week: "Mo–So",
   },
 };
 
@@ -63,6 +73,9 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     this._busy = false;
     this._status = "";
     this._statusIsError = false;
+    this._view = "overview";
+    this._overview = [];
+    this._overviewLoading = false;
   }
 
   set hass(value) {
@@ -100,19 +113,31 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     if (!this._hass) return;
     this._busy = true;
     this._render();
+    let ready = false;
     try {
       const request = {
         type: `${DOMAIN}/time_programs/info`,
       };
       if (this._config?.entry_id) request.entry_id = this._config.entry_id;
       this._info = await this._hass.callWS(request);
-      const firstCircuit = Object.keys(this._info.circuits)
+      const circuitIds = Object.keys(this._info.circuits)
         .map(Number)
-        .sort((a, b) => a - b)[0];
+        .sort((a, b) => a - b);
+      const firstCircuit = circuitIds.find(
+        (circuit) => this._info.circuits[String(circuit)].active_program,
+      ) ?? circuitIds[0];
       if (firstCircuit === undefined) throw new Error("No heating circuit detected");
       const active = this._info.circuits[String(firstCircuit)].active_program || "heating_1";
       this._target = { circuit: firstCircuit, program: active };
-      await this._loadSchedule();
+      this._overview = this._overviewTargets().map((target) => ({
+        ...target,
+        schedule: null,
+        fresh: false,
+        ageSeconds: null,
+        loading: Boolean(target.program),
+        error: "",
+      }));
+      ready = true;
     } catch (error) {
       this._status = this._t("load_failed", { error: error.message || error });
       this._statusIsError = true;
@@ -120,6 +145,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
       this._busy = false;
       this._render();
     }
+    if (ready) await this._loadOverview();
   }
 
   async _loadSchedule() {
@@ -134,6 +160,16 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         program: this._target.program,
       });
       this._schedule = structuredClone(response.schedule);
+      const overviewItem = this._overview.find(
+        (item) => item.program && this._targetKey(item) === this._targetKey(this._target),
+      );
+      if (overviewItem) {
+        overviewItem.schedule = structuredClone(response.schedule);
+        overviewItem.fresh = Boolean(response.cache_fresh);
+        overviewItem.ageSeconds = response.cache_age_seconds;
+        overviewItem.loading = false;
+        overviewItem.error = "";
+      }
       this._dirty.clear();
       this._status = "";
       this._statusIsError = false;
@@ -185,6 +221,112 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     return targets;
   }
 
+  _overviewTargets() {
+    if (!this._info) return [];
+    const targets = Object.keys(this._info.circuits)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((circuit) => {
+        const circuitInfo = this._info.circuits[String(circuit)];
+        const program = circuitInfo.active_program || null;
+        return {
+          circuit,
+          program,
+          editorProgram: program || "heating_1",
+          label: this._t(`circuit_${circuit}`),
+          subtitle: program
+            ? this._t(`mode_${circuitInfo.mode}`)
+            : this._t("inactive_program"),
+          kind: "heating",
+        };
+      });
+    targets.push({
+      circuit: this._info.program_buses.hot_water,
+      program: "hot_water",
+      editorProgram: "hot_water",
+      label: this._t("hot_water"),
+      subtitle: this._t("mode_hot_water_program"),
+      kind: "hot_water",
+    });
+    return targets;
+  }
+
+  async _scheduleRequest(target, options = {}) {
+    return this._hass.callWS({
+      type: `${DOMAIN}/time_programs/get`,
+      entry_id: this._info.entry_id,
+      heating_circuit: target.circuit,
+      program: target.program,
+      ...options,
+    });
+  }
+
+  _applyOverviewResponse(item, response) {
+    if (response.schedule) item.schedule = structuredClone(response.schedule);
+    item.fresh = Boolean(response.cache_fresh);
+    item.ageSeconds = response.cache_age_seconds;
+    item.error = "";
+  }
+
+  async _loadOverview({ force = false } = {}) {
+    if (!this._hass || !this._info || this._overviewLoading) return;
+    this._overviewLoading = true;
+
+    const targets = this._overviewTargets();
+    this._overview = targets.map((target) => {
+      const existing = this._overview.find(
+        (item) => item.program === target.program && item.circuit === target.circuit,
+      );
+      return existing
+        ? { ...existing, ...target, loading: Boolean(target.program), error: "" }
+        : {
+            ...target,
+            schedule: null,
+            fresh: false,
+            ageSeconds: null,
+            loading: Boolean(target.program),
+            error: "",
+          };
+    });
+    this._render();
+
+    if (!force) {
+      await Promise.all(this._overview.filter((item) => item.program).map(async (item) => {
+        try {
+          const cached = await this._scheduleRequest(item, { cache_only: true });
+          if (cached.schedule) this._applyOverviewResponse(item, cached);
+        } catch (_error) {
+          // A cache miss or unavailable cache must not hide the live read below.
+        }
+      }));
+      this._render();
+    }
+
+    const pending = this._overview.filter(
+      (item) => item.program && (force || !item.schedule || !item.fresh),
+    );
+    for (const item of this._overview) {
+      if (item.program && !pending.includes(item)) item.loading = false;
+    }
+    this._render();
+
+    await Promise.all(pending.map(async (item) => {
+      try {
+        const response = await this._scheduleRequest(item, {
+          refresh: force || Boolean(item.schedule),
+        });
+        this._applyOverviewResponse(item, response);
+      } catch (error) {
+        item.error = error.message || String(error);
+      } finally {
+        item.loading = false;
+        this._render();
+      }
+    }));
+    this._overviewLoading = false;
+    this._render();
+  }
+
   _targetKey(target) {
     return `${target.circuit}:${target.program}`;
   }
@@ -214,6 +356,82 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     return `${meter.name}: ${meter.state}${meter.unit ? ` ${meter.unit}` : ""}`;
   }
 
+  _shortDay(day) {
+    return this._t(`${day}_short`);
+  }
+
+  _dayGroupLabel(indexes) {
+    if (indexes.length === DAYS.length) return this._t("all_week");
+    const consecutive = indexes.every(
+      (value, index) => index === 0 || value === indexes[index - 1] + 1,
+    );
+    if (consecutive && indexes.length >= 2) {
+      return `${this._shortDay(DAYS[indexes[0]])}–${this._shortDay(DAYS[indexes.at(-1)])}`;
+    }
+    return indexes.map((index) => this._shortDay(DAYS[index])).join(", ");
+  }
+
+  _groupSchedule(schedule) {
+    const groups = [];
+    const byIntervals = new Map();
+    DAYS.forEach((day, index) => {
+      const intervals = schedule?.[day] || [];
+      const key = JSON.stringify(intervals);
+      let group = byIntervals.get(key);
+      if (!group) {
+        group = { indexes: [], intervals };
+        byIntervals.set(key, group);
+        groups.push(group);
+      }
+      group.indexes.push(index);
+    });
+    return groups;
+  }
+
+  _timePercent(value) {
+    const [hour, minute] = String(value).split(":").map(Number);
+    const total = hour * 60 + minute;
+    return Math.max(0, Math.min(100, (total / (24 * 60)) * 100));
+  }
+
+  _renderTimeline(schedule) {
+    return `
+      <div class="timeline-axis"><span></span><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+      ${this._groupSchedule(schedule).map((group) => {
+        const intervalText = group.intervals.length
+          ? group.intervals.map(([start, end]) => `${start}–${end}`).join(" · ")
+          : this._t("no_window");
+        return `<div class="timeline-row">
+          <div class="timeline-days">${escapeHtml(this._dayGroupLabel(group.indexes))}</div>
+          <div>
+            <div class="timeline-rail">
+              ${group.intervals.map(([start, end]) => {
+                const left = this._timePercent(start);
+                const width = Math.max(0, this._timePercent(end) - left);
+                return `<span class="timeline-block" style="left:${left.toFixed(3)}%;width:${width.toFixed(3)}%"></span>`;
+              }).join("")}
+            </div>
+            <div class="timeline-times">${escapeHtml(intervalText)}</div>
+          </div>
+        </div>`;
+      }).join("")}`;
+  }
+
+  _overviewUpdatedLabel() {
+    const ages = this._overview
+      .filter((item) => item.schedule && item.ageSeconds !== null)
+      .map((item) => Number(item.ageSeconds));
+    if (!ages.length) return this._t("not_loaded");
+    const oldest = Math.max(...ages);
+    const updated = new Date(Date.now() - oldest * 1000);
+    return this._t("updated", {
+      time: updated.toLocaleTimeString(this._hass?.language || undefined, {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    });
+  }
+
   _timeOptions(selected, isEnd) {
     const options = [];
     const first = isEnd ? 1 : 0;
@@ -229,9 +447,6 @@ class WeishauptTimeProgramPanel extends HTMLElement {
 
   _render() {
     if (!this.shadowRoot) return;
-    const targets = this._targets();
-    const selectedKey = this._target ? this._targetKey(this._target) : "";
-    const writable = Boolean(this._info?.allow_write);
     const cardMode = this.localName === "weishaupt-time-program-card";
     const title = this._config?.title || this._t("title");
 
@@ -245,6 +460,36 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         .header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:18px; }
         h1 { margin:0 0 6px; font-size:28px; font-weight:500; }
         .subtle { color:var(--secondary-text-color); font-size:14px; }
+        .view-tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 16px; background:var(--secondary-background-color); border-radius:12px; }
+        .view-tab { background:transparent; color:var(--secondary-text-color); }
+        .view-tab.active { background:var(--card-background-color); color:var(--primary-text-color); box-shadow:0 1px 3px rgba(0,0,0,.18); font-weight:600; }
+        .mode-pills { display:flex; flex-wrap:wrap; gap:7px; margin:0 0 14px; }
+        .mode-pill { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--divider-color); border-radius:999px; padding:6px 10px; font-size:12px; }
+        .mode-pill::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--success-color, #39c978); }
+        .mode-pill.inactive { color:var(--secondary-text-color); }
+        .mode-pill.inactive::before { background:var(--disabled-text-color, #777); }
+        .overview-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 12px; }
+        .overview-toolbar button { white-space:nowrap; }
+        .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:12px; }
+        .overview-card { position:relative; background:var(--card-background-color); border:1px solid var(--divider-color); border-radius:14px; box-shadow:var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.16)); padding:16px; min-width:0; }
+        .overview-card.inactive { opacity:.7; }
+        .overview-head { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px; }
+        .overview-title { font-size:17px; font-weight:600; }
+        .overview-subtitle { color:var(--secondary-text-color); font-size:12px; margin-top:3px; }
+        .program-badge { display:inline-block; margin-left:5px; padding:3px 6px; border-radius:6px; background:color-mix(in srgb, var(--primary-color) 22%, transparent); color:var(--primary-color); font-size:10px; vertical-align:2px; }
+        .overview-open { min-width:36px; padding:7px 10px; font-size:20px; }
+        .overview-progress { color:var(--secondary-text-color); font-size:11px; margin-top:8px; }
+        .overview-error { color:var(--error-color); font-size:12px; margin-top:8px; }
+        .timeline-axis { display:grid; grid-template-columns:54px repeat(5, 1fr); margin:0 0 3px; color:var(--disabled-text-color, #777); font-size:9px; }
+        .timeline-axis span:last-child { text-align:right; }
+        .timeline-row { display:grid; grid-template-columns:54px 1fr; gap:8px; align-items:start; margin:8px 0; }
+        .timeline-days { font-size:11px; font-weight:600; padding-top:5px; }
+        .timeline-rail { position:relative; height:22px; overflow:hidden; border:1px solid var(--divider-color); border-radius:7px; background:var(--secondary-background-color); }
+        .timeline-rail::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent 24.5%, var(--divider-color) 25%, transparent 25.5%, transparent 49.5%, var(--divider-color) 50%, transparent 50.5%, transparent 74.5%, var(--divider-color) 75%, transparent 75.5%); opacity:.65; }
+        .timeline-block { position:absolute; top:3px; bottom:3px; z-index:1; border-radius:5px; background:var(--primary-color); }
+        .overview-card.hot-water .timeline-block { background:var(--info-color, #00a7a0); }
+        .timeline-times { min-height:14px; margin-top:4px; color:var(--secondary-text-color); font-size:10px; }
+        .overview-skeleton { height:22px; border-radius:7px; background:var(--secondary-background-color); opacity:.75; }
         .card { background:var(--card-background-color); border-radius:12px; box-shadow:var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.18)); padding:20px; }
         .toolbar { display:flex; flex-wrap:wrap; align-items:end; gap:12px; margin-bottom:18px; }
         label { display:flex; flex-direction:column; gap:6px; color:var(--secondary-text-color); font-size:12px; }
@@ -273,6 +518,8 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         @media (max-width:760px) {
           .page { padding:12px; }
           .header { display:block; }
+          .header > .subtle { margin-top:6px; }
+          .overview-grid { grid-template-columns:1fr; }
           .grid { display:block; }
           .row { display:block; border-bottom:1px solid var(--divider-color); padding:10px 0; }
           .day, .windows, .actions { border:0; padding:5px 0; }
@@ -288,21 +535,79 @@ class WeishauptTimeProgramPanel extends HTMLElement {
           </div>
           <div class="subtle">${escapeHtml(this._busy ? this._t("querying") : this._gasMeterSummary())}</div>
         </div>
-        <div class="card">
-          ${!writable && this._info ? `<div class="warning"><b>${this._t("read_only_title")}</b> ${this._t("read_only")}</div>` : ""}
-          <div class="toolbar">
-            <label>${this._t("time_program")}
-              <select id="target" ${this._busy ? "disabled" : ""}>
-                ${targets.map((target) => `<option value="${escapeHtml(this._targetKey(target))}" ${this._targetKey(target) === selectedKey ? "selected" : ""}>${escapeHtml(target.label)}</option>`).join("")}
-              </select>
-            </label>
-            ${!this._info?.circulation_supported ? `<label><span>${this._t("optional")}</span><span><input id="optional" type="checkbox" ${this._showOptional ? "checked" : ""}> ${this._t("show_circulation")}</span></label>` : ""}
-          </div>
-          ${this._schedule ? this._renderSchedule() : `<div class="spinner">${this._busy ? this._t("loading_schedule") : this._t("no_schedule")}</div>`}
-          <div class="status ${this._statusIsError ? "error" : ""}">${escapeHtml(this._status)}</div>
+        <div class="view-tabs">
+          <button class="view-tab ${this._view === "overview" ? "active" : ""}" data-view="overview">${this._t("overview")}</button>
+          <button class="view-tab ${this._view === "editor" ? "active" : ""}" data-view="editor">${this._t("all_programs")}</button>
         </div>
+        ${this._view === "overview" ? this._renderOverview() : this._renderEditor()}
       </div>`;
     this._bindEvents();
+  }
+
+  _renderOverview() {
+    if (!this._info) {
+      return `<div class="card"><div class="spinner">${this._t("loading_info")}</div></div>`;
+    }
+    const pills = Object.keys(this._info.circuits)
+      .map(Number)
+      .sort((a, b) => a - b)
+      .map((circuit) => {
+        const info = this._info.circuits[String(circuit)];
+        const mode = info.active_program
+          ? `P${info.active_program.slice(-1)}`
+          : this._t(`mode_${info.mode}`);
+        const text = `HK${circuit + 1} ${mode}`;
+        return `<span class="mode-pill ${info.active_program ? "" : "inactive"}">${escapeHtml(text)}</span>`;
+      }).join("") + `<span class="mode-pill">${this._t("hot_water")}</span>`;
+    return `
+      <div class="mode-pills">${pills}</div>
+      <div class="overview-toolbar">
+        <span class="subtle">${escapeHtml(this._overviewUpdatedLabel())}</span>
+        <button id="refresh-overview" ${this._overviewLoading ? "disabled" : ""}>${this._overviewLoading ? this._t("refreshing") : this._t("refresh")}</button>
+      </div>
+      <div class="overview-grid">
+        ${this._overview.map((item, index) => {
+          const inactive = !item.program;
+          const badge = item.program?.startsWith("heating_")
+            ? `P${item.program.slice(-1)} ${this._t("active_program_badge")}`
+            : item.program === "hot_water" ? this._t("active_program_badge") : "";
+          return `<section class="overview-card ${inactive ? "inactive" : ""} ${item.kind === "hot_water" ? "hot-water" : ""}">
+            <div class="overview-head">
+              <div>
+                <div class="overview-title">${escapeHtml(item.label)}${badge ? ` <span class="program-badge">${escapeHtml(badge)}</span>` : ""}</div>
+                <div class="overview-subtitle">${escapeHtml(item.subtitle)}</div>
+              </div>
+              <button class="overview-open" data-overview-index="${index}" aria-label="${escapeHtml(this._t("all_programs"))}">›</button>
+            </div>
+            ${item.schedule
+              ? this._renderTimeline(item.schedule)
+              : inactive
+                ? ""
+                : `<div class="overview-skeleton"></div>`}
+            ${item.loading ? `<div class="overview-progress">${this._t("loading_program")}</div>` : ""}
+            ${item.error ? `<div class="overview-error">${this._t("program_load_failed")}: ${escapeHtml(item.error)}</div>` : ""}
+          </section>`;
+        }).join("")}
+      </div>`;
+  }
+
+  _renderEditor() {
+    const targets = this._targets();
+    const selectedKey = this._target ? this._targetKey(this._target) : "";
+    const writable = Boolean(this._info?.allow_write);
+    return `<div class="card">
+      ${!writable && this._info ? `<div class="warning"><b>${this._t("read_only_title")}</b> ${this._t("read_only")}</div>` : ""}
+      <div class="toolbar">
+        <label>${this._t("time_program")}
+          <select id="target" ${this._busy ? "disabled" : ""}>
+            ${targets.map((target) => `<option value="${escapeHtml(this._targetKey(target))}" ${this._targetKey(target) === selectedKey ? "selected" : ""}>${escapeHtml(target.label)}</option>`).join("")}
+          </select>
+        </label>
+        ${!this._info?.circulation_supported ? `<label><span>${this._t("optional")}</span><span><input id="optional" type="checkbox" ${this._showOptional ? "checked" : ""}> ${this._t("show_circulation")}</span></label>` : ""}
+      </div>
+      ${this._schedule ? this._renderSchedule() : `<div class="spinner">${this._busy ? this._t("loading_schedule") : this._t("no_schedule")}</div>`}
+      <div class="status ${this._statusIsError ? "error" : ""}">${escapeHtml(this._status)}</div>
+    </div>`;
   }
 
   _renderSchedule() {
@@ -321,7 +626,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
               </div>`).join("")}
               ${intervals.length === 0 ? `<span class="subtle">${this._t("no_window")}</span>` : ""}
             </div>
-            <div class="actions"><button class="icon add" data-day="${day}" ${intervals.length >= 3 ? "disabled" : ""}>＋</button></div>
+            <div class="actions"><button class="icon add" data-day="${day}" ${intervals.length >= 3 ? "disabled" : ""}>+</button></div>
           </div>`;
         }).join("")}
       </div>
@@ -341,6 +646,38 @@ class WeishauptTimeProgramPanel extends HTMLElement {
 
   _bindEvents() {
     const root = this.shadowRoot;
+    root.querySelectorAll("button.view-tab").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const nextView = button.dataset.view;
+        if (nextView === this._view) return;
+        if (this._view === "editor" && this._dirty.size && !confirm(this._t("discard_confirm"))) return;
+        this._dirty.clear();
+        this._view = nextView;
+        this._render();
+        if (nextView === "editor" && !this._schedule && this._target) {
+          await this._loadSchedule();
+        }
+      });
+    });
+    root.querySelector("#refresh-overview")?.addEventListener("click", () => {
+      this._loadOverview({ force: true });
+    });
+    root.querySelectorAll("button.overview-open").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const item = this._overview[Number(button.dataset.overviewIndex)];
+        if (!item) return;
+        this._target = { circuit: item.circuit, program: item.editorProgram };
+        this._schedule = item.program === item.editorProgram && item.schedule
+          ? structuredClone(item.schedule)
+          : null;
+        this._dirty.clear();
+        this._status = "";
+        this._statusIsError = false;
+        this._view = "editor";
+        this._render();
+        if (!this._schedule || !item.fresh) await this._loadSchedule();
+      });
+    });
     root.querySelector("#target")?.addEventListener("change", async (event) => {
       if (this._dirty.size && !confirm(this._t("discard_confirm"))) {
         event.target.value = this._targetKey(this._target);

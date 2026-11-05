@@ -4,6 +4,28 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3b2]
+
+### Added
+
+- Add a compact default overview that displays every active heating program and
+  the hot-water program together as grouped 24-hour timelines.
+- Keep the complete selector and weekly editor available under "All programs".
+- Add a manual refresh action and show when the oldest displayed schedule was
+  last read.
+
+### Changed
+
+- Show the last successful schedule immediately, even after its five-minute
+  freshness window, while a new controller read runs in the background.
+- Load overview cards independently and skip schedule reads for heating circuits
+  that currently have no active program.
+
+### Validation
+
+- Add cache and forced-refresh regression tests plus a runtime frontend test for
+  active-program discovery, inactive-circuit suppression and weekday grouping.
+
 ## [1.5.3b1]
 
 ### Fixed

@@ -19,17 +19,55 @@ class TimeProgramManager:
         self._cache: dict[tuple[int, str], tuple[float, dict]] = {}
         self._lock = asyncio.Lock()
 
-    async def async_get(self, heating_circuit: int, program: str) -> dict:
-        """Return a cached schedule or read it from the controller."""
+    def cached(self, heating_circuit: int, program: str) -> dict | None:
+        """Return the last successful schedule without performing device I/O."""
 
         key = (int(heating_circuit), str(program))
         cached = self._cache.get(key)
-        if cached and monotonic() - cached[0] < self._cache_seconds:
+        if cached is None:
+            return None
+        cached_at, schedule = cached
+        age_seconds = max(0.0, monotonic() - cached_at)
+        return {
+            "schedule": schedule,
+            "age_seconds": age_seconds,
+            "fresh": age_seconds < self._cache_seconds,
+        }
+
+    async def async_get(
+        self,
+        heating_circuit: int,
+        program: str,
+        *,
+        force_refresh: bool = False,
+    ) -> dict:
+        """Return a cached schedule or read it from the controller."""
+
+        key = (int(heating_circuit), str(program))
+        request_started = monotonic()
+        cached = self._cache.get(key)
+        if (
+            not force_refresh
+            and cached
+            and monotonic() - cached[0] < self._cache_seconds
+        ):
             return cached[1]
 
         async with self._lock:
             cached = self._cache.get(key)
-            if cached and monotonic() - cached[0] < self._cache_seconds:
+            refreshed_while_waiting = bool(
+                force_refresh and cached and cached[0] >= request_started
+            )
+            if (
+                cached
+                and (
+                    refreshed_while_waiting
+                    or (
+                        not force_refresh
+                        and monotonic() - cached[0] < self._cache_seconds
+                    )
+                )
+            ):
                 return cached[1]
             try:
                 schedule = await self._hass.async_add_executor_job(
