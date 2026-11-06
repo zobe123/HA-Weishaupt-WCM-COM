@@ -92,15 +92,15 @@ The integration queries various parameters from the WCM-COM interface and expose
   Circulation is added only when the controller reports a usable circulation
   signal.
 - The integration adds a **Weishaupt Time Programs** panel for editing all three
-  stored heating programs, hot water and optional circulation in a compact
-  weekly view. Schedules are loaded one at a time and cached so they do not
-  increase the normal one-minute polling load.
+  stored heating programs, hot water and optional circulation. Its default
+  overview shows all active programs together as compact 24-hour timelines;
+  the complete weekly editor remains available under **All programs**. Cached
+  schedules appear immediately, stale data refreshes in the background and
+  simultaneous reads are deduplicated so the panel does not increase the
+  normal polling load unnecessarily.
 - Integration options control whether that editor is shown in the sidebar and
   whether active programs appear as Home Assistant calendar entities. The same
   editor is available as `custom:weishaupt-time-program-card` for dashboards.
-- An existing gas-meter sensor can optionally be selected. Its current reading
-  is displayed in the time-program editor; no duplicate or derived consumption
-  entity is created yet.
 
 Expert sensors are marked as diagnostic entities in Home Assistant and may be `unavailable` if your installation does not expose the corresponding value.
 
