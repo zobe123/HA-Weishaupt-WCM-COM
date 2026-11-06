@@ -4,6 +4,37 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3]
+
+### Added
+
+- Add a compact default overview for all active heating programs and hot water,
+  grouped into readable 24-hour timelines while the complete weekly editor
+  remains available under "All programs".
+- Show cached schedules immediately, refresh stale data in the background and
+  deduplicate concurrent controller reads.
+- Add manual refresh, last-update time and WCM-FS operating symbols to the
+  overview badges.
+
+### Changed
+
+- Remove the repeated operating-mode summary and external gas-meter line from
+  the page header in both overview and editor views.
+
+### Fixed
+
+- Escape every externally supplied value before rendering the time-program
+  panel or dashboard card through `innerHTML`.
+- Preserve replacement-like text such as `$&` in translated error messages.
+- Render both views of both custom elements with distinct hostile values in the
+  regression suite, protecting labels, subtitles, errors, badges, timelines,
+  status text and selector values from future escaping regressions.
+
+### Thanks
+
+- Thanks to @frenck for the eagle-eyed security review — no stray angle bracket
+  escaped his gaze. 🦅
+
 ## [1.5.3b5]
 
 ### Tests

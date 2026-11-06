@@ -281,9 +281,16 @@ class FrontendContractTest(unittest.TestCase):
               }];
               element._render();
               assertEscaped(elementName, "editor", element.shadowRoot.innerHTML, [
-                "title", "modeSummary", "meterName", "meterState", "meterUnit",
-                "status", "optionValue", "optionLabel",
+                "title", "status", "optionValue", "optionLabel",
               ]);
+              for (const field of [
+                "modeSummary", "meterName", "meterState", "meterUnit",
+              ]) {
+                const html = element.shadowRoot.innerHTML;
+                if (html.includes(attacks[field]) || html.includes(escape(attacks[field]))) {
+                  throw new Error(`${elementName} editor still renders removed ${field}`);
+                }
+              }
             }
             """
         )

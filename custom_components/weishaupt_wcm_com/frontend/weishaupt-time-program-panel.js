@@ -338,25 +338,6 @@ class WeishauptTimeProgramPanel extends HTMLElement {
     )?.label || this._t("time_program");
   }
 
-  _modeSummary() {
-    if (!this._info) return "";
-    return Object.keys(this._info.circuits)
-      .map(Number)
-      .sort((a, b) => a - b)
-      .map((circuit) => {
-        const mode = this._info.circuits[String(circuit)].mode;
-        const label = this._t(`circuit_${circuit}`);
-        return `${label}: ${this._t(`mode_${mode}`)}`;
-      })
-      .join(" · ");
-  }
-
-  _gasMeterSummary() {
-    const meter = this._info?.external_gas_meter;
-    if (!meter) return "";
-    return `${meter.name}: ${meter.state}${meter.unit ? ` ${meter.unit}` : ""}`;
-  }
-
   _shortDay(day) {
     return this._t(`${day}_short`);
   }
@@ -459,7 +440,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         .page.dashboard-card { max-width:none; padding:16px; background:var(--ha-card-background, var(--card-background-color)); border-radius:var(--ha-card-border-radius, 12px); box-shadow:var(--ha-card-box-shadow, 0 2px 6px rgba(0,0,0,.18)); }
         .page.dashboard-card .card { box-shadow:none; padding:0; }
         .header { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:18px; }
-        h1 { margin:0 0 6px; font-size:28px; font-weight:500; }
+        h1 { margin:0; font-size:28px; font-weight:500; }
         .subtle { color:var(--secondary-text-color); font-size:14px; }
         .view-tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 16px; background:var(--secondary-background-color); border-radius:12px; }
         .view-tab { background:transparent; color:var(--secondary-text-color); }
@@ -515,7 +496,6 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         @media (max-width:760px) {
           .page { padding:12px; }
           .header { display:block; }
-          .header > .subtle { margin-top:6px; }
           .overview-grid { grid-template-columns:1fr; }
           .grid { display:block; }
           .row { display:block; border-bottom:1px solid var(--divider-color); padding:10px 0; }
@@ -525,13 +505,7 @@ class WeishauptTimeProgramPanel extends HTMLElement {
         }
       </style>
       <div class="page ${cardMode ? "dashboard-card" : ""}">
-        <div class="header">
-          <div>
-            <h1>${escapeHtml(title)}</h1>
-            ${this._view === "editor" ? `<div class="subtle">${escapeHtml(this._info ? this._modeSummary() : this._t("loading_info"))}</div>` : ""}
-          </div>
-          ${this._view === "editor" ? `<div class="subtle">${escapeHtml(this._busy ? this._t("querying") : this._gasMeterSummary())}</div>` : ""}
-        </div>
+        <div class="header"><h1>${escapeHtml(title)}</h1></div>
         <div class="view-tabs">
           <button class="view-tab ${this._view === "overview" ? "active" : ""}" data-view="overview">${this._t("overview")}</button>
           <button class="view-tab ${this._view === "editor" ? "active" : ""}" data-view="editor">${this._t("all_programs")}</button>
