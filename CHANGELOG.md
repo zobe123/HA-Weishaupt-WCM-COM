@@ -4,6 +4,15 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.3b5]
+
+### Tests
+
+- Render both the overview and editor in the panel and dashboard card with
+  distinct hostile values for every dynamic field. This makes the XSS
+  regression test fail if escaping is removed from labels, subtitles, badges,
+  errors, timelines, status text, selector options or gas-meter values.
+
 ## [1.5.3b4]
 
 ### Changed

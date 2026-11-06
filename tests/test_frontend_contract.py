@@ -149,6 +149,152 @@ class FrontendContractTest(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_panel_and_card_escape_every_dynamic_render_path(self) -> None:
+        node = shutil.which("node")
+        self.assertIsNotNone(node, "Node.js is required for the frontend test")
+        panel = COMPONENT / "frontend" / "weishaupt-time-program-panel.js"
+        script = textwrap.dedent(
+            r"""
+            const fs = require("node:fs");
+            const vm = require("node:vm");
+
+            const registry = new Map();
+            globalThis.HTMLElement = class {
+              attachShadow() {
+                this.shadowRoot = {
+                  innerHTML: "",
+                  querySelector: () => null,
+                  querySelectorAll: () => [],
+                };
+              }
+            };
+            globalThis.customElements = {
+              define: (name, constructor) => registry.set(name, constructor),
+              get: (name) => registry.get(name),
+            };
+            globalThis.window = {};
+
+            const panelPath = process.argv[1];
+            vm.runInThisContext(fs.readFileSync(panelPath, "utf8"), {
+              filename: panelPath,
+            });
+
+            const attack = (field) =>
+              `$&<img data-field="${field}" src=x onerror="globalThis.xss=1">'&`;
+            const escape = (value) => String(value)
+              .replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;")
+              .replaceAll('"', "&quot;")
+              .replaceAll("'", "&#39;");
+            const attacks = Object.fromEntries([
+              "title", "overviewLabel", "overviewSubtitle", "overviewError",
+              "overviewBadge", "timelineStart", "timelineEnd", "modeSummary",
+              "meterName", "meterState", "meterUnit", "status", "optionValue",
+              "optionLabel",
+            ].map((field) => [field, attack(field)]));
+            const days = [
+              "monday", "tuesday", "wednesday", "thursday", "friday",
+              "saturday", "sunday",
+            ];
+            const hostileSchedule = Object.fromEntries(days.map((day) => [
+              day, [[attacks.timelineStart, attacks.timelineEnd]],
+            ]));
+
+            const assertEscaped = (elementName, view, html, fields) => {
+              if (html.includes("<img") || globalThis.xss) {
+                throw new Error(`${elementName} ${view} rendered hostile markup`);
+              }
+              for (const field of fields) {
+                if (!html.includes(escape(attacks[field]))) {
+                  throw new Error(`${elementName} ${view} did not escape ${field}`);
+                }
+              }
+            };
+
+            for (const elementName of [
+              "weishaupt-time-program-panel",
+              "weishaupt-time-program-card",
+            ]) {
+              const Element = customElements.get(elementName);
+              const element = new Element();
+              element.localName = elementName;
+              element._hass = { language: "en" };
+              element._config = { title: attacks.title };
+              element._info = {
+                allow_write: true,
+                circuits: {
+                  "0": { active_program: null, mode: attacks.modeSummary },
+                },
+                program_buses: { hot_water: 0, circulation: 0 },
+                circulation_supported: true,
+                external_gas_meter: {
+                  name: attacks.meterName,
+                  state: attacks.meterState,
+                  unit: attacks.meterUnit,
+                },
+              };
+
+              element._view = "overview";
+              element._overview = [
+                {
+                  circuit: 0,
+                  program: null,
+                  editorProgram: "heating_1",
+                  label: attacks.overviewLabel,
+                  subtitle: attacks.overviewSubtitle,
+                  mode: attacks.overviewBadge,
+                  kind: "heating",
+                  schedule: null,
+                  loading: false,
+                  error: attacks.overviewError,
+                  ageSeconds: null,
+                },
+                {
+                  circuit: 1,
+                  program: "heating_1",
+                  editorProgram: "heating_1",
+                  label: "Timeline",
+                  subtitle: "Timeline",
+                  mode: "program_1",
+                  kind: "heating",
+                  schedule: hostileSchedule,
+                  loading: false,
+                  error: "",
+                  ageSeconds: 0,
+                },
+              ];
+              element._render();
+              assertEscaped(elementName, "overview", element.shadowRoot.innerHTML, [
+                "title", "overviewLabel", "overviewSubtitle", "overviewError",
+                "overviewBadge", "timelineStart", "timelineEnd",
+              ]);
+
+              element._view = "editor";
+              element._target = { circuit: 0, program: "heating_1" };
+              element._schedule = {};
+              element._status = attacks.status;
+              element._targets = () => [{
+                circuit: 0,
+                program: attacks.optionValue,
+                label: attacks.optionLabel,
+              }];
+              element._render();
+              assertEscaped(elementName, "editor", element.shadowRoot.innerHTML, [
+                "title", "modeSummary", "meterName", "meterState", "meterUnit",
+                "status", "optionValue", "optionLabel",
+              ]);
+            }
+            """
+        )
+        result = subprocess.run(
+            [node, "-e", script, str(panel)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_overview_loads_active_programs_from_cache_and_groups_days(self) -> None:
         node = shutil.which("node")
         self.assertIsNotNone(node, "Node.js is required for the frontend test")
