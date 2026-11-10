@@ -21,7 +21,7 @@ It reads important parameters from your boiler and heating circuits and exposes 
 
 ## Requirements
 
-- Home Assistant Core
+- Home Assistant Core 2024.7.0 or newer
 - Weishaupt WCM-COM control unit reachable in your local network
 - Network connection to the Weishaupt WCM-COM (via LAN)
 - Python 3.11 or higher
@@ -35,11 +35,6 @@ Install this integration with HACS:
 1. In Home Assistant, go to **HACS → Integrations**.
 2. Search for **Weishaupt WCM-COM** and install it.
 3. Restart Home Assistant.
-
-If the integration is not yet listed in the default HACS store, add it as a custom repository first:
-
-- **Repository**: `https://github.com/zobe123/HA-Weishaupt-WCM-COM`
-- **Category**: `Integration`
 
 ### 2. Manual installation
 

@@ -4,6 +4,19 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.4]
+
+### Changed
+
+- Require Home Assistant 2024.7.0 or newer, matching the frontend static-path
+  registration API used by the integration.
+- Document installation directly from the default HACS store.
+
+### Thanks
+
+- Thanks to @frenck for spotting the stale compatibility metadata during the
+  HACS review.
+
 ## [1.5.3]
 
 ### Added
