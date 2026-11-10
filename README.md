@@ -28,11 +28,12 @@ It reads important parameters from your boiler and heating circuits and exposes 
 
 ## Installation
 
-### 1. HACS (recommended)
+### 1. Marketplace / HACS (recommended)
 
-Install this integration with HACS:
+Install this integration from Home Assistant's community store:
 
-1. In Home Assistant, go to **HACS → Integrations**.
+1. Open **Marketplace** on Home Assistant 2026.11 or newer. On older Home
+   Assistant releases, open **HACS → Integrations**.
 2. Search for **Weishaupt WCM-COM** and install it.
 3. Restart Home Assistant.
 
