@@ -39,6 +39,21 @@ FIRMWARE_CHECK_TIMEOUT = 180
 FIRMWARE_CHECK_INTERVAL = 2
 
 
+def is_no_value(param: dict, value) -> bool:
+    """Return whether ``value`` is one of the parameter's no-value markers.
+
+    ``no_value`` is either a single marker or a list of markers, because the
+    same parameter can report "not used" differently across WTC firmware.
+    """
+
+    markers = param.get("no_value")
+    if markers is None:
+        return False
+    if isinstance(markers, (list, tuple, set, frozenset)):
+        return value in markers
+    return value == markers
+
+
 def combine_wtc_ob_counters(result: dict) -> None:
     """Combine WTC-OB high/low counter words in-place like the WebUI."""
 
@@ -511,10 +526,8 @@ class WeishauptAPI:
                             # Compare sentinels against the unscaled 16-bit
                             # wire value.  This is required for 0x8000, which
                             # would otherwise decode as a signed temperature.
-                            elif (
-                                param.get("no_value") is not None
-                                and int(low_byte) + 256 * int(high_byte)
-                                == param["no_value"]
+                            elif is_no_value(
+                                param, int(low_byte) + 256 * int(high_byte)
                             ):
                                 value = None
 
@@ -566,7 +579,7 @@ class WeishauptAPI:
                             else:
                                 value = low_byte + 256 * high_byte  # Fallback
 
-                            if param.get("no_value") is not None and value == param.get("no_value"):
+                            if is_no_value(param, value):
                                 value = None
 
                             # Speichern/Mergen der Werte. Expected no-value

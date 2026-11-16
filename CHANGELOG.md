@@ -4,6 +4,15 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [Unreleased]
+
+### Fixed
+
+- Stop the WTC-integrated heating circuit's room thermostat function sensor
+  from failing to load with `code_10` when the function is not used. Both
+  no-value markers reported by WTC FS1 firmware (10 and 32768) are now
+  recognized.
+
 ## [1.5.5]
 
 ### Added
