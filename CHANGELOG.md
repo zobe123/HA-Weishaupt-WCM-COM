@@ -4,6 +4,22 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.5b1]
+
+### Added
+
+- Support WCM-COM variants that advertise HTTP Basic authentication. The
+  integration keeps Digest as the default, retries once with Basic only after
+  an explicit Basic-only challenge, and reuses the detected method for all
+  subsequent reads, writes, time programs and firmware requests.
+- Generate the diagnostic curl command with the authentication method detected
+  for the current WCM-COM.
+
+### Thanks
+
+- Thanks to @chneuber for documenting the Basic-only WCM-COM behavior and
+  providing a working reproduction.
+
 ## [1.5.4]
 
 ### Changed

@@ -4,7 +4,7 @@ import json
 import requests
 import threading
 import time
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from .const import PARAMETERS, ERROR_CODE_MAP, WARNING_CODE_MAP
 from .protocol import (
@@ -101,11 +101,45 @@ class WeishauptAPI:
         self._host = host
         self._username = username
         self._password = password
+        self._auth_scheme = "digest"
         self._data = {}
         self.previous_values = {}
         self._parameters = PARAMETERS if parameters is None else parameters
         # Optionaler Modus für zusätzliche Debug-Logs
         self.advanced_logging = advanced_logging
+
+    def _auth(self):
+        """Return the authentication handler selected for this WCM-COM."""
+
+        if not (self._username and self._password):
+            return None
+        if self._auth_scheme == "basic":
+            return HTTPBasicAuth(self._username, self._password)
+        return HTTPDigestAuth(self._username, self._password)
+
+    def _post(self, url: str, **kwargs):
+        """POST with Digest by default and learn Basic-only WCM-COM devices."""
+
+        response = requests.post(url, auth=self._auth(), **kwargs)
+        if (
+            self._username
+            and self._password
+            and self._auth_scheme == "digest"
+            and response.status_code == 401
+        ):
+            challenge = str(
+                response.headers.get("WWW-Authenticate", "")
+            ).strip().casefold()
+            if challenge.startswith("basic ") and "digest " not in challenge:
+                response = requests.post(
+                    url,
+                    auth=HTTPBasicAuth(self._username, self._password),
+                    **kwargs,
+                )
+                if 200 <= response.status_code < 400:
+                    self._auth_scheme = "basic"
+                    _LOGGER.debug("WCM-COM selected HTTP Basic authentication")
+        return response
 
     @property
     def data(self):
@@ -234,15 +268,9 @@ class WeishauptAPI:
     def _request_firmware_telegram_unlocked(self, telegram: list[int]) -> dict:
         """Send one firmware telegram; caller must hold the API lock."""
 
-        auth = (
-            HTTPDigestAuth(self._username, self._password)
-            if self._username and self._password
-            else None
-        )
         try:
-            response = requests.post(
+            response = self._post(
                 f"http://{self._host}/parameter.json",
-                auth=auth,
                 data=json.dumps({"prot": "coco", "telegramm": [telegram]}),
                 headers={"Content-Type": "application/json"},
                 timeout=60,
@@ -377,12 +405,6 @@ class WeishauptAPI:
 
         url = f"http://{self._host}{ENDPOINT}"
 
-        # Check if authentication is required
-        if self._username and self._password:
-            auth = HTTPDigestAuth(self._username, self._password)
-        else:
-            auth = None
-
         for attempt in range(3):  # Bis zu 3 Versuche, falls die Anfrage fehlschlägt
             try:
                 result = {}
@@ -406,9 +428,8 @@ class WeishauptAPI:
                     if not params:
                         continue
 
-                    req = requests.post(
+                    req = self._post(
                         url,
-                        auth=auth,
                         data=json.dumps(build_read_request(params)),
                         headers={'Content-Type': 'application/json'},
                         timeout=60  # Timeout auf 60 Sekunden erhöhen
@@ -785,16 +806,9 @@ class WeishauptAPI:
                 for parameter_id in parameter_ids
             ],
         }
-        auth = (
-            HTTPDigestAuth(self._username, self._password)
-            if self._username and self._password
-            else None
-        )
-
         try:
-            response = requests.post(
+            response = self._post(
                 url,
-                auth=auth,
                 data=json.dumps(telegram),
                 headers={"Content-Type": "application/json"},
                 timeout=60,
@@ -851,16 +865,9 @@ class WeishauptAPI:
 
         _LOGGER.debug("Writing parameter %s (bus=%s, modultyp=%s) with code %s", parameter_id, bus, modultyp, code)
 
-        # Optional Auth wie im Read-Pfad
-        if self._username and self._password:
-            auth = HTTPDigestAuth(self._username, self._password)
-        else:
-            auth = None
-
         try:
-            req = requests.post(
+            req = self._post(
                 url,
-                auth=auth,
                 data=json.dumps(telegram),
                 headers={"Content-Type": "application/json"},
                 timeout=30,
@@ -927,6 +934,10 @@ class WeishauptAPI:
             ],
         }
         headers = "-H 'Content-Type: application/json'"
-        auth = f"--digest -u {self._username}:{self._password}" if self._username and self._password else ""
+        if self._username and self._password:
+            digest = "--digest " if self._auth_scheme == "digest" else ""
+            auth = f"{digest}-u {self._username}:{self._password}"
+        else:
+            auth = ""
         data = f"-d '{json.dumps(telegram)}'"
         return f"curl -X POST {auth} {headers} {data} {url}"

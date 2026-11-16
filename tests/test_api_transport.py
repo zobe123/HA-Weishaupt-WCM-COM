@@ -60,12 +60,15 @@ def json_response(telegram: list[list[int]]) -> Mock:
     return response
 
 
-def unauthorized_response() -> Mock:
+def unauthorized_response(challenge: str | None = None) -> Mock:
     """Return a minimal HTTP 401 response."""
 
     response = Mock()
     response.text = "Unauthorized"
     response.status_code = 401
+    response.headers = {}
+    if challenge is not None:
+        response.headers["WWW-Authenticate"] = challenge
     response.raise_for_status.side_effect = requests.exceptions.HTTPError(
         "401 Client Error: Unauthorized"
     )
@@ -265,6 +268,74 @@ class ApiTransportTest(unittest.TestCase):
 
         self.assertEqual(post.call_count, 1)
         sleep.assert_not_called()
+
+    def test_basic_challenge_falls_back_once_and_is_reused(self) -> None:
+        response = json_response([[10, 0, 1, 1, 0, 0, 7, 0]])
+        with patch.object(
+            api_module.requests,
+            "post",
+            side_effect=[
+                unauthorized_response(
+                    'Basic realm="Please enter Username and Password!"'
+                ),
+                response,
+                response,
+            ],
+        ) as post:
+            api = api_module.WeishauptAPI(
+                "wcm.test",
+                "admin",
+                "secret",
+                parameters=[{"id": 1, "name": "Status", "type": "value"}],
+            )
+            self.assertEqual(api.get_data(), {"Status": 7})
+            self.assertEqual(api.get_data(), {"Status": 7})
+
+        self.assertEqual(post.call_count, 3)
+        self.assertIsInstance(
+            post.call_args_list[0].kwargs["auth"],
+            api_module.HTTPDigestAuth,
+        )
+        self.assertTrue(
+            all(
+                isinstance(request.kwargs["auth"], api_module.HTTPBasicAuth)
+                for request in post.call_args_list[1:]
+            )
+        )
+        self.assertEqual(api._auth_scheme, "basic")
+        self.assertNotIn("--digest", api.get_curl_command())
+
+    def test_digest_challenge_does_not_downgrade_authentication(self) -> None:
+        with patch.object(
+            api_module.requests,
+            "post",
+            return_value=unauthorized_response(
+                'Digest realm="WCM-COM", nonce="abc"'
+            ),
+        ) as post:
+            with self.assertRaises(api_module.WeishauptAuthenticationError):
+                api_module.WeishauptAPI(
+                    "wcm.test", "user", "wrong"
+                ).get_data()
+
+        self.assertEqual(post.call_count, 1)
+
+    def test_rejected_basic_credentials_remain_invalid_auth(self) -> None:
+        challenge = 'Basic realm="Please enter Username and Password!"'
+        with patch.object(
+            api_module.requests,
+            "post",
+            side_effect=[
+                unauthorized_response(challenge),
+                unauthorized_response(challenge),
+            ],
+        ) as post:
+            api = api_module.WeishauptAPI("wcm.test", "user", "wrong")
+            with self.assertRaises(api_module.WeishauptAuthenticationError):
+                api.get_data()
+
+        self.assertEqual(post.call_count, 2)
+        self.assertEqual(api._auth_scheme, "digest")
 
     def test_firmware_authentication_failure_is_specific(self) -> None:
         with patch.object(

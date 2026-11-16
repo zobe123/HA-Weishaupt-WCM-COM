@@ -21,7 +21,7 @@ class ConfigContractTest(unittest.TestCase):
 
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertTrue(manifest["single_config_entry"])
-        self.assertEqual(manifest["version"], "1.5.4")
+        self.assertEqual(manifest["version"], "1.5.5b1")
         self.assertEqual(hacs["homeassistant"], "2024.7.0")
         self.assertIn("Home Assistant Core 2024.7.0 or newer", readme)
         self.assertIn("Python 3.11 or higher", readme)
