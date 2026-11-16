@@ -4,6 +4,14 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.5b2]
+
+### Changed
+
+- Re-detect Digest authentication after Basic was previously selected, allowing
+  the integration to recover automatically if a WCM-COM firmware update changes
+  the advertised authentication method while Home Assistant remains running.
+
 ## [1.5.5b1]
 
 ### Added

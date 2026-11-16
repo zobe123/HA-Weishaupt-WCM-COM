@@ -305,6 +305,50 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(api._auth_scheme, "basic")
         self.assertNotIn("--digest", api.get_curl_command())
 
+    def test_authentication_change_from_basic_to_digest_is_relearned(self) -> None:
+        response = json_response([[10, 0, 1, 1, 0, 0, 7, 0]])
+        with patch.object(
+            api_module.requests,
+            "post",
+            side_effect=[
+                unauthorized_response('Basic realm="WCM-COM"'),
+                response,
+                unauthorized_response(
+                    'Digest realm="WCM-COM", nonce="abc"'
+                ),
+                response,
+                response,
+            ],
+        ) as post:
+            api = api_module.WeishauptAPI(
+                "wcm.test",
+                "admin",
+                "secret",
+                parameters=[{"id": 1, "name": "Status", "type": "value"}],
+            )
+            self.assertEqual(api.get_data(), {"Status": 7})
+            self.assertEqual(api._auth_scheme, "basic")
+            self.assertEqual(api.get_data(), {"Status": 7})
+            self.assertEqual(api._auth_scheme, "digest")
+            self.assertEqual(api.get_data(), {"Status": 7})
+
+        self.assertEqual(post.call_count, 5)
+        auth_types = [
+            type(request.kwargs["auth"])
+            for request in post.call_args_list
+        ]
+        self.assertEqual(
+            auth_types,
+            [
+                api_module.HTTPDigestAuth,
+                api_module.HTTPBasicAuth,
+                api_module.HTTPBasicAuth,
+                api_module.HTTPDigestAuth,
+                api_module.HTTPDigestAuth,
+            ],
+        )
+        self.assertIn("--digest", api.get_curl_command())
+
     def test_digest_challenge_does_not_downgrade_authentication(self) -> None:
         with patch.object(
             api_module.requests,

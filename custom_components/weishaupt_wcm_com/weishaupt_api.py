@@ -108,37 +108,44 @@ class WeishauptAPI:
         # Optionaler Modus für zusätzliche Debug-Logs
         self.advanced_logging = advanced_logging
 
-    def _auth(self):
+    def _auth(self, scheme: str | None = None):
         """Return the authentication handler selected for this WCM-COM."""
 
         if not (self._username and self._password):
             return None
-        if self._auth_scheme == "basic":
+        if (scheme or self._auth_scheme) == "basic":
             return HTTPBasicAuth(self._username, self._password)
         return HTTPDigestAuth(self._username, self._password)
 
     def _post(self, url: str, **kwargs):
-        """POST with Digest by default and learn Basic-only WCM-COM devices."""
+        """POST using the authentication scheme advertised by WCM-COM."""
 
         response = requests.post(url, auth=self._auth(), **kwargs)
         if (
             self._username
             and self._password
-            and self._auth_scheme == "digest"
             and response.status_code == 401
         ):
             challenge = str(
                 response.headers.get("WWW-Authenticate", "")
             ).strip().casefold()
-            if challenge.startswith("basic ") and "digest " not in challenge:
+            requested_scheme = None
+            if challenge.startswith("basic "):
+                requested_scheme = "basic"
+            elif challenge.startswith("digest "):
+                requested_scheme = "digest"
+            if requested_scheme and requested_scheme != self._auth_scheme:
                 response = requests.post(
                     url,
-                    auth=HTTPBasicAuth(self._username, self._password),
+                    auth=self._auth(requested_scheme),
                     **kwargs,
                 )
                 if 200 <= response.status_code < 400:
-                    self._auth_scheme = "basic"
-                    _LOGGER.debug("WCM-COM selected HTTP Basic authentication")
+                    self._auth_scheme = requested_scheme
+                    _LOGGER.debug(
+                        "WCM-COM selected HTTP %s authentication",
+                        requested_scheme.title(),
+                    )
         return response
 
     @property
