@@ -56,11 +56,15 @@ def combine_wtc_ob_counters(result: dict) -> None:
         ("WTC-OB Ölzähler High", "WTC-OB Ölzähler Low", "Ölzähler"),
     )
     for high_key, low_key, target_key in parts:
-        # Always clear a previously combined value when either source word is
-        # missing.  A partial device response must never look like fresh data.
-        result.pop(target_key, None)
         high = result.get(high_key)
         low = result.get(low_key)
+        if high is None and low is None:
+            # Not a WTC-OB response.  WTC-G reports the same target names
+            # directly (3158/3159), so those values must be left untouched.
+            continue
+        # Clear the combined value when only one source word is present.  A
+        # partial device response must never look like fresh data.
+        result.pop(target_key, None)
         if high is not None and low is not None:
             result[target_key] = high * 1000 + low
 

@@ -4,6 +4,14 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [Unreleased]
+
+### Fixed
+
+- Restore the WTC-G burner cycle count and burner operating hours sensors,
+  which stayed unavailable since 1.5.0b2 because the WTC-OB counter
+  combination discarded the values reported directly by WTC-G devices.
+
 ## [1.5.5]
 
 ### Added
