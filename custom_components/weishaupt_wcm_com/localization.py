@@ -128,6 +128,27 @@ SELECT_OPTION_KEYS = {
     },
 }
 
+# P505 room thermostat (2588): the WebUI uses option codes 0-4, but some FS
+# firmware (e.g. FS 327.26) stores the switching differential in tenths of a
+# kelvin, so 10 = 1.0 K (the factory default).  Map those to the same options.
+ROOM_THERMOSTAT_TENTHS_CODES: dict[int, int] = {10: 2, 20: 3, 30: 4}
+
+
+def room_thermostat_code(raw):
+    """Return the 0-4 option code for a raw P505 room-thermostat value."""
+
+    return ROOM_THERMOSTAT_TENTHS_CODES.get(raw, raw)
+
+
+def room_thermostat_uses_tenths(raw) -> bool:
+    """Return whether a raw P505 value is in tenths-of-a-kelvin format.
+
+    The manual's range is 1.0 K ... 3.0 K, so any raw value from 10 to 30 is
+    a differential; the WebUI option codes never exceed 4.
+    """
+
+    return isinstance(raw, int) and 10 <= raw <= 30
+
 
 def select_option_map(translation_key: str, *, hot_water: bool = False) -> dict[int, str]:
     """Return neutral option values for a translated select entity."""

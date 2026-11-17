@@ -13,6 +13,11 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   not the boiler or flow temperature. Its internal name and unique ID change
   from `Kesseltemperatur` to `Abgastemperatur`; the existing entity is
   migrated on startup, so its entity ID, history and settings are kept.
+- Show the WTC-integrated heating circuit's room thermostat function (P505)
+  again on firmware that stores the switching differential in tenths of a
+  kelvin, such as FS 327.26. A raw value of 10 is now shown as 1 K instead of
+  being treated as "no value", 20 and 30 as 2 K and 3 K, and changes are
+  written back in the same format. Only 32768 still means "not available".
 
 ### Added
 

@@ -31,7 +31,13 @@ from .const import (
 )
 from .base_entity import WeishauptBaseEntity
 from .protocol import resolve_parameter_metadata
-from .localization import SELECT_TRANSLATION_KEYS, select_option_map
+from .localization import (
+    ROOM_THERMOSTAT_TENTHS_CODES,
+    SELECT_TRANSLATION_KEYS,
+    room_thermostat_code,
+    room_thermostat_uses_tenths,
+    select_option_map,
+)
 from .device_model import device_info
 from .entity_help import coordinator_language, entity_help_attributes
 
@@ -305,6 +311,9 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
             self._attr_translation_key,
             hot_water=hot_water_mode,
         )
+        self._room_thermostat = self._attr_translation_key.endswith(
+            "_room_thermostat"
+        )
 
         parameter = resolve_parameter_metadata(
             PARAMETERS,
@@ -395,6 +404,8 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
 
         # Fallback: roher Code → Mapping benutzen
         if isinstance(value, int):
+            if self._room_thermostat:
+                value = room_thermostat_code(value)
             return self._option_map.get(value)
 
         return None
@@ -428,6 +439,20 @@ class WeishauptHKConfigSelect(CoordinatorEntity, WeishauptBaseEntity, SelectEnti
         if code is None:
             _LOGGER.warning("Unknown option '%s' for %s", option, self._sensor_name)
             return
+
+        # Write P505 back in the format the device currently reports, so a
+        # firmware storing tenths of a kelvin receives 10/20/30 for 1/2/3 K.
+        if self._room_thermostat and room_thermostat_uses_tenths(
+            (self.coordinator.data or {}).get(self._data_name)
+        ):
+            code = next(
+                (
+                    raw
+                    for raw, option_code in ROOM_THERMOSTAT_TENTHS_CODES.items()
+                    if option_code == code
+                ),
+                code,
+            )
 
         _LOGGER.debug(
             "Setting %s (id=%s, bus=%s, modultyp=%s) to code %s",
