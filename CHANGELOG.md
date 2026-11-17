@@ -16,9 +16,9 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 
 ### Added
 
-- French name for the flue-gas temperature sensor. Other entities stay in
-  English for French-language installations until a full French translation
-  is available.
+- French translation of all entity names and states, the configuration and
+  options dialogs, services and error messages. Entity help texts remain
+  German and English.
 
 ## [1.5.7]
 

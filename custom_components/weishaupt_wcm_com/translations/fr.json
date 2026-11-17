@@ -1,13 +1,1387 @@
 {
-  "entity": {
-    "number": {
-      "parameter_b0_m10_p325": {
-        "name": "Température des fumées"
+  "config": {
+    "abort": {
+      "already_configured": "Ce WCM-COM est déjà configuré",
+      "single_instance_allowed": "Un seul WCM-COM peut être configuré par installation Home Assistant",
+      "reauth_successful": "Authentification mise à jour",
+      "reauth_unsuccessful": "L'entrée de l'intégration est introuvable"
+    },
+    "error": {
+      "already_configured": "Ce WCM-COM est déjà configuré",
+      "cannot_connect": "Impossible de se connecter au WCM-COM",
+      "invalid_auth": "Nom d'utilisateur ou mot de passe incorrect"
+    },
+    "step": {
+      "user": {
+        "title": "Weishaupt WCM-COM",
+        "description": "Connexion à un régulateur de chauffage Weishaupt WCM-COM",
+        "data": {
+          "host": "Hôte",
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe",
+          "boiler_profile": "Chaudière"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Mettre à jour les identifiants WCM-COM",
+        "description": "Saisissez les identifiants actuels de ce régulateur WCM-COM",
+        "data": {
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe"
+        }
+      }
+    }
+  },
+  "options": {
+    "error": {
+      "already_configured": "Ce WCM-COM est déjà configuré",
+      "cannot_connect": "Les nouveaux paramètres de connexion n'ont pas pu être vérifiés",
+      "invalid_auth": "Nom d'utilisateur ou mot de passe incorrect"
+    },
+    "step": {
+      "init": {
+        "description": "Seules les modifications de l'hôte, du nom d'utilisateur ou du mot de passe sont vérifiées avant l'enregistrement. Avec une nouvelle adresse IP, cette vérification peut prendre quelques minutes, car l'interface WCM-COM répond lentement. Les autres options sont enregistrées sans ce test de connexion.",
+        "data": {
+          "host": "Hôte",
+          "username": "Nom d'utilisateur",
+          "password": "Mot de passe",
+          "scan_interval": "Intervalle d'interrogation (secondes)",
+          "allow_write": "Autoriser l'écriture vers le WCM-COM (mode expert)",
+          "allow_firmware_check": "Rechercher automatiquement un nouveau firmware (envoie un télégramme d'écriture)",
+          "advanced_logging": "Activer la journalisation avancée (sortie de débogage supplémentaire pour le dépannage)",
+          "show_time_program_panel": "Afficher les programmes horaires dans la barre latérale",
+          "expose_time_program_calendars": "Ajouter les programmes horaires actifs au calendrier Home Assistant",
+          "external_gas_meter_entity": "Compteur de gaz externe (facultatif)",
+          "boiler_profile": "Chaudière"
+        }
+      }
+    }
+  },
+  "selector": {
+    "boiler_profile": {
+      "options": {
+        "wtc_g": "WTC-G (gaz)",
+        "wtc_ob": "WTC-OB (fioul)"
       }
     },
+    "time_program": {
+      "options": {
+        "heating_1": "Programme de chauffage 1",
+        "heating_2": "Programme de chauffage 2",
+        "heating_3": "Programme de chauffage 3",
+        "hot_water": "Eau chaude sanitaire",
+        "circulation": "Circulation"
+      }
+    },
+    "weekday": {
+      "options": {
+        "monday": "Lundi",
+        "tuesday": "Mardi",
+        "wednesday": "Mercredi",
+        "thursday": "Jeudi",
+        "friday": "Vendredi",
+        "saturday": "Samedi",
+        "sunday": "Dimanche"
+      }
+    }
+  },
+  "issues": {},
+  "entity": {
     "sensor": {
+      "parameter_b0_m10_p1": {
+        "name": "État",
+        "state": {
+          "normal": "Normal",
+          "code_11": "F11 : température de la sonde de départ supérieure à 105 °C",
+          "code_12": "W12 : température de la sonde de départ supérieure à 95 °C",
+          "code_13": "F13 : température des fumées trop élevée",
+          "code_14": "W14 : la température de départ augmente trop vite",
+          "code_15": "F15/W15 : écart trop important entre température de départ et température des fumées",
+          "code_16": "W16 : température des fumées trop élevée",
+          "code_21": "F21 : aucune flamme formée au démarrage du brûleur",
+          "code_22": "W22 : perte de flamme en fonctionnement",
+          "code_23": "F23 : signal de flamme parasite",
+          "code_24": "F24 : entrée H2 fermée alors que le paramètre 17 vaut 3",
+          "code_30": "F30 : sonde de départ défectueuse",
+          "code_31": "F31 : sonde de fumées défectueuse",
+          "code_33": "W33 : sonde extérieure défectueuse",
+          "code_34": "W34 : sonde ECS défectueuse",
+          "code_37": "W37 : capteur de débit d'eau défectueux",
+          "code_38": "F38 : sonde du ballon tampon défectueuse",
+          "code_39": "F39 : sonde du ballon tampon ou de la bouteille de découplage défectueuse",
+          "code_41": "F41 : échec du contrôle du relais de vanne gaz",
+          "code_42": "W42 : aucun signal de commande pour la pompe de circulation",
+          "code_43": "F43 : vitesse du ventilateur non atteinte",
+          "code_44": "F44 : échec du contrôle d'arrêt du ventilateur",
+          "code_51": "F51 : erreur du jeu de données chaudière",
+          "code_52": "F52 : erreur du jeu de données brûleur",
+          "code_53": "F53 : tension d'alimentation hors tolérance",
+          "code_54": "F54 : défaut électronique",
+          "code_55": "F55 : fréquence secteur hors tolérance",
+          "code_56": "F56 : défaut de mesure d'ionisation",
+          "code_61": "F61 : le signal d'ionisation s'écarte de la consigne",
+          "code_62": "F62 : signal de commande de l'actionneur gaz hors tolérance",
+          "code_64": "F64 : valeur de base SCOT® hors des limites admissibles",
+          "code_65": "F65 : valeur de base SCOT® trop éloignée de la valeur précédente",
+          "code_66": "F66 : l'étalonnage n'a pas pu être terminé",
+          "code_67": "F67 : valeur de base SCOT® mal enregistrée",
+          "code_80": "W80 : communication avec le gestionnaire de cascade défectueuse",
+          "code_81": "W81 : communication avec le WCM-FS 1 défectueuse",
+          "code_82": "W82 : communication avec l'EM 2 ou le WCM-FS 2 défectueuse",
+          "code_83": "W83 : communication avec l'EM 3 ou le WCM-FS 3 défectueuse",
+          "code_84": "W84 : communication avec l'EM 4 ou le WCM-FS 4 défectueuse",
+          "code_85": "W85 : communication avec l'EM 5 ou le WCM-FS 5 défectueuse",
+          "code_86": "W86 : communication avec l'EM 6 ou le WCM-FS 6 défectueuse",
+          "code_87": "W87 : communication avec l'EM 7 ou le WCM-FS 7 défectueuse",
+          "code_88": "W88 : communication avec l'EM 8 ou le WCM-FS 8 défectueuse"
+        }
+      },
+      "parameter_b0_m10_p12": {
+        "name": "Température extérieure"
+      },
+      "parameter_b0_m10_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b0_m10_p81": {
+        "name": "Flamme",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p82": {
+        "name": "Chauffage",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p83": {
+        "name": "Eau chaude sanitaire",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
       "parameter_b0_m10_p325": {
         "name": "Température des fumées"
+      },
+      "parameter_b0_m10_p373": {
+        "name": "Phase de fonctionnement",
+        "state": {
+          "phase_0": "Brûleur arrêté",
+          "phase_1": "Contrôle d'arrêt du ventilateur",
+          "phase_2": "Montée à la vitesse de préventilation",
+          "phase_3": "Décompte de préventilation",
+          "phase_4": "Montée à la vitesse d'allumage",
+          "phase_5": "Temps de formation de flamme",
+          "phase_6": "Brûleur en fonctionnement, régulation active",
+          "phase_7": "Contrôle de la vanne gaz V1",
+          "phase_8": "Contrôle de la vanne gaz V2",
+          "phase_9": "Montée à la vitesse de post-ventilation et post-ventilation",
+          "pre_purge_remaining_10": "Préventilation – 10 s restantes",
+          "pre_purge_remaining_11": "Préventilation – 11 s restantes",
+          "pre_purge_remaining_12": "Préventilation – 12 s restantes",
+          "pre_purge_remaining_13": "Préventilation – 13 s restantes",
+          "pre_purge_remaining_14": "Préventilation – 14 s restantes",
+          "pre_purge_remaining_15": "Préventilation – 15 s restantes",
+          "pre_purge_remaining_16": "Préventilation – 16 s restantes",
+          "pre_purge_remaining_17": "Préventilation – 17 s restantes",
+          "pre_purge_remaining_18": "Préventilation – 18 s restantes",
+          "pre_purge_remaining_19": "Préventilation – 19 s restantes",
+          "pre_purge_remaining_20": "Préventilation – 20 s restantes",
+          "pre_purge_remaining_21": "Préventilation – 21 s restantes",
+          "pre_purge_remaining_22": "Préventilation – 22 s restantes",
+          "pre_purge_remaining_23": "Préventilation – 23 s restantes",
+          "pre_purge_remaining_24": "Préventilation – 24 s restantes",
+          "pre_purge_remaining_25": "Préventilation – 25 s restantes",
+          "pre_purge_remaining_26": "Préventilation – 26 s restantes",
+          "pre_purge_remaining_27": "Préventilation – 27 s restantes",
+          "pre_purge_remaining_28": "Préventilation – 28 s restantes",
+          "pre_purge_remaining_29": "Préventilation – 29 s restantes",
+          "pre_purge_remaining_30": "Préventilation – 30 s restantes",
+          "pre_purge_remaining_31": "Préventilation – 31 s restantes",
+          "pre_purge_remaining_32": "Préventilation – 32 s restantes",
+          "pre_purge_remaining_33": "Préventilation – 33 s restantes",
+          "pre_purge_remaining_34": "Préventilation – 34 s restantes",
+          "pre_purge_remaining_35": "Préventilation – 35 s restantes",
+          "pre_purge_remaining_36": "Préventilation – 36 s restantes",
+          "pre_purge_remaining_37": "Préventilation – 37 s restantes",
+          "pre_purge_remaining_38": "Préventilation – 38 s restantes",
+          "pre_purge_remaining_39": "Préventilation – 39 s restantes",
+          "pre_purge_remaining_40": "Préventilation – 40 s restantes",
+          "pre_purge_remaining_41": "Préventilation – 41 s restantes",
+          "pre_purge_remaining_42": "Préventilation – 42 s restantes",
+          "pre_purge_remaining_43": "Préventilation – 43 s restantes",
+          "pre_purge_remaining_44": "Préventilation – 44 s restantes",
+          "pre_purge_remaining_45": "Préventilation – 45 s restantes",
+          "pre_purge_remaining_46": "Préventilation – 46 s restantes",
+          "pre_purge_remaining_47": "Préventilation – 47 s restantes",
+          "pre_purge_remaining_48": "Préventilation – 48 s restantes",
+          "pre_purge_remaining_49": "Préventilation – 49 s restantes",
+          "pre_purge_remaining_50": "Préventilation – 50 s restantes",
+          "pre_purge_remaining_51": "Préventilation – 51 s restantes",
+          "pre_purge_remaining_52": "Préventilation – 52 s restantes",
+          "pre_purge_remaining_53": "Préventilation – 53 s restantes",
+          "pre_purge_remaining_54": "Préventilation – 54 s restantes",
+          "pre_purge_remaining_55": "Préventilation – 55 s restantes",
+          "pre_purge_remaining_56": "Préventilation – 56 s restantes",
+          "pre_purge_remaining_57": "Préventilation – 57 s restantes",
+          "pre_purge_remaining_58": "Préventilation – 58 s restantes",
+          "pre_purge_remaining_59": "Préventilation – 59 s restantes",
+          "pre_purge_remaining_60": "Préventilation – 60 s restantes",
+          "flame_formation_10": "Temps de formation de flamme 1,0 s",
+          "flame_formation_11": "Temps de formation de flamme 1,1 s",
+          "flame_formation_12": "Temps de formation de flamme 1,2 s",
+          "flame_formation_13": "Temps de formation de flamme 1,3 s",
+          "flame_formation_14": "Temps de formation de flamme 1,4 s",
+          "flame_formation_15": "Temps de formation de flamme 1,5 s",
+          "flame_formation_16": "Temps de formation de flamme 1,6 s",
+          "flame_formation_17": "Temps de formation de flamme 1,7 s",
+          "flame_formation_18": "Temps de formation de flamme 1,8 s",
+          "flame_formation_19": "Temps de formation de flamme 1,9 s",
+          "flame_formation_20": "Temps de formation de flamme 2,0 s",
+          "flame_formation_21": "Temps de formation de flamme 2,1 s",
+          "flame_formation_22": "Temps de formation de flamme 2,2 s",
+          "flame_formation_23": "Temps de formation de flamme 2,3 s",
+          "flame_formation_24": "Temps de formation de flamme 2,4 s",
+          "flame_formation_25": "Temps de formation de flamme 2,5 s",
+          "flame_formation_26": "Temps de formation de flamme 2,6 s",
+          "flame_formation_27": "Temps de formation de flamme 2,7 s",
+          "flame_formation_28": "Temps de formation de flamme 2,8 s",
+          "flame_formation_29": "Temps de formation de flamme 2,9 s",
+          "flame_formation_30": "Temps de formation de flamme 3,0 s",
+          "flame_formation_31": "Temps de formation de flamme 3,1 s",
+          "flame_formation_32": "Temps de formation de flamme 3,2 s",
+          "flame_formation_33": "Temps de formation de flamme 3,3 s",
+          "flame_formation_34": "Temps de formation de flamme 3,4 s",
+          "flame_formation_35": "Temps de formation de flamme 3,5 s",
+          "flame_formation_36": "Temps de formation de flamme 3,6 s",
+          "flame_formation_37": "Temps de formation de flamme 3,7 s",
+          "flame_formation_38": "Temps de formation de flamme 3,8 s",
+          "flame_formation_39": "Temps de formation de flamme 3,9 s",
+          "flame_formation_40": "Temps de formation de flamme 4,0 s",
+          "flame_formation_41": "Temps de formation de flamme 4,1 s",
+          "flame_formation_42": "Temps de formation de flamme 4,2 s",
+          "flame_formation_43": "Temps de formation de flamme 4,3 s",
+          "flame_formation_44": "Temps de formation de flamme 4,4 s",
+          "flame_formation_45": "Temps de formation de flamme 4,5 s",
+          "flame_formation_46": "Temps de formation de flamme 4,6 s",
+          "flame_formation_47": "Temps de formation de flamme 4,7 s",
+          "flame_formation_48": "Temps de formation de flamme 4,8 s",
+          "flame_formation_49": "Temps de formation de flamme 4,9 s",
+          "flame_formation_50": "Temps de formation de flamme 5,0 s",
+          "flame_formation_51": "Temps de formation de flamme 5,1 s",
+          "flame_formation_52": "Temps de formation de flamme 5,2 s",
+          "flame_formation_53": "Temps de formation de flamme 5,3 s",
+          "flame_formation_54": "Temps de formation de flamme 5,4 s",
+          "flame_formation_55": "Temps de formation de flamme 5,5 s",
+          "flame_formation_56": "Temps de formation de flamme 5,6 s",
+          "flame_formation_57": "Temps de formation de flamme 5,7 s",
+          "flame_formation_58": "Temps de formation de flamme 5,8 s",
+          "flame_formation_59": "Temps de formation de flamme 5,9 s",
+          "flame_formation_60": "Temps de formation de flamme 6,0 s"
+        }
+      },
+      "parameter_b0_m10_p466": {
+        "name": "Pompe",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p3101": {
+        "name": "Température de départ zone"
+      },
+      "parameter_b0_m10_p2": {
+        "name": "Demande de chaleur"
+      },
+      "parameter_b0_m10_p13": {
+        "name": "Température de départ"
+      },
+      "parameter_b0_m10_p118": {
+        "name": "Ballon tampon haut"
+      },
+      "parameter_b0_m10_p138": {
+        "name": "Taux de modulation"
+      },
+      "parameter_b0_m10_p1497": {
+        "name": "Vanne gaz 1",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p1498": {
+        "name": "Vanne gaz 2",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p2572": {
+        "name": "Température extérieure lissée"
+      },
+      "parameter_b0_m10_p3158": {
+        "name": "Nombre de démarrages du brûleur"
+      },
+      "parameter_b0_m10_p3159": {
+        "name": "Heures de fonctionnement du brûleur"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Puissance du brûleur"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Électrovanne 1",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Électrovanne 2",
+        "state": {
+          "off": "Arrêt",
+          "on": "Marche"
+        }
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Nombre de démarrages du brûleur"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Heures de fonctionnement du brûleur"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Compteur de fioul"
+      },
+      "parameter_b0_m10_p700": {
+        "name": "Temps écoulé depuis la dernière maintenance"
+      },
+      "parameter_b0_m10_p3794": {
+        "name": "Configuration de l'appareil (P10)"
+      },
+      "parameter_b0_m10_p376": {
+        "name": "Adresse de la chaudière (P12)"
+      },
+      "parameter_b0_m10_p3102": {
+        "name": "Niveau spécial chauffage (P18)"
+      },
+      "parameter_b0_m10_p3103": {
+        "name": "Correction de la sonde extérieure (P20)"
+      },
+      "parameter_b0_m10_p2560": {
+        "name": "Protection antigel de l'installation (P23)"
+      },
+      "parameter_b0_m10_p31": {
+        "name": "Consigne de départ min. (P30)"
+      },
+      "parameter_b0_m10_p39": {
+        "name": "Consigne de départ max. (P31)"
+      },
+      "parameter_b0_m10_p34": {
+        "name": "Différentiel de commutation départ (P32)"
+      },
+      "parameter_b0_m10_p323": {
+        "name": "Blocage de cycle du brûleur (P34)"
+      },
+      "parameter_b0_m10_p319": {
+        "name": "Puissance max. chauffage (P37)"
+      },
+      "parameter_b0_m10_p345": {
+        "name": "Puissance max. ECS (P38)"
+      },
+      "parameter_b0_m10_p4148": {
+        "name": "Puissance de chauffage max. (P37, non testé)"
+      },
+      "parameter_b0_m10_p384": {
+        "name": "Temps de charge ECS max. (P52)"
+      },
+      "parameter_b1_m12_p857": {
+        "name": "Configuration de la pompe",
+        "state": {
+          "stepped": "À paliers"
+        }
+      },
+      "parameter_b1_m12_p65019": {
+        "name": "Sortie pompe",
+        "state": {
+          "manual_off": "Arrêt manuel",
+          "manual_on": "Marche manuelle",
+          "automatic_off": "Arrêt automatique",
+          "automatic_on": "Marche automatique"
+        }
+      },
+      "parameter_b1_m6_p16": {
+        "name": "Sonde d'ambiance externe",
+        "state": {
+          "not_available": "Non disponible",
+          "external_room_sensor": "Sonde d'ambiance externe",
+          "internal_room_sensor": "Sonde d'ambiance intégrée",
+          "inside_boiler": "Dans la chaudière"
+        }
+      },
+      "parameter_b1_m6_p2419": {
+        "name": "Type de circuit de chauffage",
+        "state": {
+          "floor_warming": "Réchauffage de base du plancher",
+          "underfloor_heating": "Plancher chauffant",
+          "radiator_60": "Radiateurs 60 °C",
+          "radiator_75": "Radiateurs 75 °C",
+          "convector": "Convecteur",
+          "universal": "Universel"
+        }
+      },
+      "parameter_b1_m6_p321": {
+        "name": "Variante de régulation",
+        "state": {
+          "constant_flow": "Départ constant",
+          "weather_compensated": "Extérieur",
+          "weather_and_room_compensated": "Extérieur/ambiance",
+          "room_compensated": "Ambiance"
+        }
+      },
+      "parameter_b2_m12_p857": {
+        "name": "Configuration de la pompe",
+        "state": {
+          "stepped": "À paliers"
+        }
+      },
+      "parameter_b2_m12_p65019": {
+        "name": "Sortie pompe",
+        "state": {
+          "manual_off": "Arrêt manuel",
+          "manual_on": "Marche manuelle",
+          "automatic_off": "Arrêt automatique",
+          "automatic_on": "Marche automatique"
+        }
+      },
+      "parameter_b2_m6_p16": {
+        "name": "Sonde d'ambiance externe",
+        "state": {
+          "not_available": "Non disponible",
+          "external_room_sensor": "Sonde d'ambiance externe",
+          "internal_room_sensor": "Sonde d'ambiance intégrée",
+          "inside_boiler": "Dans la chaudière"
+        }
+      },
+      "parameter_b2_m6_p2419": {
+        "name": "Type de circuit de chauffage",
+        "state": {
+          "floor_warming": "Réchauffage de base du plancher",
+          "underfloor_heating": "Plancher chauffant",
+          "radiator_60": "Radiateurs 60 °C",
+          "radiator_75": "Radiateurs 75 °C",
+          "convector": "Convecteur",
+          "universal": "Universel"
+        }
+      },
+      "parameter_b2_m6_p321": {
+        "name": "Variante de régulation",
+        "state": {
+          "constant_flow": "Départ constant",
+          "weather_compensated": "Extérieur",
+          "weather_and_room_compensated": "Extérieur/ambiance",
+          "room_compensated": "Ambiance"
+        }
+      },
+      "parameter_b0_m6_p274": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "parameter_b1_m6_p274": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "hot_water_program": "Programme ECS",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "parameter_b2_m6_p274": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "hot_water_program": "Programme ECS",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "boiler_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc1_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc2_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc1_firmware_em": {
+        "name": "Firmware EM"
+      },
+      "hc2_firmware_em": {
+        "name": "Firmware EM"
+      },
+      "parameter_b1_m6_p2586": {
+        "name": "Température extérieure mixte"
+      },
+      "parameter_b1_m6_p17": {
+        "name": "Température ambiante"
+      },
+      "parameter_b1_m12_p15": {
+        "name": "Température de départ"
+      },
+      "parameter_b1_m6_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b1_m12_p1257": {
+        "name": "Température de circulation"
+      },
+      "parameter_b1_m6_p4": {
+        "name": "Température de consigne"
+      },
+      "parameter_b1_m6_p2": {
+        "name": "Température de consigne système"
+      },
+      "parameter_b2_m6_p2586": {
+        "name": "Température extérieure mixte"
+      },
+      "parameter_b2_m6_p17": {
+        "name": "Température ambiante"
+      },
+      "parameter_b2_m12_p15": {
+        "name": "Température de départ"
+      },
+      "parameter_b2_m6_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b2_m12_p1257": {
+        "name": "Température de circulation"
+      },
+      "parameter_b2_m6_p4": {
+        "name": "Température de consigne"
+      },
+      "parameter_b2_m6_p2": {
+        "name": "Température de consigne système"
+      },
+      "parameter_b1_m6_p5": {
+        "name": "Température ambiante normale"
+      },
+      "parameter_b1_m6_p8": {
+        "name": "Température ambiante réduite"
+      },
+      "parameter_b1_m6_p297": {
+        "name": "Consigne de départ normale"
+      },
+      "parameter_b1_m6_p298": {
+        "name": "Consigne de départ réduite"
+      },
+      "parameter_b1_m6_p270": {
+        "name": "Pente de la courbe de chauffe"
+      },
+      "parameter_b1_m6_p2580": {
+        "name": "Température ambiante antigel"
+      },
+      "parameter_b1_m6_p278": {
+        "name": "Commutation été/hiver"
+      },
+      "parameter_b1_m6_p19": {
+        "name": "Consigne ECS normale"
+      },
+      "parameter_b1_m6_p650": {
+        "name": "Consigne ECS réduite"
+      },
+      "parameter_b1_m6_p2418": {
+        "name": "Anticipation"
+      },
+      "parameter_b2_m6_p5": {
+        "name": "Température ambiante normale"
+      },
+      "parameter_b2_m6_p8": {
+        "name": "Température ambiante réduite"
+      },
+      "parameter_b2_m6_p297": {
+        "name": "Consigne de départ normale"
+      },
+      "parameter_b2_m6_p298": {
+        "name": "Consigne de départ réduite"
+      },
+      "parameter_b2_m6_p270": {
+        "name": "Pente de la courbe de chauffe"
+      },
+      "parameter_b2_m6_p2580": {
+        "name": "Température ambiante antigel"
+      },
+      "parameter_b2_m6_p278": {
+        "name": "Commutation été/hiver"
+      },
+      "parameter_b2_m6_p19": {
+        "name": "Consigne ECS normale"
+      },
+      "parameter_b2_m6_p650": {
+        "name": "Consigne ECS réduite"
+      },
+      "parameter_b2_m6_p2418": {
+        "name": "Anticipation"
+      },
+      "parameter_b1_m6_p306": {
+        "name": "Mode de fonctionnement réduit",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_operation": "Fonctionnement réduit"
+        }
+      },
+      "parameter_b1_m6_p702": {
+        "name": "Température limite hors-gel"
+      },
+      "parameter_b1_m6_p272": {
+        "name": "Optimisation au démarrage maximale"
+      },
+      "parameter_b1_m6_p2414": {
+        "name": "Optimisation au démarrage actuelle"
+      },
+      "parameter_b1_m6_p2588": {
+        "name": "Fonction thermostat d'ambiance",
+        "state": {
+          "off": "Arrêt",
+          "day_on": "Arrêt jour",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "parameter_b1_m12_p384": {
+        "name": "Temps de charge ECS max."
+      },
+      "parameter_b2_m6_p306": {
+        "name": "Mode de fonctionnement réduit",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_operation": "Fonctionnement réduit"
+        }
+      },
+      "parameter_b2_m6_p702": {
+        "name": "Température limite hors-gel"
+      },
+      "parameter_b2_m6_p272": {
+        "name": "Optimisation au démarrage maximale"
+      },
+      "parameter_b2_m6_p2414": {
+        "name": "Optimisation au démarrage actuelle"
+      },
+      "parameter_b2_m6_p2588": {
+        "name": "Fonction thermostat d'ambiance",
+        "state": {
+          "off": "Arrêt",
+          "day_on": "Arrêt jour",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "parameter_b2_m12_p384": {
+        "name": "Temps de charge ECS max."
+      },
+      "system_date": {
+        "name": "Date système"
+      },
+      "system_time": {
+        "name": "Heure système"
+      },
+      "hc1_holiday_start": {
+        "name": "Début des vacances"
+      },
+      "hc1_holiday_end": {
+        "name": "Fin des vacances"
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "Niveau de température vacances",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_temperature": "Température réduite"
+        }
+      },
+      "hc2_holiday_start": {
+        "name": "Début des vacances"
+      },
+      "hc2_holiday_end": {
+        "name": "Fin des vacances"
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "Niveau de température vacances",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_temperature": "Température réduite"
+        }
+      },
+      "daylight_saving_start": {
+        "name": "Début de l'heure d'été"
+      },
+      "daylight_saving_end": {
+        "name": "Fin de l'heure d'été"
+      }
+    },
+    "number": {
+      "parameter_b0_m10_p1": {
+        "name": "État"
+      },
+      "parameter_b0_m10_p12": {
+        "name": "Température extérieure"
+      },
+      "parameter_b0_m10_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b0_m10_p81": {
+        "name": "Flamme"
+      },
+      "parameter_b0_m10_p82": {
+        "name": "Chauffage"
+      },
+      "parameter_b0_m10_p83": {
+        "name": "Eau chaude sanitaire"
+      },
+      "parameter_b0_m10_p325": {
+        "name": "Température des fumées"
+      },
+      "parameter_b0_m10_p373": {
+        "name": "Phase de fonctionnement"
+      },
+      "parameter_b0_m10_p466": {
+        "name": "Pompe"
+      },
+      "parameter_b0_m10_p3101": {
+        "name": "Température de départ zone"
+      },
+      "parameter_b0_m10_p2": {
+        "name": "Demande de chaleur"
+      },
+      "parameter_b0_m10_p13": {
+        "name": "Température de départ"
+      },
+      "parameter_b0_m10_p118": {
+        "name": "Ballon tampon haut"
+      },
+      "parameter_b0_m10_p138": {
+        "name": "Taux de modulation"
+      },
+      "parameter_b0_m10_p1497": {
+        "name": "Vanne gaz 1"
+      },
+      "parameter_b0_m10_p1498": {
+        "name": "Vanne gaz 2"
+      },
+      "parameter_b0_m10_p2572": {
+        "name": "Température extérieure lissée"
+      },
+      "parameter_b0_m10_p3158": {
+        "name": "Nombre de démarrages du brûleur"
+      },
+      "parameter_b0_m10_p3159": {
+        "name": "Heures de fonctionnement du brûleur"
+      },
+      "parameter_b0_m10_p4176": {
+        "name": "Puissance du brûleur"
+      },
+      "wtc_ob_magnetic_valve_1": {
+        "name": "Électrovanne 1"
+      },
+      "wtc_ob_magnetic_valve_2": {
+        "name": "Électrovanne 2"
+      },
+      "parameter_b0_m10_p3196": {
+        "name": "Nombre de démarrages du brûleur"
+      },
+      "parameter_b0_m10_p3198": {
+        "name": "Heures de fonctionnement du brûleur"
+      },
+      "parameter_b0_m10_p3793": {
+        "name": "Compteur de fioul"
+      },
+      "parameter_b0_m10_p700": {
+        "name": "Temps écoulé depuis la dernière maintenance"
+      },
+      "parameter_b0_m10_p3794": {
+        "name": "Configuration de l'appareil (P10)"
+      },
+      "parameter_b0_m10_p376": {
+        "name": "Adresse de la chaudière (P12)"
+      },
+      "parameter_b0_m10_p3102": {
+        "name": "Niveau spécial chauffage (P18)"
+      },
+      "parameter_b0_m10_p3103": {
+        "name": "Correction de la sonde extérieure (P20)"
+      },
+      "parameter_b0_m10_p2560": {
+        "name": "Protection antigel de l'installation (P23)"
+      },
+      "parameter_b0_m10_p31": {
+        "name": "Consigne de départ min. (P30)"
+      },
+      "parameter_b0_m10_p39": {
+        "name": "Consigne de départ max. (P31)"
+      },
+      "parameter_b0_m10_p34": {
+        "name": "Différentiel de commutation départ (P32)"
+      },
+      "parameter_b0_m10_p323": {
+        "name": "Blocage de cycle du brûleur (P34)"
+      },
+      "parameter_b0_m10_p319": {
+        "name": "Puissance max. chauffage (P37)"
+      },
+      "parameter_b0_m10_p345": {
+        "name": "Puissance max. ECS (P38)"
+      },
+      "parameter_b0_m10_p4148": {
+        "name": "Puissance de chauffage max. (P37, non testé)"
+      },
+      "parameter_b0_m10_p384": {
+        "name": "Temps de charge ECS max. (P52)"
+      },
+      "parameter_b1_m12_p857": {
+        "name": "Configuration de la pompe"
+      },
+      "parameter_b1_m12_p65019": {
+        "name": "Sortie pompe"
+      },
+      "parameter_b1_m6_p16": {
+        "name": "Sonde d'ambiance externe"
+      },
+      "parameter_b1_m6_p2419": {
+        "name": "Type de circuit de chauffage"
+      },
+      "parameter_b1_m6_p321": {
+        "name": "Variante de régulation"
+      },
+      "parameter_b2_m12_p857": {
+        "name": "Configuration de la pompe"
+      },
+      "parameter_b2_m12_p65019": {
+        "name": "Sortie pompe"
+      },
+      "parameter_b2_m6_p16": {
+        "name": "Sonde d'ambiance externe"
+      },
+      "parameter_b2_m6_p2419": {
+        "name": "Type de circuit de chauffage"
+      },
+      "parameter_b2_m6_p321": {
+        "name": "Variante de régulation"
+      },
+      "parameter_b0_m6_p274": {
+        "name": "Mode de fonctionnement"
+      },
+      "parameter_b1_m6_p274": {
+        "name": "Mode de fonctionnement"
+      },
+      "parameter_b2_m6_p274": {
+        "name": "Mode de fonctionnement"
+      },
+      "boiler_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc1_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc2_firmware_fs": {
+        "name": "Firmware FS"
+      },
+      "hc1_firmware_em": {
+        "name": "Firmware EM"
+      },
+      "hc2_firmware_em": {
+        "name": "Firmware EM"
+      },
+      "parameter_b1_m6_p2586": {
+        "name": "Température extérieure mixte"
+      },
+      "parameter_b1_m6_p17": {
+        "name": "Température ambiante"
+      },
+      "parameter_b1_m12_p15": {
+        "name": "Température de départ"
+      },
+      "parameter_b1_m6_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b1_m12_p1257": {
+        "name": "Température de circulation"
+      },
+      "parameter_b1_m6_p4": {
+        "name": "Température de consigne"
+      },
+      "parameter_b1_m6_p2": {
+        "name": "Température de consigne système"
+      },
+      "parameter_b2_m6_p2586": {
+        "name": "Température extérieure mixte"
+      },
+      "parameter_b2_m6_p17": {
+        "name": "Température ambiante"
+      },
+      "parameter_b2_m12_p15": {
+        "name": "Température de départ"
+      },
+      "parameter_b2_m6_p14": {
+        "name": "Température ECS"
+      },
+      "parameter_b2_m12_p1257": {
+        "name": "Température de circulation"
+      },
+      "parameter_b2_m6_p4": {
+        "name": "Température de consigne"
+      },
+      "parameter_b2_m6_p2": {
+        "name": "Température de consigne système"
+      },
+      "parameter_b1_m6_p5": {
+        "name": "Température ambiante normale"
+      },
+      "parameter_b1_m6_p8": {
+        "name": "Température ambiante réduite"
+      },
+      "parameter_b1_m6_p297": {
+        "name": "Consigne de départ normale"
+      },
+      "parameter_b1_m6_p298": {
+        "name": "Consigne de départ réduite"
+      },
+      "parameter_b1_m6_p270": {
+        "name": "Pente de la courbe de chauffe"
+      },
+      "parameter_b1_m6_p2580": {
+        "name": "Température ambiante antigel"
+      },
+      "parameter_b1_m6_p278": {
+        "name": "Commutation été/hiver"
+      },
+      "parameter_b1_m6_p19": {
+        "name": "Consigne ECS normale"
+      },
+      "parameter_b1_m6_p650": {
+        "name": "Consigne ECS réduite"
+      },
+      "parameter_b1_m6_p2418": {
+        "name": "Anticipation"
+      },
+      "parameter_b2_m6_p5": {
+        "name": "Température ambiante normale"
+      },
+      "parameter_b2_m6_p8": {
+        "name": "Température ambiante réduite"
+      },
+      "parameter_b2_m6_p297": {
+        "name": "Consigne de départ normale"
+      },
+      "parameter_b2_m6_p298": {
+        "name": "Consigne de départ réduite"
+      },
+      "parameter_b2_m6_p270": {
+        "name": "Pente de la courbe de chauffe"
+      },
+      "parameter_b2_m6_p2580": {
+        "name": "Température ambiante antigel"
+      },
+      "parameter_b2_m6_p278": {
+        "name": "Commutation été/hiver"
+      },
+      "parameter_b2_m6_p19": {
+        "name": "Consigne ECS normale"
+      },
+      "parameter_b2_m6_p650": {
+        "name": "Consigne ECS réduite"
+      },
+      "parameter_b2_m6_p2418": {
+        "name": "Anticipation"
+      },
+      "parameter_b1_m6_p306": {
+        "name": "Mode de fonctionnement réduit"
+      },
+      "parameter_b1_m6_p702": {
+        "name": "Température limite hors-gel"
+      },
+      "parameter_b1_m6_p272": {
+        "name": "Optimisation au démarrage maximale"
+      },
+      "parameter_b1_m6_p2414": {
+        "name": "Optimisation au démarrage actuelle"
+      },
+      "parameter_b1_m6_p2588": {
+        "name": "Fonction thermostat d'ambiance"
+      },
+      "parameter_b1_m12_p384": {
+        "name": "Temps de charge ECS max."
+      },
+      "parameter_b2_m6_p306": {
+        "name": "Mode de fonctionnement réduit"
+      },
+      "parameter_b2_m6_p702": {
+        "name": "Température limite hors-gel"
+      },
+      "parameter_b2_m6_p272": {
+        "name": "Optimisation au démarrage maximale"
+      },
+      "parameter_b2_m6_p2414": {
+        "name": "Optimisation au démarrage actuelle"
+      },
+      "parameter_b2_m6_p2588": {
+        "name": "Fonction thermostat d'ambiance"
+      },
+      "parameter_b2_m12_p384": {
+        "name": "Temps de charge ECS max."
+      },
+      "system_date": {
+        "name": "Date système"
+      },
+      "system_time": {
+        "name": "Heure système"
+      },
+      "hc1_holiday_start": {
+        "name": "Début des vacances"
+      },
+      "hc1_holiday_end": {
+        "name": "Fin des vacances"
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "Niveau de température vacances"
+      },
+      "hc2_holiday_start": {
+        "name": "Début des vacances"
+      },
+      "hc2_holiday_end": {
+        "name": "Fin des vacances"
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "Niveau de température vacances"
+      },
+      "daylight_saving_start": {
+        "name": "Début de l'heure d'été"
+      },
+      "daylight_saving_end": {
+        "name": "Fin de l'heure d'été"
+      }
+    },
+    "select": {
+      "hc1_type": {
+        "name": "Type de circuit de chauffage",
+        "state": {
+          "floor_warming": "Réchauffage de base du plancher",
+          "underfloor_heating": "Plancher chauffant",
+          "radiator_60": "Radiateurs 60 °C",
+          "radiator_75": "Radiateurs 75 °C",
+          "convector": "Convecteur",
+          "universal": "Universel"
+        }
+      },
+      "hc2_type": {
+        "name": "Type de circuit de chauffage",
+        "state": {
+          "floor_warming": "Réchauffage de base du plancher",
+          "underfloor_heating": "Plancher chauffant",
+          "radiator_60": "Radiateurs 60 °C",
+          "radiator_75": "Radiateurs 75 °C",
+          "convector": "Convecteur",
+          "universal": "Universel"
+        }
+      },
+      "hc1_control_variant": {
+        "name": "Variante de régulation",
+        "state": {
+          "constant_flow": "Départ constant",
+          "weather_compensated": "Extérieur",
+          "weather_and_room_compensated": "Extérieur/ambiance",
+          "room_compensated": "Ambiance"
+        }
+      },
+      "hc2_control_variant": {
+        "name": "Variante de régulation",
+        "state": {
+          "constant_flow": "Départ constant",
+          "weather_compensated": "Extérieur",
+          "weather_and_room_compensated": "Extérieur/ambiance",
+          "room_compensated": "Ambiance"
+        }
+      },
+      "hc1_external_room_sensor": {
+        "name": "Sonde d'ambiance externe",
+        "state": {
+          "not_available": "Non disponible",
+          "external_room_sensor": "Sonde d'ambiance externe",
+          "internal_room_sensor": "Sonde d'ambiance intégrée",
+          "inside_boiler": "Dans la chaudière"
+        }
+      },
+      "hc2_external_room_sensor": {
+        "name": "Sonde d'ambiance externe",
+        "state": {
+          "not_available": "Non disponible",
+          "external_room_sensor": "Sonde d'ambiance externe",
+          "internal_room_sensor": "Sonde d'ambiance intégrée",
+          "inside_boiler": "Dans la chaudière"
+        }
+      },
+      "wtc_hc1_operating_mode": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "hc1_operating_mode": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "hot_water_program": "Programme ECS",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "hc2_operating_mode": {
+        "name": "Mode de fonctionnement",
+        "state": {
+          "program_1": "Programme 1",
+          "program_2": "Programme 2",
+          "program_3": "Programme 3",
+          "hot_water_program": "Programme ECS",
+          "standby": "Standby",
+          "summer": "Été",
+          "reduced": "Réduit",
+          "normal": "Normal",
+          "control_center": "Commande centralisée"
+        }
+      },
+      "hc1_reduced_mode": {
+        "name": "Mode réduit",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_operation": "Fonctionnement réduit"
+        }
+      },
+      "hc2_reduced_mode": {
+        "name": "Mode réduit",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_operation": "Fonctionnement réduit"
+        }
+      },
+      "hc1_room_thermostat": {
+        "name": "Thermostat d'ambiance",
+        "state": {
+          "off": "Arrêt",
+          "day_on": "Arrêt jour",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "hc2_room_thermostat": {
+        "name": "Thermostat d'ambiance",
+        "state": {
+          "off": "Arrêt",
+          "day_on": "Arrêt jour",
+          "one_kelvin": "1 K",
+          "two_kelvin": "2 K",
+          "three_kelvin": "3 K"
+        }
+      },
+      "hc1_holiday_temperature_level": {
+        "name": "Niveau de température vacances",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_temperature": "Température réduite"
+        }
+      },
+      "hc2_holiday_temperature_level": {
+        "name": "Niveau de température vacances",
+        "state": {
+          "frost_protection": "Hors-gel",
+          "reduced_temperature": "Température réduite"
+        }
+      }
+    },
+    "calendar": {
+      "wtc_hk1_active_heating_program": {
+        "name": "Programme de chauffage actif WTC-CC1 / FS1"
+      },
+      "hc1_active_heating_program": {
+        "name": "Programme de chauffage actif CC2 radiateurs"
+      },
+      "hc2_active_heating_program": {
+        "name": "Programme de chauffage actif CC3 plancher chauffant"
+      },
+      "hot_water_program": {
+        "name": "Programme horaire ECS"
+      },
+      "circulation_program": {
+        "name": "Programme horaire circulation"
+      }
+    },
+    "update": {
+      "wcm_com_firmware": {
+        "name": "Firmware WCM-COM"
+      }
+    }
+  },
+  "exceptions": {
+    "read_only": {
+      "message": "L'intégration WCM-COM est en mode lecture seule."
+    },
+    "invalid_heating_circuit": {
+      "message": "Circuit de chauffage {value} invalide ; bus 0, 1 ou 2 attendu."
+    },
+    "invalid_holiday_target": {
+      "message": "Cible de vacances {value} invalide ; start ou end attendu."
+    },
+    "no_loaded_entry": {
+      "message": "Aucune entrée de configuration WCM-COM chargée n'a été trouvée."
+    },
+    "unknown_entry": {
+      "message": "Entrée de configuration inconnue ou non chargée : {entry_id}."
+    },
+    "entry_required": {
+      "message": "config_entry_id est requis lorsque plusieurs appareils WCM-COM sont chargés."
+    },
+    "invalid_date": {
+      "message": "Date « {value} » invalide ; format AAAA-MM-JJ attendu."
+    },
+    "year_out_of_range": {
+      "message": "L'année {value} est hors de la plage prise en charge 2000–2099."
+    },
+    "incomplete_time_window": {
+      "message": "Le créneau {slot} nécessite un début et une fin."
+    },
+    "invalid_time_program": {
+      "message": "Programme horaire invalide : {reason}"
+    }
+  },
+  "services": {
+    "set_holiday_date": {
+      "name": "Régler la date de vacances",
+      "description": "Règle la date de début ou de fin des vacances pour WTC-CC1/FS1, CC2 radiateurs/FS2 ou CC3 plancher chauffant/FS3.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Appareil WCM-COM"
+        },
+        "heating_circuit": {
+          "name": "Circuit de chauffage"
+        },
+        "target": {
+          "name": "Cible"
+        },
+        "date": {
+          "name": "Date"
+        }
+      }
+    },
+    "set_time_program_day": {
+      "name": "Régler un jour du programme horaire",
+      "description": "Remplace et vérifie tous les créneaux d'un jour du programme.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Appareil WCM-COM"
+        },
+        "heating_circuit": {
+          "name": "Circuit de chauffage"
+        },
+        "program": {
+          "name": "Programme"
+        },
+        "day": {
+          "name": "Jour de la semaine"
+        },
+        "start_1": {
+          "name": "Début du créneau 1"
+        },
+        "end_1": {
+          "name": "Fin du créneau 1"
+        },
+        "start_2": {
+          "name": "Début du créneau 2"
+        },
+        "end_2": {
+          "name": "Fin du créneau 2"
+        },
+        "start_3": {
+          "name": "Début du créneau 3"
+        },
+        "end_3": {
+          "name": "Fin du créneau 3"
+        }
+      }
+    },
+    "copy_time_program_day": {
+      "name": "Copier un jour du programme horaire",
+      "description": "Copie un jour source vers des jours cibles.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Appareil WCM-COM"
+        },
+        "source_heating_circuit": {
+          "name": "Circuit de chauffage source"
+        },
+        "source_program": {
+          "name": "Programme source"
+        },
+        "source_day": {
+          "name": "Jour source"
+        },
+        "target_heating_circuit": {
+          "name": "Circuit de chauffage cible"
+        },
+        "target_program": {
+          "name": "Programme cible"
+        },
+        "target_days": {
+          "name": "Jours cibles"
+        }
+      }
+    },
+    "clear_time_program_days": {
+      "name": "Effacer des jours du programme horaire",
+      "description": "Désactive tous les créneaux des jours sélectionnés.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Appareil WCM-COM"
+        },
+        "heating_circuit": {
+          "name": "Circuit de chauffage"
+        },
+        "program": {
+          "name": "Programme"
+        },
+        "days": {
+          "name": "Jours de la semaine"
+        }
       }
     }
   }
