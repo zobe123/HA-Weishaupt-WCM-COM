@@ -4,6 +4,22 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [Unreleased]
+
+### Fixed
+
+- Rename the boiler "Boiler temperature" sensor to "Flue-gas temperature".
+  Parameter 325 reports the flue-gas temperature (WebUI process value I31),
+  not the boiler or flow temperature. Its internal name and unique ID change
+  from `Kesseltemperatur` to `Abgastemperatur`; the existing entity is
+  migrated on startup, so its entity ID, history and settings are kept.
+
+### Added
+
+- French name for the flue-gas temperature sensor. Other entities stay in
+  English for French-language installations until a full French translation
+  is available.
+
 ## [1.5.7]
 
 ### Changed

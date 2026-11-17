@@ -101,6 +101,39 @@ class LocalizationContractTest(unittest.TestCase):
                             definition["name"].startswith(prefixes[language])
                         )
 
+    def test_parameter_325_is_named_flue_gas_temperature(self) -> None:
+        by_name = {parameter["name"]: parameter for parameter in const.PARAMETERS}
+        parameter = by_name["Abgastemperatur"]
+        self.assertEqual(parameter["id"], 325)
+        key = localization.parameter_translation_key(parameter)
+        french = json.loads(
+            (COMPONENT / "translations" / "fr.json").read_text(encoding="utf-8")
+        )
+        catalogs = {**self.catalogs, "fr": french}
+        expected = {
+            "de": "Abgastemperatur",
+            "en": "Flue-gas temperature",
+            "fr": "Température des fumées",
+        }
+        for language, name in expected.items():
+            for platform in ("sensor", "number"):
+                with self.subTest(language=language, platform=platform):
+                    self.assertEqual(
+                        catalogs[language]["entity"][platform][key]["name"],
+                        name,
+                    )
+
+    def test_partial_catalogs_only_use_english_keys(self) -> None:
+        # Home Assistant falls back to English for keys a catalog omits, so a
+        # partial catalog is valid as long as it introduces no unknown keys.
+        english = leaf_paths(self.catalogs["en"])
+        for path in sorted((COMPONENT / "translations").glob("*.json")):
+            if path.stem in self.catalogs:
+                continue
+            catalog = json.loads(path.read_text(encoding="utf-8"))
+            with self.subTest(language=path.stem):
+                self.assertLessEqual(leaf_paths(catalog), english)
+
     def test_every_public_parameter_has_sensor_and_number_name(self) -> None:
         for parameter in const.PARAMETERS:
             if parameter.get("internal"):
@@ -171,7 +204,7 @@ class LocalizationContractTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            device_model.device_descriptor("Kesseltemperatur"),
+            device_model.device_descriptor("Abgastemperatur"),
             (
                 "weishaupt_kessel",
                 "Therme / Kessel",

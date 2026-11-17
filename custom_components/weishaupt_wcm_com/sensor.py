@@ -241,7 +241,7 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
             self._attr_icon = "mdi:radiator"
         elif self._sensor_name == "Warmwasser":
             self._attr_icon = "mdi:water-thermometer"
-        elif self._sensor_name == "Kesseltemperatur":
+        elif self._sensor_name == "Abgastemperatur":
             self._attr_icon = "mdi:thermometer"
         elif self._sensor_name == "Betriebsphase":
             self._attr_icon = "mdi:cog-play"
