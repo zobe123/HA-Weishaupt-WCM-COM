@@ -21,7 +21,7 @@ class ConfigContractTest(unittest.TestCase):
 
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertTrue(manifest["single_config_entry"])
-        self.assertEqual(manifest["version"], "1.5.7")
+        self.assertEqual(manifest["version"], "1.5.8")
         self.assertEqual(hacs["homeassistant"], "2024.7.0")
         self.assertTrue(hacs["zip_release"])
         self.assertEqual(hacs["filename"], "weishaupt_wcm_com.zip")

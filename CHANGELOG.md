@@ -4,7 +4,7 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [Unreleased]
+## [1.5.8]
 
 ### Fixed
 
@@ -24,6 +24,11 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 - French translation of all entity names and states, the configuration and
   options dialogs, services and error messages. Entity help texts remain
   German and English.
+
+### Thanks
+
+- Thanks to @fdnhkj for the detailed WCM-FS device evidence, the safe entity
+  migration and the complete French translation based on Weishaupt manuals.
 
 ## [1.5.7]
 
