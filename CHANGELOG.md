@@ -4,7 +4,7 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
-## [Unreleased]
+## [1.5.6]
 
 ### Fixed
 
@@ -15,6 +15,11 @@ bullet points, and no raw commit list. Before creating a version tag, replace
   from failing to load with `code_10` when the function is not used. Both
   no-value markers reported by WTC FS1 firmware (10 and 32768) are now
   recognized.
+
+### Thanks
+
+- Thanks to @fdnhkj for the detailed device evidence, root-cause analysis and
+  regression tests for both fixes.
 
 ## [1.5.5]
 
