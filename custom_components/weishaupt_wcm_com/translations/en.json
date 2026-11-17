@@ -164,7 +164,7 @@
         }
       },
       "parameter_b0_m10_p325": {
-        "name": "Boiler temperature"
+        "name": "Flue-gas temperature"
       },
       "parameter_b0_m10_p373": {
         "name": "Operation phase",
@@ -753,7 +753,7 @@
         "name": "Hot water"
       },
       "parameter_b0_m10_p325": {
-        "name": "Boiler temperature"
+        "name": "Flue-gas temperature"
       },
       "parameter_b0_m10_p373": {
         "name": "Operation phase"

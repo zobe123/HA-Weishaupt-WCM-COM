@@ -254,6 +254,30 @@ def _remove_obsolete_entities(
                 registry.async_remove(entity_id)
 
 
+# Parameters renamed after release.  The registry entry keeps its entity ID,
+# so history, statistics and automations survive the new unique ID.
+RENAMED_ENTITY_UNIQUE_IDS: dict[str, dict[str, str]] = {
+    # 325 reports the flue-gas temperature, not the boiler temperature.
+    "sensor": {"weishaupt_kesseltemperatur": "weishaupt_abgastemperatur"},
+}
+
+
+def _migrate_renamed_unique_ids(hass: HomeAssistant) -> None:
+    """Move registry entries of renamed parameters to their new unique ID."""
+
+    registry = er.async_get(hass)
+    for platform, renames in RENAMED_ENTITY_UNIQUE_IDS.items():
+        for old_unique_id, new_unique_id in renames.items():
+            entity_id = registry.async_get_entity_id(platform, DOMAIN, old_unique_id)
+            if entity_id is None:
+                continue
+            if registry.async_get_entity_id(platform, DOMAIN, new_unique_id):
+                # Both exist (e.g. after a downgrade and upgrade): keep the
+                # current entity and leave the old one for the user to remove.
+                continue
+            registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
 def _remove_disabled_firmware_update_entity(hass: HomeAssistant) -> None:
     """Remove the optional firmware update entity when its check is disabled."""
 
@@ -407,6 +431,10 @@ def _register_entity_registry_reload_listener(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Weishaupt WCM-COM from a config entry."""
+
+    # Before any registry-based filtering, so disabled renamed entities stay
+    # disabled and are still excluded from polling.
+    _migrate_renamed_unique_ids(hass)
 
     host: str | None = entry.data.get(CONF_HOST)
     username: str | None = entry.data.get(CONF_USERNAME)

@@ -43,7 +43,7 @@ _EXACT_HELP: dict[str, HelpDefinition] = {
     "Flamme": _help("Meldet, ob der Brenner eine Flamme erkannt hat.", "Indicates whether the burner has detected a flame."),
     "Heizung": _help("Meldet eine aktive Wärmeerzeugung für den Heizbetrieb.", "Indicates active heat generation for space heating."),
     "Warmwasser": _help("Meldet eine aktive Warmwasserbereitung.", "Indicates active domestic-hot-water heating."),
-    "Kesseltemperatur": _help("Aktuelle Temperatur im Wärmeerzeuger.", "Current heat-generator temperature."),
+    "Abgastemperatur": _help("Abgastemperatur des Wärmeerzeugers (WebUI-Prozesswert I31).", "Flue-gas temperature of the heat generator (WebUI process value I31)."),
     "Betriebsphase": _help("Aktuelle Ablaufphase des Brenners; zeitabhängige Zwischenwerte werden kontextbezogen dargestellt.", "Current burner sequence phase; time-dependent intermediate values are displayed in context."),
     "Pumpe": _help("Betriebszustand der internen Umwälzpumpe.", "Operating state of the internal circulation pump."),
     "Vorlauftemperatur Zone": _help("Aktuelle Vorlauftemperatur der vom WTC versorgten Zone.", "Current flow temperature of the zone supplied by the WTC."),

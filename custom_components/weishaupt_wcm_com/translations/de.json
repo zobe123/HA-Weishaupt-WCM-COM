@@ -164,7 +164,7 @@
         }
       },
       "parameter_b0_m10_p325": {
-        "name": "Kesseltemperatur"
+        "name": "Abgastemperatur"
       },
       "parameter_b0_m10_p373": {
         "name": "Betriebsphase",
@@ -753,7 +753,7 @@
         "name": "Warmwasser"
       },
       "parameter_b0_m10_p325": {
-        "name": "Kesseltemperatur"
+        "name": "Abgastemperatur"
       },
       "parameter_b0_m10_p373": {
         "name": "Betriebsphase"

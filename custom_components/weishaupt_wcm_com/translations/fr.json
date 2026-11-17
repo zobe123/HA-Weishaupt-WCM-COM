@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "number": {
+      "parameter_b0_m10_p325": {
+        "name": "Température des fumées"
+      }
+    },
+    "sensor": {
+      "parameter_b0_m10_p325": {
+        "name": "Température des fumées"
+      }
+    }
+  }
+}
