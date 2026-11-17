@@ -56,14 +56,16 @@ class LocalizationContractTest(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
-            for language in ("de", "en")
+            for language in ("de", "en", "fr")
         }
 
     def test_catalogs_have_identical_leaf_keys(self) -> None:
-        self.assertEqual(
-            leaf_paths(self.catalogs["de"]),
-            leaf_paths(self.catalogs["en"]),
-        )
+        for language in ("de", "fr"):
+            with self.subTest(language=language):
+                self.assertEqual(
+                    leaf_paths(self.catalogs[language]),
+                    leaf_paths(self.catalogs["en"]),
+                )
 
     def test_hot_water_calendars_have_unambiguous_names(self) -> None:
         self.assertEqual(
@@ -73,6 +75,10 @@ class LocalizationContractTest(unittest.TestCase):
         self.assertEqual(
             self.catalogs["en"]["entity"]["calendar"]["hot_water_program"]["name"],
             "Hot-water schedule",
+        )
+        self.assertEqual(
+            self.catalogs["fr"]["entity"]["calendar"]["hot_water_program"]["name"],
+            "Programme horaire ECS",
         )
 
     def test_missing_fs_hot_water_measurements_are_conditional(self) -> None:
@@ -88,6 +94,7 @@ class LocalizationContractTest(unittest.TestCase):
         prefixes = {
             "de": ("WTC-HK1 ", "HK2 Radiatoren ", "HK3 FBH "),
             "en": ("WTC-HC1 ", "HC2 radiators ", "HC3 underfloor heating "),
+            "fr": ("WTC-CC1 ", "CC2 radiateurs ", "CC3 plancher chauffant "),
         }
         for language, catalog in self.catalogs.items():
             for platform in ("sensor", "number", "select"):
@@ -106,10 +113,6 @@ class LocalizationContractTest(unittest.TestCase):
         parameter = by_name["Abgastemperatur"]
         self.assertEqual(parameter["id"], 325)
         key = localization.parameter_translation_key(parameter)
-        french = json.loads(
-            (COMPONENT / "translations" / "fr.json").read_text(encoding="utf-8")
-        )
-        catalogs = {**self.catalogs, "fr": french}
         expected = {
             "de": "Abgastemperatur",
             "en": "Flue-gas temperature",
@@ -119,7 +122,7 @@ class LocalizationContractTest(unittest.TestCase):
             for platform in ("sensor", "number"):
                 with self.subTest(language=language, platform=platform):
                     self.assertEqual(
-                        catalogs[language]["entity"][platform][key]["name"],
+                        self.catalogs[language]["entity"][platform][key]["name"],
                         name,
                     )
 
