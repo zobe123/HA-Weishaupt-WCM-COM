@@ -104,6 +104,40 @@ class ApiTransportTest(unittest.TestCase):
 
         self.assertNotIn("Ölzähler", result)
 
+    def test_wtc_g_direct_counters_survive_wtc_ob_combination(self) -> None:
+        result = {
+            "Schaltspielzahl Brenner": 408,
+            "Betriebsstunden Brenner": 253,
+        }
+
+        api_module.combine_wtc_ob_counters(result)
+
+        self.assertEqual(result["Schaltspielzahl Brenner"], 408)
+        self.assertEqual(result["Betriebsstunden Brenner"], 253)
+        self.assertNotIn("Ölzähler", result)
+
+    def test_wtc_g_burner_counters_are_read_from_device(self) -> None:
+        parameters = [
+            {"id": 3158, "name": "Schaltspielzahl Brenner", "type": "value_1000"},
+            {"id": 3159, "name": "Betriebsstunden Brenner", "type": "hours_100"},
+            {"id": 700, "name": "Zeit seit letzter Wartung", "type": "value"},
+        ]
+        response = json_response(
+            [
+                [10, 0, 1, 3158, 0, 0, 152, 1],
+                [10, 0, 1, 3159, 0, 0, 253, 0],
+                [10, 0, 1, 700, 0, 0, 49, 3],
+            ]
+        )
+        with patch.object(api_module.requests, "post", return_value=response):
+            data = api_module.WeishauptAPI(
+                "wcm.test", parameters=parameters
+            ).get_data()
+
+        self.assertEqual(data["Schaltspielzahl Brenner"], 408)
+        self.assertEqual(data["Betriebsstunden Brenner"], 253)
+        self.assertEqual(data["Zeit seit letzter Wartung"], 817)
+
     def test_p18_and_p20_are_read_without_tenths_scaling(self) -> None:
         parameters = [
             {"id": 3102, "name": "P18", "type": "integer_temperature"},
