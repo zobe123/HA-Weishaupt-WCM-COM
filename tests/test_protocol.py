@@ -296,7 +296,7 @@ class ProtocolTest(unittest.TestCase):
         )
         self.assertEqual(
             parameters["WTC HK1 Expert Raumthermostat"]["no_value"],
-            [10, 32768],
+            32768,
         )
         for circuit in (1, 2):
             self.assertEqual(

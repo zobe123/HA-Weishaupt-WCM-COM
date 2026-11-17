@@ -131,6 +131,27 @@ class LocalizationContractTest(unittest.TestCase):
                 with self.subTest(language=language, select=translation_key):
                     self.assertTrue(possible <= states.keys())
 
+    def test_room_thermostat_tenths_values_map_to_enum_options(self) -> None:
+        options = localization.SELECT_OPTION_KEYS["room_thermostat"]
+        expected = {
+            0: "off",
+            1: "day_on",
+            2: "one_kelvin",
+            4: "three_kelvin",
+            10: "one_kelvin",
+            20: "two_kelvin",
+            30: "three_kelvin",
+            15: None,
+        }
+        for raw, option in expected.items():
+            with self.subTest(raw=raw):
+                self.assertEqual(
+                    options.get(localization.room_thermostat_code(raw)), option
+                )
+        self.assertTrue(localization.room_thermostat_uses_tenths(15))
+        self.assertFalse(localization.room_thermostat_uses_tenths(4))
+        self.assertFalse(localization.room_thermostat_uses_tenths(None))
+
     def test_entity_platforms_do_not_set_hard_coded_names(self) -> None:
         for filename in ("sensor.py", "number.py", "select.py", "calendar.py"):
             source = (COMPONENT / filename).read_text(encoding="utf-8")
