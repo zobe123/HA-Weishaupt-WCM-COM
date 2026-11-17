@@ -101,6 +101,20 @@ class LocalizationContractTest(unittest.TestCase):
                             definition["name"].startswith(prefixes[language])
                         )
 
+    def test_parameter_325_is_named_flue_gas_temperature(self) -> None:
+        by_name = {parameter["name"]: parameter for parameter in const.PARAMETERS}
+        parameter = by_name["Abgastemperatur"]
+        self.assertEqual(parameter["id"], 325)
+        key = localization.parameter_translation_key(parameter)
+        expected = {"de": "Abgastemperatur", "en": "Flue-gas temperature"}
+        for language, name in expected.items():
+            for platform in ("sensor", "number"):
+                with self.subTest(language=language, platform=platform):
+                    self.assertEqual(
+                        self.catalogs[language]["entity"][platform][key]["name"],
+                        name,
+                    )
+
     def test_every_public_parameter_has_sensor_and_number_name(self) -> None:
         for parameter in const.PARAMETERS:
             if parameter.get("internal"):
@@ -171,7 +185,7 @@ class LocalizationContractTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            device_model.device_descriptor("Kesseltemperatur"),
+            device_model.device_descriptor("Abgastemperatur"),
             (
                 "weishaupt_kessel",
                 "Therme / Kessel",
