@@ -496,7 +496,15 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(data["WTC HK1 Config Ext Room Sensor"], 4)
         self.assertNotIn("WTC HK1 Expert Raumthermostat", data)
 
-    def test_wtc_hk1_room_thermostat_accepts_every_no_value_marker(self) -> None:
+    def test_no_value_accepts_a_single_marker_or_a_list(self) -> None:
+        self.assertTrue(api_module.is_no_value({"no_value": 10}, 10))
+        self.assertFalse(api_module.is_no_value({"no_value": 10}, 20))
+        self.assertTrue(api_module.is_no_value({"no_value": [0, 32768]}, 32768))
+        self.assertFalse(api_module.is_no_value({"no_value": [0, 32768]}, 10))
+        self.assertFalse(api_module.is_no_value({}, 0))
+
+    def test_wtc_hk1_room_thermostat_keeps_tenths_kelvin_value(self) -> None:
+        # FS 327.26 reports P505 = 1.0 K as raw 10; only 32768 means no value.
         parameters = [
             {
                 "id": 2588,
@@ -504,12 +512,12 @@ class ApiTransportTest(unittest.TestCase):
                 "type": "value",
                 "bus": 0,
                 "modultyp": 6,
-                "no_value": [10, 32768],
+                "no_value": 32768,
             },
             {"id": 1, "name": "Status", "type": "value"},
         ]
         for low, high, expected in (
-            (10, 0, None),
+            (10, 0, 10),
             (0, 128, None),
             (2, 0, 2),
         ):

@@ -40,6 +40,7 @@ from .localization import (
     error_code_key,
     operation_phase_key,
     parameter_translation_key,
+    room_thermostat_code,
 )
 from .device_model import (
     device_info,
@@ -509,8 +510,10 @@ class WeishauptSensor(CoordinatorEntity, WeishauptBaseEntity, SensorEntity):
                 "HK1 Expert Raumthermostat",
                 "HK2 Expert Raumthermostat",
             ):
+                # Unmapped differentials (e.g. 15 = 1.5 K) are unknown
+                # rather than an invalid enum state.
                 return SELECT_OPTION_KEYS["room_thermostat"].get(
-                    value, f"code_{value}"
+                    room_thermostat_code(value)
                 )
 
             # Virtuelle, human readable Sensoren (Date/Time/Holiday/DST)

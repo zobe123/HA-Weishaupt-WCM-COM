@@ -378,6 +378,45 @@ class SelectPlatformTest(unittest.TestCase):
 
         api.write_parameter.assert_called_once_with(317, 1, 6, 1)
 
+    def test_room_thermostat_reads_and_writes_the_reported_encoding(self) -> None:
+        async def run_executor(function, *args):
+            return function(*args)
+
+        # (raw value reported by the device, expected option, option to
+        # write, expected wire value).  FS 327.26 reports tenths of a kelvin
+        # (10 = 1.0 K); other firmware uses the WebUI option codes 0-4.
+        cases = (
+            (10, "one_kelvin", "two_kelvin", 20),
+            (20, "two_kelvin", "three_kelvin", 30),
+            (30, "three_kelvin", "one_kelvin", 10),
+            (10, "one_kelvin", "off", 0),
+            (2, "one_kelvin", "three_kelvin", 4),
+            (0, "off", "one_kelvin", 2),
+            (15, None, "two_kelvin", 20),
+        )
+        for raw, current, option, wire_value in cases:
+            with self.subTest(raw=raw, option=option):
+                coordinator = Mock(data={"WTC HK1 Expert Raumthermostat": raw})
+                coordinator.async_request_refresh = AsyncMock()
+                api = Mock()
+                entity = select_module.WeishauptHKConfigSelect(
+                    coordinator,
+                    api,
+                    "WTC HK1 Expert Raumthermostat",
+                    "wtc_hk1_expert_room_thermostat",
+                    select_module.HK_ROOM_THERMOSTAT_MAP,
+                    parameter_id=2588,
+                    bus=0,
+                    modultyp=6,
+                    allow_write=True,
+                )
+                entity.hass = Mock()
+                entity.hass.async_add_executor_job = run_executor
+
+                self.assertEqual(entity.current_option, current)
+                asyncio.run(entity.async_select_option(option))
+                api.write_parameter.assert_called_once_with(2588, 0, 6, wire_value)
+
 
 if __name__ == "__main__":
     unittest.main()
