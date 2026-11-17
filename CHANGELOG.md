@@ -11,6 +11,10 @@ bullet points, and no raw commit list. Before creating a version tag, replace
 - Restore the WTC-G burner cycle count and burner operating hours sensors,
   which stayed unavailable since 1.5.0b2 because the WTC-OB counter
   combination discarded the values reported directly by WTC-G devices.
+- Stop the WTC-integrated heating circuit's room thermostat function sensor
+  from failing to load with `code_10` when the function is not used. Both
+  no-value markers reported by WTC FS1 firmware (10 and 32768) are now
+  recognized.
 
 ## [1.5.5]
 

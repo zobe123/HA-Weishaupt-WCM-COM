@@ -496,6 +496,38 @@ class ApiTransportTest(unittest.TestCase):
         self.assertEqual(data["WTC HK1 Config Ext Room Sensor"], 4)
         self.assertNotIn("WTC HK1 Expert Raumthermostat", data)
 
+    def test_wtc_hk1_room_thermostat_accepts_every_no_value_marker(self) -> None:
+        parameters = [
+            {
+                "id": 2588,
+                "name": "WTC HK1 Expert Raumthermostat",
+                "type": "value",
+                "bus": 0,
+                "modultyp": 6,
+                "no_value": [10, 32768],
+            },
+            {"id": 1, "name": "Status", "type": "value"},
+        ]
+        for low, high, expected in (
+            (10, 0, None),
+            (0, 128, None),
+            (2, 0, 2),
+        ):
+            with self.subTest(low=low, high=high):
+                response = json_response(
+                    [[6, 0, 1, 2588, 0, 0, low, high], [10, 0, 1, 1, 0, 0, 7, 0]]
+                )
+                with patch.object(
+                    api_module.requests, "post", return_value=response
+                ):
+                    data = api_module.WeishauptAPI(
+                        "wcm.test", parameters=parameters
+                    ).get_data()
+
+                self.assertEqual(
+                    data.get("WTC HK1 Expert Raumthermostat"), expected
+                )
+
     def test_server_busy_write_raises(self) -> None:
         response = Mock()
         response.text = "<HTML>Sorry, the server is busy.</HTML>"
