@@ -1,6 +1,8 @@
 {
   "name": "Weishaupt WCM-COM",
   "content_in_root": false,
+  "zip_release": true,
+  "filename": "weishaupt_wcm_com.zip",
   "render_readme": true,
   "country": ["AT", "DE", "CH"],
   "homeassistant": "2024.7.0"

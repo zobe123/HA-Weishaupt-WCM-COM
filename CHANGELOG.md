@@ -4,6 +4,14 @@ Release notes are written for Home Assistant and HACS: short headings, concise
 bullet points, and no raw commit list. Before creating a version tag, replace
 `Unreleased` with the exact version number used by the tag.
 
+## [1.5.7]
+
+### Changed
+
+- Publish the integration as a dedicated `weishaupt_wcm_com.zip` release asset
+  so the Home Assistant Marketplace can install the packaged integration and
+  display its per-release download count.
+
 ## [1.5.6]
 
 ### Fixed

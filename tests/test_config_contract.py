@@ -21,11 +21,24 @@ class ConfigContractTest(unittest.TestCase):
 
         self.assertEqual(manifest["integration_type"], "hub")
         self.assertTrue(manifest["single_config_entry"])
-        self.assertEqual(manifest["version"], "1.5.6")
+        self.assertEqual(manifest["version"], "1.5.7")
         self.assertEqual(hacs["homeassistant"], "2024.7.0")
+        self.assertTrue(hacs["zip_release"])
+        self.assertEqual(hacs["filename"], "weishaupt_wcm_com.zip")
         self.assertIn("Home Assistant Core 2024.7.0 or newer", readme)
         self.assertIn("Python 3.11 or higher", readme)
         self.assertIn("Apache License 2.0", readme)
+
+    def test_release_workflow_publishes_hacs_archive(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('Path("custom_components/weishaupt_wcm_com")', workflow)
+        self.assertIn('Path("weishaupt_wcm_com.zip")', workflow)
+        self.assertIn("archive.write(path, path.relative_to(source))", workflow)
+        self.assertIn("unzip -p weishaupt_wcm_com.zip manifest.json", workflow)
+        self.assertIn("weishaupt_wcm_com.zip \\", workflow)
 
     def test_duplicate_abort_reason_is_translated(self) -> None:
         for language in ("de", "en"):

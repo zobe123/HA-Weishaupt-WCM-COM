@@ -30,6 +30,29 @@ jobs:
             exit 1
           fi
 
+      - name: Build HACS release archive
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZIP_DEFLATED, ZipFile
+
+          source = Path("custom_components/weishaupt_wcm_com")
+          output = Path("weishaupt_wcm_com.zip")
+
+          with ZipFile(output, "w", ZIP_DEFLATED) as archive:
+              for path in sorted(source.rglob("*")):
+                  if (
+                      path.is_file()
+                      and "__pycache__" not in path.parts
+                      and path.suffix != ".pyc"
+                  ):
+                      archive.write(path, path.relative_to(source))
+          PY
+
+          unzip -t weishaupt_wcm_com.zip
+          unzip -p weishaupt_wcm_com.zip manifest.json > packaged-manifest.json
+          cmp custom_components/weishaupt_wcm_com/manifest.json packaged-manifest.json
+
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -43,4 +66,5 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --title "Version $GITHUB_REF_NAME" \
             --notes-file release-notes.md \
+            weishaupt_wcm_com.zip \
             "${prerelease_args[@]}"
