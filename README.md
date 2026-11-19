@@ -1,6 +1,14 @@
 # HA-Weishaupt-WCM-COM Home Integration
 
-[![GitHub release](https://img.shields.io/github/release/zobe123/HA-Weishaupt-WCM-COM.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/releases)
+[![GitHub release](https://img.shields.io/github/v/release/zobe123/HA-Weishaupt-WCM-COM?include_prereleases)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/releases)
+[![License](https://img.shields.io/github/license/zobe123/HA-Weishaupt-WCM-COM)](LICENSE)
+[![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2024.7%2B-41BDF5.svg)](https://www.home-assistant.io)
+[![Python tests](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/tests.yml/badge.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/tests.yml)
+[![hassfest](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/hassfest.yml/badge.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/hassfest.yml)
+[![HACS validation](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/hacs.yml/badge.svg)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/actions/workflows/hacs.yml)
+[![Issues](https://img.shields.io/github/issues/zobe123/HA-Weishaupt-WCM-COM)](https://github.com/zobe123/HA-Weishaupt-WCM-COM/issues)
+
 
 ## Overview
 
